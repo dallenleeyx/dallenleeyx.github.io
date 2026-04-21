@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dallen Lee | Mathematics, NUS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── THEMES ── */
+    :root {
+      --sidebar-w: 280px;
+      --radius: 10px;
+      --transition: 0.22s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg:       #0f1117;
+      --surface:  #161b25;
+      --surface2: #1d2333;
+      --border:   #272d3e;
+      --text:     #eae6de;
+      --text2:    #a8a49c;
+      --muted:    #6b7080;
+      --accent:   #f0c97a;
+      --accent2:  #82c4d4;
+      --accent3:  #a8d4a0;
+    }
+
+    [data-theme="light"] {
+      --bg:       #f7f5f0;
+      --surface:  #ffffff;
+      --surface2: #f0ede6;
+      --border:   #ddd9d0;
+      --text:     #1a1814;
+      --text2:    #5a5650;
+      --muted:    #9a9590;
+      --accent:   #b07a20;
+      --accent2:  #2e7fa0;
+      --accent3:  #3a8a50;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      display: flex;
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ── THEME TOGGLE ── */
+    .theme-toggle {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 200;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.28rem 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.15rem;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), box-shadow 0.2s;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+
+    .theme-toggle:hover { border-color: var(--accent); box-shadow: 0 2px 14px rgba(0,0,0,0.22); }
+
+    .toggle-icon {
+      width: 30px; height: 30px;
+      border-radius: 50px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      transition: background 0.2s, opacity 0.2s;
+      opacity: 0.35;
+    }
+
+    [data-theme="dark"]  .icon-moon { opacity: 1; background: var(--accent); }
+    [data-theme="light"] .icon-sun  { opacity: 1; background: var(--accent); }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 2.5rem 1.75rem;
+      overflow-y: auto;
+      z-index: 100;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .sidebar-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 1.2rem;
+      flex-shrink: 0;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .sidebar-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+
+    .sidebar-institution {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .sidebar-nav { list-style: none; flex: 1; }
+    .sidebar-nav li { margin-bottom: 0.1rem; }
+
+    .sidebar-nav a {
+      display: block;
+      padding: 0.42rem 0.65rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: color 0.18s, background 0.18s;
+    }
+
+    .sidebar-nav a:hover { color: var(--text); background: var(--surface2); }
+    .sidebar-nav a.active { color: var(--accent); background: var(--surface2); }
+
+    .sidebar-links {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .sidebar-links a {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.18s;
+      word-break: break-all;
+    }
+
+    .sidebar-links a:hover { color: var(--accent2); }
+
+    .link-icon {
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+      opacity: 0.55;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 3.5rem 4rem 6rem;
+      max-width: 860px;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      margin-bottom: 4.5rem;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    section:nth-child(1) { animation-delay: 0.05s; }
+    section:nth-child(2) { animation-delay: 0.14s; }
+    section:nth-child(3) { animation-delay: 0.23s; }
+    section:nth-child(4) { animation-delay: 0.32s; }
+    section:nth-child(5) { animation-delay: 0.41s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.4rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+      transition: border-color var(--transition);
+    }
+
+    /* ── ABOUT ── */
+    .about-greeting {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 1.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .about-greeting em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .about-body p {
+      color: var(--text2);
+      margin-bottom: 0.9rem;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .about-body p:last-child { margin-bottom: 0; }
+
+    .about-body em {
+      color: var(--text);
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .about-cta {
+      margin-top: 1.75rem;
+      display: flex; gap: 0.85rem; flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.3rem;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: 2px solid var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--muted);
+      border: 2px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    /* ── PROJECT CARDS ── */
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s, background var(--transition), transform 0.18s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card:hover {
+      border-color: var(--accent2);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 10px 0 0 10px;
+      background: var(--accent2);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .project-card:hover::before { opacity: 1; }
+
+    .project-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.01em;
+    }
+
+    .project-area {
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 0.65rem;
+    }
+
+    .project-desc {
+      color: var(--text2);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .project-tags {
+      margin-top: 0.9rem;
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+    }
+
+    .tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.22rem 0.65rem;
+      border-radius: 50px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    /* ── EDUCATION ── */
+    .edu-entry {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 0 1.5rem;
+      margin-bottom: 2rem;
+      align-items: start;
+    }
+
+    .edu-date {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 400;
+      color: var(--muted);
+      padding-top: 0.3rem;
+      line-height: 1.5;
+    }
+
+    .edu-degree {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.15rem;
+      letter-spacing: -0.01em;
+    }
+
+    .edu-institution {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+
+    .edu-note {
+      font-size: 0.93rem;
+      font-weight: 400;
+      color: var(--text2);
+      font-style: italic;
+    }
+
+    /* ── INTERESTS ── */
+    .interests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .interest-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      transition: border-color 0.2s, background var(--transition), transform 0.18s;
+      cursor: default;
+    }
+
+    .interest-chip:hover {
+      border-color: var(--accent3);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+
+    .interest-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .interest-sub {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── CONTACT ── */
+    .contact-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 2.25rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .contact-block p {
+      color: var(--text2);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-emails {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .contact-email-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .contact-email-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 68px;
+    }
+
+    .contact-email-row a {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--accent2);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+
+    .contact-email-row a:hover { color: var(--text); }
+
+    /* ── MATH DECO ── */
+    .math-deco {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--border);
+      position: fixed;
+      bottom: 2rem;
+      left: 0.8rem;
+      writing-mode: vertical-rl;
+      letter-spacing: 0.12em;
+      user-select: none;
+      pointer-events: none;
+      transition: color var(--transition);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 100%;
+        min-width: unset;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.5rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+      }
+      .sidebar-nav, .sidebar-links { display: none; }
+      .main { margin-left: 0; padding: 2rem 1.5rem 4rem; }
+      body { flex-direction: column; }
+      .theme-toggle { top: 1rem; right: 1rem; }
+    }
+
+    @media (max-width: 600px) {
+      .main { padding: 1.5rem 1rem 4rem; }
+      .about-greeting { font-size: 2rem; }
+      .edu-entry { grid-template-columns: 1fr; gap: 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- THEME TOGGLE -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+    <div class="toggle-icon icon-sun">☀️</div>
+    <div class="toggle-icon icon-moon">🌙</div>
+  </button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-avatar">DL</div>
+    <div class="sidebar-name">Dallen Lee</div>
+    <div class="sidebar-title">Undergraduate</div>
+    <div class="sidebar-institution">National University of Singapore</div>
+
+    <ul class="sidebar-nav">
+      <li><a href="#about" class="active">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#interests">Interests</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+
+    <div class="sidebar-links">
+      <a href="mailto:dallenleeyuxuan123@gmail.com">
+        <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        Personal Email
+      </a>
+      <a href="mailto:e0969261@u.nus.edu">
+        <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        NUS Email
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <section id="about">
+      <div class="about-greeting">Hi, I'm <em>Dallen</em>.</div>
+      <div class="about-body">
+        <p>I am an undergraduate student reading Mathematics with a Specialisation in Pure Mathematics at the National University of Singapore.</p>
+        <p>My interests lie at the intersection of geometry, probability, and statistics — in particular the <em>geometry of statistical manifolds</em> and the structural properties of high-dimensional mathematical objects.</p>
+        <p>I enjoy exploring how tools from pure mathematics — differential geometry, algebra, and analysis — illuminate problems in statistics, data, and beyond.</p>
+      </div>
+      <div class="about-cta">
+        <a href="#projects" class="btn btn-primary">View Projects</a>
+        <a href="#contact" class="btn btn-outline">Get in Touch</a>
+      </div>
+    </section>
+
+    <section id="projects">
+      <div class="section-label">Projects</div>
+
+      <div class="project-card">
+        <div class="project-title">Model Theory and its Applications</div>
+        <div class="project-area">Mathematical Logic · Algebra</div>
+        <div class="project-desc">An exploration of model theory — the study of mathematical structures and the languages used to describe them — examining compactness, completeness, and applications to algebraic geometry and field theory.</div>
+        <div class="project-tags">
+          <span class="tag">First-Order Logic</span>
+          <span class="tag">Structures &amp; Models</span>
+          <span class="tag">Completeness</span>
+          <span class="tag">Algebra</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-title">Random Matrix Theory</div>
+        <div class="project-area">Probability · Analysis</div>
+        <div class="project-desc">A study of the spectral properties of large random matrices, including Wigner's semicircle law, the universality phenomenon, and connections to free probability and operator algebras.</div>
+        <div class="project-tags">
+          <span class="tag">Spectral Theory</span>
+          <span class="tag">Wigner Matrices</span>
+          <span class="tag">Free Probability</span>
+          <span class="tag">Universality</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-title">Optimal Transport</div>
+        <div class="project-area">Analysis · Geometry · Statistics</div>
+        <div class="project-desc">An investigation into the theory of optimal transport — from Monge's original problem to the Kantorovich relaxation — and its modern applications in statistics, machine learning, and the geometry of probability measures.</div>
+        <div class="project-tags">
+          <span class="tag">Wasserstein Geometry</span>
+          <span class="tag">Kantorovich Duality</span>
+          <span class="tag">Probability Measures</span>
+          <span class="tag">Statistics</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="education">
+      <div class="section-label">Education</div>
+      <div class="edu-entry">
+        <div class="edu-date">2023 – Present</div>
+        <div>
+          <div class="edu-degree">B.Sc. (Hons) in Mathematics</div>
+          <div class="edu-institution">National University of Singapore</div>
+          <div class="edu-note">Specialisation in Pure Mathematics</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="interests">
+      <div class="section-label">Research Interests</div>
+      <div class="interests-grid">
+        <div class="interest-chip">
+          <div class="interest-name">Information Geometry</div>
+          <div class="interest-sub">Geometry of stat. manifolds</div>
+        </div>
+        <div class="interest-chip">
+          <div class="interest-name">Optimal Transport</div>
+          <div class="interest-sub">Wasserstein spaces</div>
+        </div>
+        <div class="interest-chip">
+          <div class="interest-name">Random Matrices</div>
+          <div class="interest-sub">Spectral universality</div>
+        </div>
+        <div class="interest-chip">
+          <div class="interest-name">Model Theory</div>
+          <div class="interest-sub">Logic &amp; structure</div>
+        </div>
+        <div class="interest-chip">
+          <div class="interest-name">Probability Theory</div>
+          <div class="interest-sub">Measure-theoretic foundations</div>
+        </div>
+        <div class="interest-chip">
+          <div class="interest-name">Pure Mathematics</div>
+          <div class="interest-sub">Analysis, algebra, geometry</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="section-label">Contact</div>
+      <div class="contact-block">
+        <p>I am open to discussions about mathematics, research collaborations, or anything at the intersection of geometry and statistics. Feel free to reach out.</p>
+        <div class="contact-emails">
+          <div class="contact-email-row">
+            <span class="contact-email-label">Personal</span>
+            <a href="mailto:dallenleeyuxuan123@gmail.com">dallenleeyuxuan123@gmail.com</a>
+          </div>
+          <div class="contact-email-row">
+            <span class="contact-email-label">NUS</span>
+            <a href="mailto:e0969261@u.nus.edu">e0969261@u.nus.edu</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="math-deco">∂²f / ∂xᵢ∂xⱼ · · · ∇²S(θ)</div>
+
+  <script>
+    // ── THEME TOGGLE ──
+    const toggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+
+    // Respect saved preference, then system preference
+    const saved = localStorage.getItem('theme');
+    const preferred = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    html.setAttribute('data-theme', preferred);
+
+    toggle.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+
+    // ── ACTIVE NAV ON SCROLL ──
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`.sidebar-nav a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+
+</body>
+</html>
