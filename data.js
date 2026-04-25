@@ -27,8 +27,8 @@
 const COURSES = [
   // ── Mathematics ──
   { code: "MA1100",  name: "Basic Discrete Mathematics",               dept: "Mathematics" },
-  { code: "MA1101R", name: "Linear Algebra I",                         dept: "Mathematics" },
-  { code: "MA1102R", name: "Calculus",                                 dept: "Mathematics" },
+  { code: "MA2001", name: "Linear Algebra I",                         dept: "Mathematics" },
+  { code: "MA2002", name: "Calculus",                                 dept: "Mathematics" },
   { code: "MA2101",  name: "Linear Algebra II",                        dept: "Mathematics" },
   { code: "MA2104",  name: "Multivariable Calculus",                   dept: "Mathematics" },
   { code: "MA2108",  name: "Mathematical Analysis I",                  dept: "Mathematics" },
