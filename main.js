@@ -78,7 +78,7 @@ setTimeout(() => {
     ctx.clearRect(0, 0, W, H);
 
     const isDark = html.getAttribute('data-theme') === 'dark';
-    const baseColor = isDark ? '240,201,122' : '176,122,32';
+    const baseColor = isDark ? '200,200,200' : '80,80,80';
 
     particles.forEach(p => {
       p.life += 0.002;
