@@ -33,25 +33,20 @@ const COURSES = [
   { code: "MA2104",  name: "Multivariable Calculus",                   dept: "Mathematics" },
   { code: "MA2108",  name: "Mathematical Analysis I",                  dept: "Mathematics" },
   { code: "MA2202",  name: "Algebra I",                                dept: "Mathematics" },
-  { code: "MA3110",  name: "Mathematical Analysis II",                 dept: "Mathematics" },
+  { code: "MA3210",  name: "Mathematical Analysis II",                 dept: "Mathematics" },
   { code: "MA3201",  name: "Algebra II",                               dept: "Mathematics" },
-  { code: "MA3209",  name: "Mathematical Analysis III",                dept: "Mathematics" },
-  { code: "MA3220",  name: "Ordinary Differential Equations",          dept: "Mathematics" },
-  { code: "MA3238",  name: "Probability Theory I",                     dept: "Mathematics" },
-  { code: "MA4261",  name: "Coding Theory and Cryptography",           dept: "Mathematics" },
+  { code: "MA3264",  name: "Mathematical Modelling",                   dept: "Mathematics" },
+  { code: "MA3270",  name: "Mathematics for AI",                       dept: "Mathematics" },
+  { code: "MA3209",  name: "Metric and Topological Spaces",            dept: "Mathematics" },
+  { code: "MA2116",  name: "Probability",                              dept: "Mathematics" },
   { code: "MA4271",  name: "Differential Geometry of Curves and Surfaces", dept: "Mathematics" },
-  { code: "MA4262",  name: "Measure and Integration",                  dept: "Mathematics" },
-  { code: "MA4268",  name: "Mathematics in Finance",                   dept: "Mathematics" },
+  { code: "QF1100",  name: "Introduction to Quantitative Finance",      dept: "Quantitative Finance" },
 
   // ── Statistics ──
-  { code: "ST1131",  name: "Introduction to Statistics",               dept: "Statistics" },
-  { code: "ST2131",  name: "Probability",                              dept: "Statistics" },
   { code: "ST2132",  name: "Mathematical Statistics",                  dept: "Statistics" },
-  { code: "ST3131",  name: "Regression Analysis",                      dept: "Statistics" },
 
   // ── Computer Science ──
   { code: "CS1010",  name: "Programming Methodology",                  dept: "CS" },
-  { code: "CS2040",  name: "Data Structures and Algorithms",           dept: "CS" },
 
   // ── General Education / Others ──
   // Add more courses here following the same format!
