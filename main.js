@@ -181,15 +181,29 @@ setTimeout(() => {
   if (emptyEl) emptyEl.style.display = 'none';
 
   BLOG_POSTS.forEach(post => {
-    const el = post.url
+    // Determine the link:
+    //   — if the post has a slug  → post.html?post=SLUG  (internal reader)
+    //   — if it has a url         → that external URL
+    //   — otherwise               → no link (non-clickable card)
+    const href = post.slug
+      ? `post.html?post=${encodeURIComponent(post.slug)}`
+      : (post.url || null);
+
+    const el = href
       ? document.createElement('a')
       : document.createElement('div');
+
     el.className = 'blog-post';
-    if (post.url) {
-      el.href   = post.url;
-      el.target = '_blank';
-      el.rel    = 'noopener noreferrer';
+
+    if (href) {
+      el.href = href;
+      // Internal post pages open in the same tab; external URLs open in a new tab
+      if (post.url && !post.slug) {
+        el.target = '_blank';
+        el.rel    = 'noopener noreferrer';
+      }
     }
+
     el.innerHTML = `
       <div class="blog-post-meta">
         <span class="blog-date">${post.date}</span>
