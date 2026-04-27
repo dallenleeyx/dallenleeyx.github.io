@@ -12,9 +12,6 @@
 
   <!-- KaTeX for LaTeX rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
-          onload="initPage()"></script>
 
   <style>
     /* ── THEMES (mirrors main site) ── */
@@ -379,8 +376,10 @@
 
   <div class="math-deco">∂²f / ∂xᵢ∂xⱼ · · · ∇²S(θ)</div>
 
-  <!-- Load your data file first -->
+  <!-- Scripts loaded in order: data → KaTeX core → auto-render → init -->
   <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
   <script>
     /* ── THEME ── */
@@ -425,7 +424,6 @@
     })();
 
     /* ── RENDER POST ── */
-    // Called once KaTeX auto-render is loaded
     function initPage() {
       const article = document.getElementById('postArticle');
 
@@ -477,6 +475,9 @@
         throwOnError: false,
       });
     }
+
+    // Run immediately — KaTeX is already loaded above
+    initPage();
   </script>
 
 </body>
