@@ -5,16 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Post — Dallen Lee</title>
 
-  <!-- Fonts (matching main site) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-
-  <!-- KaTeX for LaTeX rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
 
   <style>
-    /* ── THEMES (mirrors main site) ── */
     :root { --transition: 0.22s ease; }
 
     [data-theme="dark"] {
@@ -58,102 +54,63 @@
       transition: background var(--transition), color var(--transition);
     }
 
-    /* ── PARTICLE CANVAS ── */
     #particles {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.3;
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; opacity: 0.3;
     }
 
     /* ── THEME TOGGLE ── */
     .theme-toggle {
-      position: fixed;
-      top: 1.25rem;
-      right: 1.5rem;
-      z-index: 200;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 0.28rem 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 0.15rem;
+      position: fixed; top: 1.25rem; right: 1.5rem; z-index: 200;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 50px; padding: 0.28rem 0.4rem;
+      display: flex; align-items: center; gap: 0.15rem;
       cursor: pointer;
       transition: background var(--transition), border-color var(--transition), box-shadow 0.2s;
       box-shadow: 0 2px 10px rgba(0,0,0,0.15);
     }
     .theme-toggle:hover { border-color: var(--accent); box-shadow: 0 2px 18px var(--glow); }
     .toggle-icon {
-      width: 30px; height: 30px;
-      border-radius: 50px;
+      width: 30px; height: 30px; border-radius: 50px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.9rem;
-      transition: background 0.2s, opacity 0.2s;
-      opacity: 0.35;
+      font-size: 0.9rem; transition: background 0.2s, opacity 0.2s; opacity: 0.35;
     }
     [data-theme="dark"]  .icon-moon { opacity: 1; background: var(--accent); }
     [data-theme="light"] .icon-sun  { opacity: 1; background: var(--accent); }
 
     /* ── TOP BAR ── */
     .top-bar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       background: color-mix(in srgb, var(--bg) 85%, transparent);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       padding: 0.9rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      display: flex; align-items: center; gap: 1rem;
       transition: background var(--transition), border-color var(--transition);
     }
 
     .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      padding: 0.35rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); text-decoration: none;
+      padding: 0.35rem 0.75rem; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--surface); flex-shrink: 0;
       transition: color 0.18s, border-color 0.18s, transform 0.18s, box-shadow 0.18s;
-      flex-shrink: 0;
     }
-    .back-btn:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      transform: translateX(-2px);
-      box-shadow: 0 2px 12px var(--glow);
-    }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateX(-2px); box-shadow: 0 2px 12px var(--glow); }
     .back-btn svg { width: 12px; height: 12px; }
 
     .top-bar-breadcrumb {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--muted); letter-spacing: 0.04em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .top-bar-breadcrumb span { color: var(--text2); }
 
-    /* ── PAGE WRAPPER ── */
+    /* ── PAGE ── */
     .page {
-      position: relative;
-      z-index: 1;
-      max-width: 720px;
-      margin: 0 auto;
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
       padding: 3.5rem 2rem 8rem;
     }
 
@@ -161,179 +118,104 @@
     .post-header { margin-bottom: 2.5rem; }
 
     .post-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1rem; flex-wrap: wrap;
     }
 
     .post-date {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--muted);
-      letter-spacing: 0.05em;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--muted); letter-spacing: 0.05em;
     }
 
     .post-tag {
-      font-size: 0.62rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      padding: 0.15rem 0.5rem;
-      border-radius: 20px;
-      background: var(--surface2);
-      color: var(--accent2);
-      border: 1px solid var(--border);
+      font-size: 0.62rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 0.15rem 0.5rem; border-radius: 20px;
+      background: var(--surface2); color: var(--accent2); border: 1px solid var(--border);
     }
 
     .post-title {
-      font-size: 2.1rem;
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.025em;
-      color: var(--text);
-      margin-bottom: 1.2rem;
+      font-size: 2.1rem; font-weight: 700;
+      line-height: 1.2; letter-spacing: -0.025em;
+      color: var(--text); margin-bottom: 1.2rem;
     }
 
     .post-excerpt {
-      font-size: 1rem;
-      color: var(--text2);
-      line-height: 1.7;
-      border-left: 2px solid var(--border);
-      padding-left: 1rem;
-      font-style: italic;
+      font-size: 1rem; color: var(--text2); line-height: 1.7;
+      border-left: 2px solid var(--border); padding-left: 1rem; font-style: italic;
     }
 
-    .post-divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2.5rem 0;
-    }
+    .post-divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
     /* ── POST BODY ── */
-    .post-body {
-      font-size: 0.97rem;
-      color: var(--text2);
-      line-height: 1.85;
-    }
-
+    .post-body { font-size: 0.97rem; color: var(--text2); line-height: 1.85; }
     .post-body p { margin-bottom: 1.25rem; }
 
     .post-body h2 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 2.5rem 0 0.85rem;
-      letter-spacing: -0.015em;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
+      font-size: 1.25rem; font-weight: 700; color: var(--text);
+      margin: 2.5rem 0 0.85rem; letter-spacing: -0.015em;
+      padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
     }
 
     .post-body h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 1.75rem 0 0.6rem;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text); margin: 1.75rem 0 0.6rem;
     }
 
     .post-body strong { color: var(--text); font-weight: 700; }
     .post-body em     { color: var(--accent2); font-style: italic; }
 
     .post-body a {
-      color: var(--accent2);
-      text-decoration: underline;
-      text-decoration-color: var(--border);
-      text-underline-offset: 3px;
+      color: var(--accent2); text-decoration: underline;
+      text-decoration-color: var(--border); text-underline-offset: 3px;
       transition: color 0.18s, text-decoration-color 0.18s;
     }
     .post-body a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
     .post-body code {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85em;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 0.1em 0.4em;
-      border-radius: 4px;
-      color: var(--accent2);
+      font-family: 'DM Mono', monospace; font-size: 0.85em;
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 0.1em 0.4em; border-radius: 4px; color: var(--accent2);
     }
 
     .post-body pre {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      overflow-x: auto;
-      margin: 1.5rem 0;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.65;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.25rem 1.5rem;
+      overflow-x: auto; margin: 1.5rem 0;
+      font-family: 'DM Mono', monospace; font-size: 0.85rem; line-height: 1.65;
     }
 
-    .post-body ul, .post-body ol {
-      padding-left: 1.4rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .post-body li {
-      margin-bottom: 0.45rem;
-    }
+    .post-body ul, .post-body ol { padding-left: 1.4rem; margin-bottom: 1.25rem; }
+    .post-body li { margin-bottom: 0.45rem; }
 
     .post-body blockquote {
-      border-left: 2px solid var(--border);
-      padding-left: 1rem;
-      color: var(--text2);
-      font-style: italic;
-      margin: 1.5rem 0;
+      border-left: 2px solid var(--border); padding-left: 1rem;
+      color: var(--text2); font-style: italic; margin: 1.5rem 0;
     }
 
-    .post-body hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2.5rem 0;
-    }
+    .post-body hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
-    /* Display math gets a little breathing room */
-    .post-body .katex-display {
-      margin: 1.6rem 0;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
+    .post-body .katex-display { margin: 1.6rem 0; overflow-x: auto; overflow-y: hidden; }
 
-    /* Footnote / references line */
-    .post-body .post-footnote {
-      font-size: 0.78rem;
-      color: var(--muted);
-      line-height: 1.7;
-    }
+    .post-body .post-footnote { font-size: 0.78rem; color: var(--muted); line-height: 1.7; }
 
-    /* ── NOT FOUND ── */
-    .not-found {
-      text-align: center;
-      padding: 6rem 2rem;
+    /* ── STATES ── */
+    .state-box {
+      text-align: center; padding: 5rem 2rem;
+      color: var(--muted); font-size: 0.9rem;
     }
-    .not-found-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .not-found h2 { font-size: 1.3rem; color: var(--text); margin-bottom: 0.5rem; }
-    .not-found p  { color: var(--muted); font-size: 0.9rem; }
+    .state-box .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .state-box h2 { font-size: 1.1rem; color: var(--text2); margin-bottom: 0.5rem; }
 
     /* ── MATH DECO ── */
     .math-deco {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--border);
-      position: fixed;
-      bottom: 2rem;
-      left: 0.8rem;
-      writing-mode: vertical-rl;
-      letter-spacing: 0.12em;
-      user-select: none;
-      pointer-events: none;
-      transition: color var(--transition);
-      z-index: 0;
+      font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      color: var(--border); position: fixed; bottom: 2rem; left: 0.8rem;
+      writing-mode: vertical-rl; letter-spacing: 0.12em;
+      user-select: none; pointer-events: none;
+      transition: color var(--transition); z-index: 0;
     }
 
-    /* ── RESPONSIVE ── */
     @media (max-width: 640px) {
       .page { padding: 2rem 1.25rem 6rem; }
       .post-title { font-size: 1.6rem; }
@@ -344,16 +226,13 @@
 </head>
 <body>
 
-  <!-- THEME TOGGLE -->
   <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
     <div class="toggle-icon icon-sun">☀️</div>
     <div class="toggle-icon icon-moon">🌙</div>
   </button>
 
-  <!-- PARTICLE CANVAS -->
   <canvas id="particles" aria-hidden="true"></canvas>
 
-  <!-- TOP BAR -->
   <div class="top-bar">
     <a href="index.html#blog" class="back-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -366,105 +245,108 @@
     </div>
   </div>
 
-  <!-- PAGE -->
   <div class="page">
-
-    <!-- POST rendered here -->
-    <article id="postArticle"></article>
-
+    <article id="postArticle">
+      <div class="state-box">
+        <div class="icon">⏳</div>
+        <h2>Loading…</h2>
+      </div>
+    </article>
   </div>
 
   <div class="math-deco">∂²f / ∂xᵢ∂xⱼ · · · ∇²S(θ)</div>
 
-  <!-- Scripts loaded in order: data → KaTeX core → auto-render → init -->
+  <!-- Load in order: data → KaTeX core → auto-render → init -->
   <script src="data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
   <script>
     /* ── THEME ── */
-    const toggle = document.getElementById('themeToggle');
-    const html   = document.documentElement;
-    const saved  = localStorage.getItem('theme');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('theme');
     const preferred = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
     html.setAttribute('data-theme', preferred);
-    toggle.addEventListener('click', () => {
+    document.getElementById('themeToggle').addEventListener('click', () => {
       const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
     });
 
     /* ── PARTICLES ── */
-    (function initParticles() {
+    (function () {
       const canvas = document.getElementById('particles');
-      const ctx    = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       let W, H, particles = [];
-      const SYMBOLS = ['∂', '∇', '∑', 'ℝ', 'ℂ', '∞', 'π', '∫', '√', 'θ', 'λ', 'μ', 'σ', '⊕', '∈'];
-      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-      function mkParticle() {
-        return { x: Math.random()*W, y: Math.random()*H, sym: SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)],
-                 size: 9+Math.random()*10, vx: (Math.random()-0.5)*0.15, vy: -0.12-Math.random()*0.18, life: Math.random() };
-      }
-      function init() { resize(); particles = Array.from({length: 20}, mkParticle); }
-      function draw() {
+      const SYM = ['∂','∇','∑','ℝ','ℂ','∞','π','∫','√','θ','λ','μ','σ','⊕','∈'];
+      const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+      const mk = () => ({ x: Math.random()*W, y: Math.random()*H, sym: SYM[Math.random()*SYM.length|0],
+        size: 9+Math.random()*10, vx: (Math.random()-.5)*.15, vy: -.12-Math.random()*.18, life: Math.random() });
+      const draw = () => {
         ctx.clearRect(0,0,W,H);
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        const bc = isDark ? '200,200,200' : '80,80,80';
+        const bc = html.getAttribute('data-theme')==='dark' ? '200,200,200' : '80,80,80';
         particles.forEach(p => {
-          p.life += 0.002; p.x += p.vx; p.y += p.vy;
-          if (p.y < -30) Object.assign(p, mkParticle(), {y: H+10, x: Math.random()*W});
-          const alpha = 0.03 + 0.07 * Math.sin(p.life * Math.PI);
-          ctx.save(); ctx.font = `${p.size}px 'DM Mono', monospace`;
-          ctx.fillStyle = `rgba(${bc},${alpha})`; ctx.fillText(p.sym, p.x, p.y); ctx.restore();
+          p.life+=.002; p.x+=p.vx; p.y+=p.vy;
+          if (p.y < -30) Object.assign(p, mk(), {y:H+10, x:Math.random()*W});
+          ctx.save(); ctx.font=`${p.size}px 'DM Mono',monospace`;
+          ctx.fillStyle=`rgba(${bc},${.03+.07*Math.sin(p.life*Math.PI)})`;
+          ctx.fillText(p.sym,p.x,p.y); ctx.restore();
         });
         requestAnimationFrame(draw);
-      }
+      };
       window.addEventListener('resize', resize);
-      init(); draw();
+      resize(); particles = Array.from({length:20},mk); draw();
     })();
 
-    /* ── RENDER POST ── */
-    function initPage() {
+    /* ── LOAD POST ── */
+    (async function () {
       const article = document.getElementById('postArticle');
+      const params  = new URLSearchParams(window.location.search);
+      const slug    = params.get('post') || '';
 
-      // Read slug from ?post=... in the URL
-      const params = new URLSearchParams(window.location.search);
-      const slug   = params.get('post') || '';
-
-      // Locate the post in data.js
-      const post = (typeof BLOG_POSTS !== 'undefined')
+      // Find metadata in data.js
+      const meta = (typeof BLOG_POSTS !== 'undefined')
         ? BLOG_POSTS.find(p => p.slug === slug)
         : null;
 
-      if (!post || !post.content) {
-        article.innerHTML = `
-          <div class="not-found">
-            <div class="not-found-icon">🔍</div>
-            <h2>Post not found</h2>
-            <p>The post <code>${slug || '(no slug given)'}</code> doesn't exist yet.</p>
-          </div>`;
+      if (!meta) {
+        article.innerHTML = `<div class="state-box"><div class="icon">🔍</div>
+          <h2>Post not found</h2><p>No post with slug <code>${slug}</code>.</p></div>`;
+        return;
+      }
+
+      // Fetch the HTML file from posts/slug.html
+      let content = '';
+      try {
+        const res = await fetch(`posts/${slug}.html`);
+        if (!res.ok) throw new Error(res.status);
+        content = await res.text();
+      } catch (e) {
+        article.innerHTML = `<div class="state-box"><div class="icon">⚠️</div>
+          <h2>Could not load post</h2>
+          <p>Make sure <code>posts/${slug}.html</code> exists.</p></div>`;
         return;
       }
 
       // Set page title & breadcrumb
-      document.title = `${post.title} — Dallen Lee`;
-      document.getElementById('breadcrumbTitle').textContent = post.title;
+      document.title = `${meta.title} — Dallen Lee`;
+      document.getElementById('breadcrumbTitle').textContent = meta.title;
 
-      // Build the article HTML
+      // Render
       article.innerHTML = `
         <header class="post-header">
           <div class="post-meta">
-            <span class="post-date">${post.date}</span>
-            <span class="post-tag">${post.tag}</span>
+            <span class="post-date">${meta.date}</span>
+            <span class="post-tag">${meta.tag}</span>
           </div>
-          <h1 class="post-title">${post.title}</h1>
-          ${post.excerpt ? `<p class="post-excerpt">${post.excerpt}</p>` : ''}
+          <h1 class="post-title">${meta.title}</h1>
+          ${meta.excerpt ? `<p class="post-excerpt">${meta.excerpt}</p>` : ''}
         </header>
         <hr class="post-divider" />
-        <div class="post-body">${post.content}</div>
+        <div class="post-body">${content}</div>
       `;
 
-      // Run KaTeX auto-render over the post body
+      // Run KaTeX over the rendered body
       renderMathInElement(article, {
         delimiters: [
           { left: '$$',  right: '$$',  display: true  },
@@ -474,10 +356,7 @@
         ],
         throwOnError: false,
       });
-    }
-
-    // Run immediately — KaTeX is already loaded above
-    initPage();
+    })();
   </script>
 
 </body>
