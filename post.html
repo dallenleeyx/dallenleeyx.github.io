@@ -299,12 +299,12 @@
     })();
 
     /* ── LOAD POST ── */
-    (async function () {
+    (function () {
       const article = document.getElementById('postArticle');
       const params  = new URLSearchParams(window.location.search);
       const slug    = params.get('post') || '';
 
-      // Find metadata in data.js
+      // Find the post (metadata + content) directly from data.js
       const meta = (typeof BLOG_POSTS !== 'undefined')
         ? BLOG_POSTS.find(p => p.slug === slug)
         : null;
@@ -315,16 +315,10 @@
         return;
       }
 
-      // Fetch the HTML file from posts/slug.html
-      let content = '';
-      try {
-        const res = await fetch(`posts/${slug}.html`);
-        if (!res.ok) throw new Error(res.status);
-        content = await res.text();
-      } catch (e) {
+      if (!meta.content) {
         article.innerHTML = `<div class="state-box"><div class="icon">⚠️</div>
-          <h2>Could not load post</h2>
-          <p>Make sure <code>posts/${slug}.html</code> exists.</p></div>`;
+          <h2>No content</h2>
+          <p>Add a <code>content</code> field to this post in <code>data.js</code>.</p></div>`;
         return;
       }
 
@@ -332,7 +326,7 @@
       document.title = `${meta.title} — Dallen Lee`;
       document.getElementById('breadcrumbTitle').textContent = meta.title;
 
-      // Render
+      // Render — content comes straight from data.js, no fetch needed
       article.innerHTML = `
         <header class="post-header">
           <div class="post-meta">
@@ -343,7 +337,7 @@
           ${meta.excerpt ? `<p class="post-excerpt">${meta.excerpt}</p>` : ''}
         </header>
         <hr class="post-divider" />
-        <div class="post-body">${content}</div>
+        <div class="post-body">${meta.content}</div>
       `;
 
       // Run KaTeX over the rendered body
