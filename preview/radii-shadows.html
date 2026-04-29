@@ -1,0 +1,23 @@
+<!doctype html>
+<html data-theme="dark"><head><meta charset="utf-8">
+<title>Card · Radii & Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>body{margin:0;background:var(--bg);color:var(--fg-1);padding:20px;font-family:var(--font-sans);}
+.row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+.box{background:var(--surface);border:1px solid var(--border);width:88px;height:64px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;color:var(--fg-muted);}
+.lbl{font-family:var(--font-mono);font-size:9px;color:var(--fg-muted);text-align:center;margin-top:4px;letter-spacing:.04em;}</style>
+</head><body>
+  <div class="row">
+    <div><div class="box" style="border-radius:4px;">4</div><div class="lbl">--radius-xs</div></div>
+    <div><div class="box" style="border-radius:8px;">8</div><div class="lbl">--radius-sm</div></div>
+    <div><div class="box" style="border-radius:10px;">10</div><div class="lbl">--radius-md</div></div>
+    <div><div class="box" style="border-radius:14px;">14</div><div class="lbl">--radius-lg</div></div>
+    <div><div class="box" style="border-radius:20px;width:120px;">20 pill</div><div class="lbl">--radius-pill</div></div>
+    <div><div class="box" style="border-radius:50%;width:64px;">●</div><div class="lbl">--radius-full</div></div>
+  </div>
+  <div class="row" style="align-items:flex-end;">
+    <div><div class="box" style="border-radius:14px;box-shadow:var(--shadow-sm);">sm</div><div class="lbl">--shadow-sm</div></div>
+    <div><div class="box" style="border-radius:14px;box-shadow:0 4px 18px rgba(255,255,255,.06);">md</div><div class="lbl">--shadow-md</div></div>
+    <div><div class="box" style="border-radius:14px;box-shadow:0 8px 32px rgba(255,255,255,.08);">lg</div><div class="lbl">--shadow-lg</div></div>
+  </div>
+</body></html>

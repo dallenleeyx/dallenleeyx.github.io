@@ -1,0 +1,141 @@
+/* themes.css — accent color themes layered on top of light/dark base.
+   Apply via [data-accent="coral|indigo|emerald|amber|mono"] on <html>.
+   Mono is the default and sets nothing (falls back to colors_and_type.css). */
+
+[data-accent="coral"][data-theme="dark"] {
+  --accent: #ff8a73;
+  --accent-2: #ffb39e;
+  --accent-3: #ffd6c8;
+  --glow: rgba(255,138,115,.10);
+  --glow-strong: rgba(255,138,115,.22);
+}
+[data-accent="coral"][data-theme="light"] {
+  --accent: #d65a3c;
+  --accent-2: #b14528;
+  --accent-3: #8a3115;
+  --glow: rgba(214,90,60,.10);
+  --glow-strong: rgba(214,90,60,.22);
+}
+
+[data-accent="indigo"][data-theme="dark"] {
+  --accent: #8aa3ff;
+  --accent-2: #b0c0ff;
+  --accent-3: #d4ddff;
+  --glow: rgba(138,163,255,.10);
+  --glow-strong: rgba(138,163,255,.22);
+}
+[data-accent="indigo"][data-theme="light"] {
+  --accent: #4256d0;
+  --accent-2: #2d3fa6;
+  --accent-3: #1c2a7a;
+  --glow: rgba(66,86,208,.10);
+  --glow-strong: rgba(66,86,208,.22);
+}
+
+[data-accent="emerald"][data-theme="dark"] {
+  --accent: #6fdcaf;
+  --accent-2: #a3ecca;
+  --accent-3: #c8f3dd;
+  --glow: rgba(111,220,175,.10);
+  --glow-strong: rgba(111,220,175,.22);
+}
+[data-accent="emerald"][data-theme="light"] {
+  --accent: #1f8a5f;
+  --accent-2: #176945;
+  --accent-3: #0e4a30;
+  --glow: rgba(31,138,95,.10);
+  --glow-strong: rgba(31,138,95,.22);
+}
+
+[data-accent="amber"][data-theme="dark"] {
+  --accent: #f5c46b;
+  --accent-2: #ffd99b;
+  --accent-3: #ffe9c2;
+  --glow: rgba(245,196,107,.10);
+  --glow-strong: rgba(245,196,107,.22);
+}
+[data-accent="amber"][data-theme="light"] {
+  --accent: #b27516;
+  --accent-2: #8c5a0e;
+  --accent-3: #654009;
+  --glow: rgba(178,117,22,.10);
+  --glow-strong: rgba(178,117,22,.22);
+}
+
+[data-accent="rose"][data-theme="dark"] {
+  --accent: #ec8ac4;
+  --accent-2: #f5b3da;
+  --accent-3: #fbd4ea;
+  --glow: rgba(236,138,196,.10);
+  --glow-strong: rgba(236,138,196,.22);
+}
+[data-accent="rose"][data-theme="light"] {
+  --accent: #c43d8a;
+  --accent-2: #9a2a6a;
+  --accent-3: #6e1a4a;
+  --glow: rgba(196,61,138,.10);
+  --glow-strong: rgba(196,61,138,.22);
+}
+
+/* Accent picker UI */
+.accent-picker {
+  position: fixed; top: 1.25rem; right: 6rem; z-index: 200;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-full); padding: .28rem .42rem;
+  display: flex; align-items: center; gap: .3rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition), box-shadow .2s;
+}
+.accent-picker:hover { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+.accent-swatch {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer; padding: 0;
+  transition: transform .15s, border-color .15s;
+  position: relative;
+}
+.accent-swatch:hover { transform: scale(1.15); }
+.accent-swatch.active { border-color: var(--fg-1); }
+.accent-swatch.active::after {
+  content: ''; position: absolute; inset: -5px; border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+/* Owner badge + export bar */
+.owner-badge {
+  position: fixed; bottom: 1rem; left: calc(var(--sidebar-w) + 1rem); z-index: 150;
+  background: var(--surface); border: 1px solid var(--accent);
+  color: var(--accent); padding: .35rem .7rem; border-radius: var(--radius-pill);
+  font-family: var(--font-mono); font-size: var(--fs-xs);
+  font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .45rem;
+  box-shadow: var(--shadow-sm);
+}
+.owner-badge button {
+  background: transparent; border: none; color: var(--fg-muted);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0 .15rem;
+}
+.owner-badge button:hover { color: var(--accent); }
+
+.owner-unlock-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(8px);
+  z-index: 500; display: flex; align-items: center; justify-content: center;
+}
+.owner-unlock-card {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.6rem 1.8rem; width: min(420px, 90vw); box-shadow: var(--shadow-lg);
+}
+.owner-unlock-card h3 {
+  font-size: var(--fs-md); font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: .5rem;
+}
+.owner-unlock-card p {
+  font-size: var(--fs-lg); color: var(--fg-2); margin-bottom: 1rem; line-height: 1.6;
+}
+.owner-unlock-card input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .55rem .75rem;
+  font-family: var(--font-mono); font-size: var(--fs-md);
+  color: var(--fg-1); outline: none; margin-bottom: 1rem;
+}
+.owner-unlock-card input:focus { border-color: var(--accent); }
+.owner-unlock-actions { display: flex; justify-content: flex-end; gap: .5rem; }
