@@ -57,7 +57,7 @@ const BLOG_POSTS = [
   {
     slug:    "fisher-rao-metric",
     title:   "The Fisher–Rao Metric: When Probability Spaces Become Curved",
-    date:    "Apr 2026",
+    date:    "Apr 2025",
     tag:     "Information Geometry",
     excerpt: "A statistical model is more than just a family of distributions — it carries a natural Riemannian geometry. We explore how the Fisher information matrix endows the space of probability distributions with curvature, and what this means for statistical inference.",
   },

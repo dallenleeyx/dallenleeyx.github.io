@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  
+  <defs>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="currentColor" stop-opacity="1"></stop>
+      <stop offset="50%" stop-color="currentColor" stop-opacity="0.55"></stop>
+      <stop offset="100%" stop-color="currentColor" stop-opacity="1"></stop>
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="none" stroke="url(#ring)" stroke-width="2"></circle>
+  <circle cx="40" cy="40" r="34" fill="currentColor" fill-opacity="0.06"></circle>
+  <text x="40" y="49" text-anchor="middle" font-family="DM Mono, monospace" font-size="22" font-weight="500" fill="currentColor">DL</text>
+</svg>
