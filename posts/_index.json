@@ -1,12 +1,20 @@
 {
   "posts": [
     {
-  "slug": "riemann-geometry",
-  "title": "Riemann Geometry",
-  "date": "May 2026",
-  "tag": "Differential Geometry",
-  "excerpt": "This is meant to be a ....",
-  "file": "riemann-geometry.md"
+      "slug": "fisher-rao-metric",
+      "title": "The Fisher–Rao Metric: When Probability Spaces Become Curved",
+      "date": "Apr 2025",
+      "tag": "Information Geometry",
+      "excerpt": "A statistical model is more than just a family of distributions — it carries a natural Riemannian geometry. We explore how the Fisher information matrix endows the space of probability distributions with curvature.",
+      "file": "fisher-rao-metric.md"
+    },
+    {
+      "slug": "gaussian-curvature-intuition",
+      "title": "Gaussian Curvature, the Hard Way",
+      "date": "Mar 2025",
+      "tag": "Differential Geometry",
+      "excerpt": "Why $K = \\det(II) / \\det(I)$ is the *only* sensible definition of curvature for a surface — a short tour through Gauss's Theorema Egregium.",
+      "file": "gaussian-curvature-intuition.md"
     }
   ]
 }

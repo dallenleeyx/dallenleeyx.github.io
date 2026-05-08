@@ -112,7 +112,7 @@ function BlogComposer({ onClose, onSave, draft, setDraft }) {
       </div>
       <div className="composer-foot">
         <div className="composer-hint">
-          <code>$...$</code> · <code>$$...$$</code> · <code>**bold**</code> · <code>## heading</code>  ·  saves as <code>posts/{slugify(draft.title)||'your-post'}.md</code>
+          <code>$...$</code> · <code>$$...$$</code> · <code>**bold**</code> · <code>## heading</code>  ·  drop into <code>posts/{slugify(draft.title)||'your-post'}.md</code>
         </div>
         <div className="composer-actions">
           <button className="btn btn-outline" onClick={onClose}>Cancel</button>
@@ -195,15 +195,20 @@ function Composer({ open, mode, onClose, onSubmit, initial }) {
     if (mode === 'blog') {
       const slug = slugify(d.title);
       const file = slug + '.md';
-      const indexEntry = {
-        slug,
-        title: d.title.trim(),
-        date: (d.date||'').trim() || nowDate(),
-        tag: (d.tag||'').trim() || 'Notes',
-        excerpt: (d.excerpt||'').trim() || (d.body||'').slice(0, 160).replace(/\n/g,' '),
-        file,
-      };
-      // Download two files: the .md body and a JSON snippet for posts/_index.json
+      const date = (d.date||'').trim() || nowDate();
+      const tag = (d.tag||'').trim() || 'Notes';
+      const excerpt = (d.excerpt||'').trim() || (d.body||'').slice(0, 160).replace(/\n/g,' ');
+      // Bake front-matter into the .md so the site auto-discovers it from posts/
+      // No _index.json edit needed.
+      const escapeFM = (s) => String(s).replace(/\n/g,' ').trim();
+      const frontMatter =
+        '---\n' +
+        'title: ' + escapeFM(d.title.trim()) + '\n' +
+        'date: ' + escapeFM(date) + '\n' +
+        'tag: ' + escapeFM(tag) + '\n' +
+        'excerpt: ' + escapeFM(excerpt) + '\n' +
+        '---\n\n';
+      const fileContents = frontMatter + (d.body || '');
       const dl = (name, contents, type) => {
         const blob = new Blob([contents], { type });
         const url = URL.createObjectURL(blob);
@@ -212,12 +217,8 @@ function Composer({ open, mode, onClose, onSubmit, initial }) {
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
       };
-      dl(file, d.body || '', 'text/markdown');
-      // Slight delay so browsers don't merge the two downloads.
-      setTimeout(() => {
-        dl('_index-snippet.json', JSON.stringify(indexEntry, null, 2) + '\n', 'application/json');
-      }, 400);
-      onSubmit && onSubmit(indexEntry);
+      dl(file, fileContents, 'text/markdown');
+      onSubmit && onSubmit({ slug, title: d.title.trim(), date, tag, excerpt, file });
     } else {
       const project = {
         id: 'p-' + Date.now().toString(36),

@@ -63,7 +63,9 @@ function App() {
     setPostLoading(true);
     setPostBody('');
     window.loadPostBody(openPost.file || (openPost.slug + '.md')).then(text => {
-      setPostBody(text);
+      // Strip YAML front-matter before rendering so it doesn't show up as text.
+      const { body } = window.parseFrontMatter(text);
+      setPostBody(body);
       setPostLoading(false);
     });
   }, [openSlug]);
