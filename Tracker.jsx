@@ -22,7 +22,6 @@ function MathTex({ children }) {
 
 // ── markdown + KaTeX renderer for chapter notes ──
 const BLOCK_LABELS = { definition: 'Definition', lemma: 'Lemma', theorem: 'Theorem', proposition: 'Proposition', corollary: 'Corollary', example: 'Example', remark: 'Remark', proof: 'Proof' };
-const BLOCK_TYPES = Object.keys(BLOCK_LABELS).map(cmd => ({ cmd, label: BLOCK_LABELS[cmd] }));
 
 function katexHtml(src, displayMode) {
   if (!window.katex) return null;
@@ -57,95 +56,231 @@ function renderInline(text, keyPrefix) {
   });
 }
 
-function renderBlocks(text) {
-  const lines = String(text || '').split('\n');
-  const out = [];
-  let para = [], list = [], quote = [];
-  const flushPara = () => { if (para.length) { out.push(<p key={'p' + out.length} className="tk-note-p">{renderInline(para.join(' '), 'p' + out.length)}</p>); para = []; } };
-  const flushList = () => { if (list.length) { out.push(<ul key={'ul' + out.length} className="tk-note-ul">{list.map((it, li) => <li key={li}>{renderInline(it, 'li' + out.length + '-' + li)}</li>)}</ul>); list = []; } };
-  const flushQuote = () => { if (quote.length) { out.push(<blockquote key={'bq' + out.length} className="tk-note-bq">{renderInline(quote.join(' '), 'bq' + out.length)}</blockquote>); quote = []; } };
-  const flushAll = () => { flushPara(); flushList(); flushQuote(); };
+// ── chapter notes: one flat list of typed blocks per chapter (Notion-ish) ──
+const ADMONITION_TYPES = new Set(Object.keys(BLOCK_LABELS));
+const SLASH_TYPES = [
+  { cmd: 'h1', type: 'h1', label: 'Heading 1' },
+  { cmd: 'h2', type: 'h2', label: 'Heading 2' },
+  { cmd: 'h3', type: 'h3', label: 'Heading 3' },
+  { cmd: 'bullet', type: 'ul', label: 'Bullet' },
+  { cmd: 'quote', type: 'quote', label: 'Quote' },
+  { cmd: 'definition', type: 'definition', label: 'Definition' },
+  { cmd: 'lemma', type: 'lemma', label: 'Lemma' },
+  { cmd: 'theorem', type: 'theorem', label: 'Theorem' },
+  { cmd: 'proposition', type: 'proposition', label: 'Proposition' },
+  { cmd: 'corollary', type: 'corollary', label: 'Corollary' },
+  { cmd: 'example', type: 'example', label: 'Example' },
+  { cmd: 'remark', type: 'remark', label: 'Remark' },
+  { cmd: 'proof', type: 'proof', label: 'Proof' },
+];
 
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function newBlock(type) { return { id: 'b' + newId(), type: type || 'p', name: '', text: '' }; }
+
+// best-effort one-time migration from the old raw-markdown chapter body
+function parseBodyToBlocks(body) {
+  const lines = String(body || '').split('\n');
+  const blocks = [];
+  let para = [];
+  const flush = () => { if (para.length) { blocks.push({ id: 'b' + newId(), type: 'p', name: '', text: para.join(' ') }); para = []; } };
   let i = 0;
   while (i < lines.length) {
     const trimmed = lines[i].trim();
-
-    const blockMatch = trimmed.match(/^:::(\w+)\s*(.*)$/);
-    if (blockMatch) {
-      flushAll();
-      const type = blockMatch[1].toLowerCase();
-      const name = blockMatch[2].trim();
+    const bm = trimmed.match(/^:::(\w+)\s*(.*)$/);
+    if (bm) {
+      flush();
+      const type = bm[1].toLowerCase();
+      const name = bm[2].trim();
       const bodyLines = [];
       i++;
       while (i < lines.length && lines[i].trim() !== ':::') { bodyLines.push(lines[i]); i++; }
       i++;
-      const label = BLOCK_LABELS[type] || type;
-      out.push(
-        <div key={'blk' + out.length} className={`tk-note-block tk-note-block-${type}`}>
-          <div className="tk-note-block-head">
-            <span className="tk-type">{label}</span>
-            {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
-          </div>
-          <div className="tk-note-block-body">{renderBlocks(bodyLines.join('\n'))}</div>
-        </div>
-      );
+      blocks.push({ id: 'b' + newId(), type: ADMONITION_TYPES.has(type) ? type : 'p', name, text: bodyLines.join(' ').trim() });
       continue;
     }
-
-    if (trimmed.startsWith('$$') && trimmed.endsWith('$$') && trimmed.length > 3) {
-      flushAll();
-      const html = katexHtml(trimmed.slice(2, -2), true);
-      out.push(html
-        ? <div key={'dm' + out.length} className="tk-note-display-math" dangerouslySetInnerHTML={{ __html: html }} />
-        : <p key={'dm' + out.length} className="tk-note-p">{trimmed}</p>);
-      i++;
-      continue;
-    }
-
-    const headMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
-    if (headMatch) {
-      flushAll();
-      const level = headMatch[1].length;
-      const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
-      out.push(React.createElement(Tag, { key: 'h' + out.length, className: `tk-note-h${level}` }, renderInline(headMatch[2], 'h' + out.length)));
-      i++;
-      continue;
-    }
-
-    if (/^[-*]\s+/.test(trimmed)) {
-      flushPara(); flushQuote();
-      list.push(trimmed.replace(/^[-*]\s+/, ''));
-      i++;
-      continue;
-    }
-
-    if (trimmed.startsWith('> ')) {
-      flushPara(); flushList();
-      quote.push(trimmed.slice(2));
-      i++;
-      continue;
-    }
-
-    if (trimmed === '') { flushAll(); i++; continue; }
-
-    flushList(); flushQuote();
+    const hm = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    if (hm) { flush(); blocks.push({ id: 'b' + newId(), type: 'h' + hm[1].length, name: '', text: hm[2] }); i++; continue; }
+    if (/^[-*]\s+/.test(trimmed)) { flush(); blocks.push({ id: 'b' + newId(), type: 'ul', name: '', text: trimmed.replace(/^[-*]\s+/, '') }); i++; continue; }
+    if (trimmed.startsWith('> ')) { flush(); blocks.push({ id: 'b' + newId(), type: 'quote', name: '', text: trimmed.slice(2) }); i++; continue; }
+    if (trimmed === '') { flush(); i++; continue; }
     para.push(trimmed);
     i++;
   }
-  flushAll();
-  return out;
+  flush();
+  return blocks;
 }
 
-function blockTemplate(cmd) {
-  const hasName = cmd !== 'proof';
-  const prefix = `:::${cmd}` + (hasName ? ' ' : '');
-  const namePlaceholder = hasName ? 'Name' : '';
-  const bodyPlaceholder = cmd === 'proof' ? 'Proof.' : 'Statement.';
-  const line1 = prefix + namePlaceholder;
-  const text = `${line1}\n${bodyPlaceholder}\n:::\n`;
-  const selStart = hasName ? prefix.length : line1.length + 1;
-  const selEnd = hasName ? prefix.length + namePlaceholder.length : line1.length + 1 + bodyPlaceholder.length;
-  return { text, selStart, selEnd };
+function normalizeCourses(list) {
+  return (list || []).map(c => ({
+    ...c,
+    chapters: (c.chapters || []).map(ch => ch.blocks ? ch : { id: ch.id, title: ch.title, blocks: parseBodyToBlocks(ch.body) }),
+  }));
+}
+
+function renderBlockView(block) {
+  if (ADMONITION_TYPES.has(block.type)) {
+    const label = BLOCK_LABELS[block.type] || block.type;
+    return (
+      <div className="tk-note-block">
+        <div className="tk-note-block-head">
+          <span className="tk-type">{label}</span>
+          {block.name && <span className="tk-note-block-name">{renderInline(block.name, block.id + '-n')}</span>}
+        </div>
+        <div className="tk-note-block-body">
+          {block.text ? <p className="tk-note-p">{renderInline(block.text, block.id + '-b')}</p> : <span className="tk-note-empty">Empty</span>}
+        </div>
+      </div>
+    );
+  }
+  if (block.type === 'h1' || block.type === 'h2' || block.type === 'h3') {
+    const Tag = block.type === 'h1' ? 'h3' : block.type === 'h2' ? 'h4' : 'h5';
+    return React.createElement(Tag, { className: `tk-note-${block.type}` }, block.text ? renderInline(block.text, block.id) : <span className="tk-note-empty">Heading</span>);
+  }
+  if (block.type === 'ul') {
+    return <div className="tk-note-ul-row"><span className="bullet">•</span><span>{block.text ? renderInline(block.text, block.id) : <span className="tk-note-empty">List item</span>}</span></div>;
+  }
+  if (block.type === 'quote') {
+    return <blockquote className="tk-note-bq">{block.text ? renderInline(block.text, block.id) : <span className="tk-note-empty">Quote</span>}</blockquote>;
+  }
+  return <p className="tk-note-p">{block.text ? renderInline(block.text, block.id) : <span className="tk-note-empty">Type something, or "/" for a block type…</span>}</p>;
+}
+
+function ChapterEditor({ course, chapter, onClose, onDeleteChapter, addBlock, updateBlock, removeBlock }) {
+  const [editingId, setEditingId] = useState(null);
+  const [slash, setSlash] = useState(null); // { blockId, query }
+  const editRef = useRef(null);
+  const nameRef = useRef(null);
+  const blocks = chapter.blocks || [];
+  const editingBlock = blocks.find(b => b.id === editingId) || null;
+  const editingIsAdmon = editingBlock ? ADMONITION_TYPES.has(editingBlock.type) : false;
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape' && !editingId) onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, editingId]);
+
+  useEffect(() => {
+    if (!editingId) return;
+    if (editingIsAdmon && nameRef.current) {
+      nameRef.current.focus();
+    } else if (!editingIsAdmon && editRef.current) {
+      editRef.current.focus();
+      const L = editRef.current.value.length;
+      editRef.current.setSelectionRange(L, L);
+    }
+  }, [editingId, editingIsAdmon]);
+
+  useEffect(() => {
+    const last = blocks[blocks.length - 1];
+    if (last && !last.text && !last.name) setEditingId(last.id);
+    // run once when this chapter opens (component remounts per chapter via key)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const focusBlock = (id) => { setSlash(null); setEditingId(id); };
+
+  const commitAndAdvance = (block) => {
+    const id = addBlock(block.id, newBlock('p'));
+    focusBlock(id);
+  };
+
+  const handleBackspaceEmpty = (block) => {
+    const idx = blocks.findIndex(b => b.id === block.id);
+    if (blocks.length <= 1) return;
+    removeBlock(block.id);
+    if (idx > 0) focusBlock(blocks[idx - 1].id);
+  };
+
+  const handleTextChange = (block, val) => {
+    if (block.type === 'p') {
+      const h = val.match(/^(#{1,3}) (.*)$/);
+      if (h) { updateBlock(block.id, { type: 'h' + h[1].length, text: h[2] }); setSlash(null); return; }
+      if (/^[-*] /.test(val)) { updateBlock(block.id, { type: 'ul', text: val.slice(2) }); setSlash(null); return; }
+      if (/^>\s/.test(val)) { updateBlock(block.id, { type: 'quote', text: val.replace(/^>\s/, '') }); setSlash(null); return; }
+      const sm = val.match(/^\/(\w*)$/);
+      if (sm) { setSlash({ blockId: block.id, query: sm[1] }); updateBlock(block.id, { text: val }); return; }
+    }
+    setSlash(null);
+    updateBlock(block.id, { text: val });
+  };
+
+  const pickSlash = (block, entry) => {
+    updateBlock(block.id, { type: entry.type, text: '', name: '' });
+    setSlash(null);
+  };
+
+  return (
+    <div className="tk-editor-overlay">
+      <div className="tk-editor-topbar">
+        <button className="tk-mono-btn" onClick={onClose}>← Back</button>
+        <div className="tk-editor-course">{course.glyph} · {course.name}</div>
+        <button className="tk-x-btn" title="delete chapter" onClick={() => { onDeleteChapter(); onClose(); }}>×</button>
+      </div>
+      <div className="tk-editor-body" onClick={() => setEditingId(null)}>
+        <h2 className="tk-editor-title">{chapter.title}</h2>
+        <div className="tk-editor-blocks">
+          {blocks.map(block => {
+            const isEditing = editingId === block.id;
+            const isAdmon = ADMONITION_TYPES.has(block.type);
+            const activeSlash = slash && slash.blockId === block.id ? slash : null;
+            const matches = activeSlash ? SLASH_TYPES.filter(t => t.cmd.startsWith(activeSlash.query.toLowerCase())) : [];
+            return (
+              <div key={block.id} className={`tk-block${isEditing ? ' editing' : ''}`}
+                onClick={e => { e.stopPropagation(); if (!isEditing) focusBlock(block.id); }}>
+                {isEditing ? (
+                  isAdmon ? (
+                    <div className="tk-block-admon-edit">
+                      <div className="tk-block-admon-label">{BLOCK_LABELS[block.type]}</div>
+                      <input ref={nameRef} className="tk-block-name-input" placeholder="Name…" value={block.name}
+                        onChange={e => updateBlock(block.id, { name: e.target.value })}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); editRef.current && editRef.current.focus(); } else if (e.key === 'Escape') setEditingId(null); }} />
+                      <textarea ref={editRef} className="tk-block-text-input" placeholder="Statement…" value={block.text}
+                        onChange={e => updateBlock(block.id, { text: e.target.value })}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') setEditingId(null);
+                          else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitAndAdvance(block); }
+                          else if (e.key === 'Backspace' && !block.text && !block.name) { e.preventDefault(); handleBackspaceEmpty(block); }
+                        }} />
+                    </div>
+                  ) : (
+                    <div className={`tk-block-row${block.type === 'ul' ? ' ul' : ''}${block.type === 'quote' ? ' quote' : ''}`}>
+                      {block.type === 'ul' && <span className="bullet">•</span>}
+                      <textarea ref={editRef} className={`tk-block-text-input ${block.type}`} placeholder='Type, or "/" for a block type…' value={block.text}
+                        onChange={e => handleTextChange(block, e.target.value)}
+                        onKeyDown={e => {
+                          if (activeSlash) {
+                            if (e.key === 'Escape') { setSlash(null); return; }
+                            if (e.key === 'Enter' || e.key === 'Tab') {
+                              if (matches.length) { e.preventDefault(); pickSlash(block, matches[0]); return; }
+                            }
+                          }
+                          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitAndAdvance(block); }
+                          else if (e.key === 'Escape') { setEditingId(null); setSlash(null); }
+                          else if (e.key === 'Backspace' && !block.text) { e.preventDefault(); handleBackspaceEmpty(block); }
+                        }} />
+                    </div>
+                  )
+                ) : renderBlockView(block)}
+                {activeSlash && (
+                  <div className="tk-slash-menu">
+                    {matches.length ? matches.map(t => (
+                      <button key={t.cmd} className="tk-slash-item" onMouseDown={e => e.preventDefault()} onClick={() => pickSlash(block, t)}>
+                        /{t.cmd} <span>{t.label}</span>
+                      </button>
+                    )) : <div className="tk-slash-empty">no match</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <button className="tk-block-add" onClick={e => { e.stopPropagation(); const id = addBlock(blocks.length ? blocks[blocks.length - 1].id : null, newBlock('p')); focusBlock(id); }}>
+            + Click to keep writing…
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function daysInfo(due, status) {
@@ -388,9 +523,9 @@ function App() {
   const [courses, setCourses] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (saved) return saved;
+      if (saved) return normalizeCourses(saved);
     } catch (e) {}
-    return window.TRACKER_SEED;
+    return normalizeCourses(window.TRACKER_SEED);
   });
   const [view, setView] = useState('dashboard');
   const [calCursor, setCalCursor] = useState({ y: new Date().getFullYear(), m: new Date().getMonth() });
@@ -399,9 +534,7 @@ function App() {
   const [flashScope, setFlashScope] = useState(undefined); // undefined = closed, null = all courses
   const [drafts, setDrafts] = useState({});
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
-  const [activeChapter, setActiveChapter] = useState({});
-  const [slash, setSlash] = useState(null);
-  const chapterTaRef = useRef(null);
+  const [openChapter, setOpenChapter] = useState(null); // { courseId, chapterId } | null
 
   useEffect(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(courses)); } catch (e) {} }, [courses]);
   useEffect(() => {
@@ -431,9 +564,9 @@ function App() {
   };
 
   const addChapter = (cid, title) => {
-    const id = 'ch' + Date.now();
-    mutate(cid, c => ({ ...c, chapters: [...(c.chapters || []), { id, title, body: '' }] }));
-    setActiveChapter(a => ({ ...a, [cid]: id }));
+    const id = 'ch' + newId();
+    mutate(cid, c => ({ ...c, chapters: [...(c.chapters || []), { id, title, blocks: [newBlock('p')] }] }));
+    setOpenChapter({ courseId: cid, chapterId: id });
   };
   const submitAddChapter = (cid) => {
     const title = draft(cid + ':chapterTitle').trim();
@@ -443,51 +576,31 @@ function App() {
   };
   const removeChapter = (cid, id) => {
     mutate(cid, c => ({ ...c, chapters: (c.chapters || []).filter(ch => ch.id !== id) }));
-    setActiveChapter(a => { const n = { ...a }; if (n[cid] === id) delete n[cid]; return n; });
   };
-  const updateChapterBody = (cid, id, body) => {
-    mutate(cid, c => ({ ...c, chapters: (c.chapters || []).map(ch => ch.id === id ? { ...ch, body } : ch) }));
+  const addBlock = (cid, chid, afterId, block) => {
+    mutate(cid, c => ({
+      ...c,
+      chapters: (c.chapters || []).map(ch => {
+        if (ch.id !== chid) return ch;
+        const blocks = ch.blocks || [];
+        const idx = afterId ? blocks.findIndex(b => b.id === afterId) : blocks.length - 1;
+        const at = idx < 0 ? blocks.length : idx + 1;
+        return { ...ch, blocks: [...blocks.slice(0, at), block, ...blocks.slice(at)] };
+      }),
+    }));
+    return block.id;
   };
-  const handleChapterChange = (cid, chid, e) => {
-    const val = e.target.value;
-    const pos = e.target.selectionStart;
-    updateChapterBody(cid, chid, val);
-    const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
-    const line = val.slice(lineStart, pos);
-    const m = line.match(/^\/(\w*)$/);
-    if (m) setSlash({ courseId: cid, chapterId: chid, query: m[1], start: lineStart, end: pos });
-    else setSlash(null);
+  const updateBlock = (cid, chid, blockId, patch) => {
+    mutate(cid, c => ({
+      ...c,
+      chapters: (c.chapters || []).map(ch => ch.id !== chid ? ch : { ...ch, blocks: (ch.blocks || []).map(b => b.id === blockId ? { ...b, ...patch } : b) }),
+    }));
   };
-  const insertBlock = (cid, chid, cmd, replaceRange) => {
-    const ta = chapterTaRef.current;
-    const course = courses.find(c => c.id === cid);
-    const ch = ((course && course.chapters) || []).find(x => x.id === chid);
-    const value = ch ? ch.body : '';
-    const { text, selStart, selEnd } = blockTemplate(cmd);
-    const start = replaceRange ? replaceRange.start : (ta ? ta.selectionStart : value.length);
-    const end = replaceRange ? replaceRange.end : (ta ? ta.selectionEnd : value.length);
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    const pad = before.length && !before.endsWith('\n') ? '\n' : '';
-    updateChapterBody(cid, chid, before + pad + text + after);
-    const base = before.length + pad.length;
-    requestAnimationFrame(() => {
-      if (!ta) return;
-      ta.focus();
-      ta.setSelectionRange(base + selStart, base + selEnd);
-    });
-  };
-  const onChapterKeyDown = (e, cid, chid) => {
-    if (!slash || slash.courseId !== cid || slash.chapterId !== chid) return;
-    if (e.key === 'Escape') { setSlash(null); return; }
-    if (e.key === 'Enter' || e.key === 'Tab') {
-      const matches = BLOCK_TYPES.filter(b => b.cmd.startsWith(slash.query.toLowerCase()));
-      if (matches.length) {
-        e.preventDefault();
-        insertBlock(cid, chid, matches[0].cmd, slash);
-        setSlash(null);
-      }
-    }
+  const removeBlock = (cid, chid, blockId) => {
+    mutate(cid, c => ({
+      ...c,
+      chapters: (c.chapters || []).map(ch => ch.id !== chid ? ch : { ...ch, blocks: (ch.blocks || []).filter(b => b.id !== blockId) }),
+    }));
   };
 
   const current = courses.find(c => c.id === view);
@@ -623,65 +736,23 @@ function App() {
             </div>
 
             <div className="fade-up d2">
-              <SectionLabel sub="write in markdown + KaTeX, organised by chapter">Chapters</SectionLabel>
-              {(() => {
-                const chapters = current.chapters || [];
-                const activeId = activeChapter[current.id] || (chapters[0] && chapters[0].id);
-                const chapter = chapters.find(ch => ch.id === activeId) || null;
-                const activeSlash = slash && slash.courseId === current.id && chapter && slash.chapterId === chapter.id ? slash : null;
-                const slashMatches = activeSlash ? BLOCK_TYPES.filter(b => b.cmd.startsWith(activeSlash.query.toLowerCase())) : [];
-                return (
-                  <React.Fragment>
-                    <div className="tk-chapter-tabs">
-                      {chapters.map(ch => (
-                        <button key={ch.id} className={`tk-chapter-tab${ch.id === activeId ? ' active' : ''}`}
-                          onClick={() => setActiveChapter(a => ({ ...a, [current.id]: ch.id }))}>{ch.title}</button>
-                      ))}
-                    </div>
-                    <div className="tk-form-row">
-                      <input className="tk-input" placeholder="new chapter title…" value={draft(current.id + ':chapterTitle')}
-                        onChange={e => setDraft(current.id + ':chapterTitle', e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && submitAddChapter(current.id)} />
-                      <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => submitAddChapter(current.id)}>Add chapter</button>
-                    </div>
-                    {chapter ? (
-                      <div className="tk-chapter-editor">
-                        <div className="tk-chapter-toolbar">
-                          {BLOCK_TYPES.map(b => (
-                            <button key={b.cmd} className="tk-mono-btn" onClick={() => insertBlock(current.id, chapter.id, b.cmd)}>/{b.cmd}</button>
-                          ))}
-                          <button className="tk-x-btn" style={{ marginLeft: 'auto' }} title="delete chapter" onClick={() => removeChapter(current.id, chapter.id)}>×</button>
-                        </div>
-                        <div className="tk-chapter-panes">
-                          <div className="tk-chapter-pane-edit">
-                            <textarea
-                              ref={chapterTaRef}
-                              className="tk-textarea tk-chapter-textarea"
-                              placeholder="Write here. Type /definition, /lemma, /theorem… for a template."
-                              value={chapter.body}
-                              onChange={e => handleChapterChange(current.id, chapter.id, e)}
-                              onKeyDown={e => onChapterKeyDown(e, current.id, chapter.id)}
-                            />
-                            {activeSlash && (
-                              <div className="tk-slash-menu">
-                                {slashMatches.length ? slashMatches.map(b => (
-                                  <button key={b.cmd} className="tk-slash-item"
-                                    onClick={() => { insertBlock(current.id, chapter.id, b.cmd, activeSlash); setSlash(null); }}>
-                                    /{b.cmd} <span>{b.label}</span>
-                                  </button>
-                                )) : <div className="tk-slash-empty">no match</div>}
-                              </div>
-                            )}
-                          </div>
-                          <div className="tk-chapter-pane-preview">
-                            {chapter.body.trim() ? renderBlocks(chapter.body) : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
-                          </div>
-                        </div>
-                      </div>
-                    ) : <Empty icon="📓">No chapters yet. Add one above.</Empty>}
-                  </React.Fragment>
-                );
-              })()}
+              <SectionLabel sub="click a chapter to write in it — markdown + KaTeX, /definition for a template">Chapters</SectionLabel>
+              <div className="tk-chapter-list">
+                {(current.chapters || []).map(ch => (
+                  <div key={ch.id} className="tk-chapter-row" onClick={() => setOpenChapter({ courseId: current.id, chapterId: ch.id })}>
+                    <div className="tk-chapter-row-title">{ch.title}</div>
+                    <div className="tk-chapter-row-meta">{(ch.blocks || []).filter(b => b.text || b.name).length} block(s)</div>
+                    <button className="tk-x-btn" title="delete chapter" onClick={e => { e.stopPropagation(); removeChapter(current.id, ch.id); }}>×</button>
+                  </div>
+                ))}
+                {!(current.chapters || []).length && <Empty icon="📓">No chapters yet. Add one below.</Empty>}
+              </div>
+              <div className="tk-form-row">
+                <input className="tk-input" placeholder="new chapter title…" value={draft(current.id + ':chapterTitle')}
+                  onChange={e => setDraft(current.id + ':chapterTitle', e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && submitAddChapter(current.id)} />
+                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => submitAddChapter(current.id)}>Add chapter</button>
+              </div>
             </div>
 
             <div className="fade-up d3">
@@ -760,6 +831,23 @@ function App() {
 
       {quizScope !== undefined && <Quiz courses={courses} scope={quizScope} onClose={() => setQuizScope(undefined)} />}
       {flashScope !== undefined && <Flashcards courses={courses} scope={flashScope} onClose={() => setFlashScope(undefined)} />}
+      {openChapter && (() => {
+        const oc = courses.find(c => c.id === openChapter.courseId);
+        const ch = oc && (oc.chapters || []).find(x => x.id === openChapter.chapterId);
+        if (!oc || !ch) return null;
+        return (
+          <ChapterEditor
+            key={ch.id}
+            course={oc}
+            chapter={ch}
+            onClose={() => setOpenChapter(null)}
+            onDeleteChapter={() => removeChapter(oc.id, ch.id)}
+            addBlock={(afterId, block) => addBlock(oc.id, ch.id, afterId, block)}
+            updateBlock={(blockId, patch) => updateBlock(oc.id, ch.id, blockId, patch)}
+            removeBlock={(blockId) => removeBlock(oc.id, ch.id, blockId)}
+          />
+        );
+      })()}
     </div>
   );
 }
