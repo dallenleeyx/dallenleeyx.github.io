@@ -1,0 +1,1091 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 25 Jul 2026 14:00:00 +0800
+Subject: [PATCH] The Proof Lab: school tracking & revision site
+
+Self-contained site: index.html (tracker homepage), tracker.css,
+tracker-data.js (seed content), Tracker.jsx (app), plus the
+colors_and_type.css tokens and MathParticles.jsx background it needs.
+Assignments queue with due-date countdowns, revision canon with
+reveal-proof, problem arena, margin notes, sidebar calendar, quiz
+mode. KaTeX for math; live edits persist in localStorage.
+
+---
+ index.html           | 21 +
+ tracker.css          | 184 +
+ tracker-data.js      | 56 +
+ Tracker.jsx          | 424 +
+ colors_and_type.css  | 310 +
+ MathParticles.jsx    | 43 +
+ 6 files changed, 1038 insertions(+)
+
+diff --git a/index.html b/index.html
+new file mode 100644
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,21 @@
++<!DOCTYPE html>
++<html lang="en" data-theme="dark">
++<head>
++  <meta charset="UTF-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++  <title>The Proof Lab | Dallen Lee</title>
++  <link rel="stylesheet" href="colors_and_type.css" />
++  <link rel="stylesheet" href="tracker.css" />
++  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous" />
++  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
++  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
++  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
++  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
++</head>
++<body data-screen-label="tracker">
++  <div id="root"></div>
++  <script type="text/babel" src="MathParticles.jsx"></script>
++  <script type="text/babel" src="tracker-data.js"></script>
++  <script type="text/babel" src="Tracker.jsx"></script>
++</body>
++</html>
+diff --git a/tracker.css b/tracker.css
+new file mode 100644
+--- /dev/null
++++ b/tracker.css
+@@ -0,0 +1,184 @@
++/* tracker.css — The Proof Lab. Extends colors_and_type.css tokens. */
++*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
++html{scroll-behavior:smooth;}
++body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);font-size:16px;line-height:var(--lh-relaxed);min-height:100vh;overflow-x:hidden;}
++::selection{background:var(--fg-1);color:var(--bg);}
++::-webkit-scrollbar{width:10px;}
++::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px;}
++::-webkit-scrollbar-track{background:transparent;}
++.katex{font-size:1.02em;}
++#particles{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;}
++@keyframes spinRing{to{transform:rotate(360deg);}}
++@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
++@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
++.fade-up{animation:fadeUp .5s ease both;}
++.d1{animation-delay:.06s;}.d2{animation-delay:.12s;}.d3{animation-delay:.18s;}.d4{animation-delay:.24s;}
++
++.math-deco{font-family:var(--font-mono);font-size:.68rem;color:var(--border);position:fixed;bottom:2rem;left:.8rem;writing-mode:vertical-rl;letter-spacing:.12em;user-select:none;pointer-events:none;z-index:0;}
++
++/* Layout */
++.tk-app{display:flex;min-height:100vh;position:relative;}
++.tk-main{margin-left:var(--sidebar-w);flex:1;padding:3.2rem 4rem 6rem;max-width:960px;position:relative;z-index:1;}
++
++/* Sidebar */
++.tk-sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;padding:2.2rem 1.6rem 1.6rem;overflow-y:auto;z-index:100;}
++.tk-brand{display:flex;align-items:center;gap:.85rem;margin-bottom:1.4rem;}
++.tk-avatar{width:52px;height:52px;position:relative;flex-shrink:0;}
++.tk-avatar-glyph{position:absolute;inset:4px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:1rem;color:var(--accent);z-index:1;}
++.tk-avatar-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;background:conic-gradient(from 0deg,var(--accent),var(--accent-2),var(--accent-3),var(--accent)) border-box;-webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spinRing 6s linear infinite;}
++.tk-brand-name{font-size:1.02rem;font-weight:800;line-height:1.15;letter-spacing:-.01em;color:var(--fg-1);}
++.tk-brand-sub{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);margin-top:.2rem;letter-spacing:.05em;}
++.tk-nav{list-style:none;margin:0 0 .4rem;}
++.tk-nav li{margin-bottom:2px;}
++.tk-nav a{display:flex;align-items:center;gap:.55rem;padding:.42rem .65rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);}
++.tk-nav a:hover{color:var(--fg-1);background:var(--surface-2);}
++.tk-nav a.active{color:var(--accent);background:var(--surface-2);}
++.tk-nav .dot{width:5px;height:5px;border-radius:50%;background:var(--border);flex-shrink:0;transition:all var(--transition-fast);}
++.tk-nav a.active .dot{background:var(--accent);transform:scale(1.5);}
++.tk-nav .count{margin-left:auto;font-family:var(--font-mono);font-size:.58rem;font-weight:400;color:var(--border);letter-spacing:0;}
++.tk-nav a.active .count{color:var(--accent-2);}
++.tk-sidebar-foot{font-family:var(--font-mono);font-size:.58rem;color:var(--fg-muted);letter-spacing:.03em;margin-top:auto;padding-top:1.2rem;line-height:1.7;}
++
++/* Calendar */
++.tk-cal{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border);}
++.tk-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;}
++.tk-cal-label{font-family:var(--font-mono);font-size:.66rem;font-weight:500;color:var(--accent-2);letter-spacing:.08em;}
++.tk-cal-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:20px;height:20px;border-radius:6px;cursor:pointer;font-size:11px;line-height:1;padding:0;transition:all var(--transition-fast);}
++.tk-cal-btn:hover{border-color:var(--accent);color:var(--accent);}
++.tk-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
++.tk-cal-dow{text-align:center;font-family:var(--font-mono);font-size:.52rem;color:var(--fg-muted);}
++.tk-cal-cell{height:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:6px;font-family:var(--font-mono);font-size:.58rem;color:var(--fg-2);user-select:none;cursor:pointer;border:1px solid transparent;transition:all var(--transition-fast);}
++.tk-cal-cell:hover{background:var(--surface-2);}
++.tk-cal-cell.out{color:var(--border);cursor:default;}
++.tk-cal-cell.out:hover{background:transparent;}
++.tk-cal-cell.today{background:var(--accent);color:var(--bg);}
++.tk-cal-cell.selected{background:var(--surface-2);border-color:var(--fg-muted);}
++.tk-cal-cell .due-dot{width:3px;height:3px;border-radius:50%;background:var(--accent);display:block;}
++.tk-cal-cell.today .due-dot{background:var(--bg);}
++.tk-cal-detail{margin-top:.7rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .7rem;animation:fadeIn .25s ease both;}
++.tk-cal-detail-date{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);margin-bottom:.35rem;}
++.tk-cal-detail-row{display:flex;align-items:baseline;gap:.45rem;margin-bottom:.25rem;}
++.tk-cal-detail-row .glyph{font-family:var(--font-mono);font-size:.6rem;color:var(--accent-2);flex-shrink:0;}
++.tk-cal-detail-row .title{font-size:.68rem;color:var(--fg-2);line-height:1.4;}
++.tk-cal-detail-empty{font-size:.66rem;color:var(--fg-muted);}
++
++/* Headers, sections */
++.tk-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;}
++.tk-hero h1{font-size:2.3rem;font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:.4rem;}
++.tk-hero h1 em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--glow-strong);}
++.tk-hero-meta{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-muted);}
++.tk-section-label{font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.4rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;}
++.tk-section-label .sub{font-family:var(--font-mono);font-size:.62rem;font-weight:400;color:var(--fg-muted);letter-spacing:.03em;text-transform:none;}
++.tk-course-head{display:flex;align-items:baseline;gap:.85rem;margin-bottom:.4rem;}
++.tk-course-glyph{font-family:var(--font-mono);font-size:1.5rem;color:var(--accent);}
++.tk-course-name{font-size:1.9rem;font-weight:800;letter-spacing:-.025em;}
++
++/* Buttons */
++.tk-btn{font-family:var(--font-sans);font-weight:800;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.3rem;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s ease;border:none;}
++.tk-btn-primary{background:var(--accent);color:var(--bg);}
++.tk-btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px var(--glow-strong);}
++.tk-btn-outline{background:transparent;color:var(--fg-1);border:1px solid var(--border);}
++.tk-btn-outline:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 24px var(--glow);}
++.tk-btn-sm{padding:.55rem 1.15rem;font-size:.7rem;}
++.tk-mono-btn{background:transparent;border:1px solid var(--border);color:var(--accent-2);font-family:var(--font-mono);font-size:.66rem;padding:.32rem .75rem;border-radius:6px;cursor:pointer;transition:all var(--transition-fast);}
++.tk-mono-btn:hover{border-color:var(--accent);color:var(--accent);}
++.tk-x-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;transition:all var(--transition-fast);}
++.tk-x-btn:hover{border-color:var(--accent);color:var(--accent);}
++
++/* Stats */
++.tk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:2.2rem 0 3.2rem;}
++.tk-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;transition:all var(--transition);}
++.tk-stat:hover{border-color:var(--accent-2);transform:translateY(-2px);box-shadow:0 6px 28px var(--glow);}
++.tk-stat-num{font-family:var(--font-mono);font-size:1.9rem;font-weight:500;color:var(--accent);line-height:1;}
++.tk-stat-num span{font-size:1rem;color:var(--fg-muted);}
++.tk-stat-cap{font-size:.66rem;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.45rem;}
++
++/* Timeline queue */
++.tk-timeline{position:relative;padding-left:44px;margin-bottom:1.1rem;}
++.tk-timeline::before{content:'';position:absolute;left:10px;top:10px;bottom:20px;width:1px;background:linear-gradient(to bottom,var(--border),transparent);}
++.tk-tl-item{position:relative;margin-bottom:.85rem;}
++.tk-tl-item::before{content:'';position:absolute;left:-38px;top:1.1rem;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--fg-muted);background:var(--bg);z-index:1;transition:all .2s;}
++.tk-tl-item:hover::before{transform:scale(1.4);border-color:var(--fg-1);background:var(--fg-1);}
++.tk-row-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;transition:all var(--transition);}
++.tk-row-card:hover{border-color:var(--accent-2);transform:translateY(-2px);box-shadow:0 6px 28px var(--glow);}
++.tk-row-title{font-size:.88rem;font-weight:700;color:var(--fg-1);transition:all var(--transition);}
++.tk-row-title.done{text-decoration:line-through;color:var(--fg-muted);}
++.tk-row-meta{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);margin-top:.25rem;}
++.tk-row-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
++
++/* Pills */
++.tk-pill{font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.06em;padding:.28rem .65rem;border-radius:var(--radius-pill);cursor:pointer;transition:all var(--transition-fast);background:transparent;}
++.tk-pill.todo{border:1px dashed var(--fg-muted);color:var(--fg-muted);}
++.tk-pill.doing{border:1px solid var(--accent-2);color:var(--accent-2);background:var(--glow);}
++.tk-pill.done{border:1px solid var(--accent);color:var(--bg);background:var(--accent);}
++.tk-days{font-family:var(--font-mono);font-size:.6rem;padding:.24rem .55rem;border-radius:var(--radius-pill);white-space:nowrap;border:1px solid var(--border);color:var(--fg-muted);}
++.tk-days.soon{border-color:var(--fg-muted);color:var(--accent-2);}
++.tk-days.today{border-color:var(--accent-3);color:var(--accent-3);background:var(--glow);}
++.tk-days.overdue{border-color:var(--fg-1);color:var(--fg-1);background:var(--glow-strong);}
++
++/* Forms */
++.tk-form-row{display:flex;gap:.6rem;margin-bottom:3.2rem;}
++.tk-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .8rem;font-family:var(--font-sans);font-size:.82rem;color:var(--fg-1);outline:none;transition:all .2s ease;}
++.tk-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
++.tk-input-date{flex:0 0 155px;font-family:var(--font-mono);font-size:.72rem;color-scheme:dark;}
++[data-theme="light"] .tk-input-date{color-scheme:light;}
++.tk-textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.75rem .9rem;font-family:var(--font-mono);font-size:.78rem;line-height:1.6;color:var(--fg-1);outline:none;resize:vertical;min-height:72px;transition:all .2s ease;}
++.tk-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
++.tk-select{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .6rem;font-family:var(--font-mono);font-size:.72rem;color:var(--fg-1);outline:none;}
++
++/* Canon / arena cards */
++.tk-card{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;transition:all var(--transition);}
++.tk-card:hover{border-color:var(--accent-2);border-left-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 28px var(--glow);}
++.tk-card-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem;flex-wrap:wrap;}
++.tk-type{font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .58rem;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--surface-2);color:var(--accent-2);}
++.tk-card-name{font-size:.95rem;font-weight:700;color:var(--fg-1);}
++.tk-card-body{font-size:.88rem;color:var(--fg-2);line-height:1.7;}
++.tk-reveal{margin-top:.85rem;padding:.85rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);font-size:.85rem;color:var(--fg-2);line-height:1.7;animation:fadeIn .25s ease both;}
++.tk-stack{display:flex;flex-direction:column;gap:.7rem;margin-bottom:3.2rem;}
++
++/* Progress */
++.tk-progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
++.tk-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease;}
++
++/* Jump-in grid */
++.tk-jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;}
++.tk-jump{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.15rem 1.3rem;cursor:pointer;transition:all var(--transition);}
++.tk-jump:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px var(--glow);}
++.tk-jump-glyph{font-family:var(--font-mono);font-size:.95rem;color:var(--accent);margin-bottom:.4rem;}
++.tk-jump-name{font-size:.87rem;font-weight:700;color:var(--fg-1);}
++.tk-jump-meta{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);margin:.3rem 0 .75rem;}
++
++/* Notes */
++.tk-note{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.85rem 1.05rem;position:relative;transition:all var(--transition);}
++.tk-note:hover{border-color:var(--accent-2);}
++.tk-note-date{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);margin-bottom:.35rem;}
++.tk-note-text{font-size:.85rem;color:var(--fg-2);line-height:1.65;padding-right:1.6rem;}
++.tk-note .tk-x-btn{position:absolute;top:.7rem;right:.7rem;width:22px;height:22px;font-size:13px;}
++.tk-note-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem;}
++.tk-note-head .glyph{font-family:var(--font-mono);font-size:.68rem;color:var(--accent-2);}
++.tk-note-head .course{font-size:.64rem;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;}
++.tk-note-head .date{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);}
++.tk-note-actions{display:flex;justify-content:flex-end;margin:.7rem 0 1.4rem;}
++
++/* Empty states */
++.tk-empty{text-align:center;padding:2.5rem 2rem;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--fg-muted);}
++.tk-empty .icon{font-size:1.6rem;margin-bottom:.5rem;}
++.tk-empty .title{font-weight:700;color:var(--fg-2);}
++
++/* Quiz modal */
++.tk-quiz-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:300;animation:fadeIn .2s ease both;}
++.tk-quiz-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:301;pointer-events:none;}
++.tk-quiz{pointer-events:auto;width:min(640px,92vw);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
++.tk-quiz-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
++.tk-quiz-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
++.tk-quiz-course{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
++.tk-quiz-name{font-size:1.05rem;font-weight:700;color:var(--fg-1);}
++.tk-quiz-body{font-size:.9rem;color:var(--fg-2);line-height:1.75;min-height:3.2rem;}
++.tk-quiz-foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:.6rem;}
++
++@media (max-width: 900px){
++  .tk-sidebar{position:static;width:100%;min-width:0;border-right:none;border-bottom:1px solid var(--border);}
++  .tk-app{flex-direction:column;}
++  .tk-main{margin-left:0;padding:2rem 1.4rem 4rem;}
++  .tk-stats{grid-template-columns:1fr;}
++}
+diff --git a/tracker-data.js b/tracker-data.js
+new file mode 100644
+--- /dev/null
++++ b/tracker-data.js
+@@ -0,0 +1,56 @@
++// tracker-data.js — seed content for The Proof Lab. Edit freely; your live
++// edits are kept in localStorage, this file only seeds the first visit.
++window.TRACKER_SEED = [
++  {
++    id: 'algtop', name: 'Algebraic Topology', glyph: 'π₁', nickname: 'Alg Top',
++    assignments: [
++      { id: 'at1', title: 'Problem Set 3 — Van Kampen & pushouts', due: '2026-08-10', status: 'doing' },
++      { id: 'at2', title: 'Problem Set 4 — CW complexes', due: '2026-08-24', status: 'todo' },
++      { id: 'at3', title: 'Problem Set 2 — Homotopy lifting', due: '2026-07-28', status: 'done' },
++    ],
++    theorems: [
++      { id: 'att1', type: 'Theorem', name: "Van Kampen's Theorem", statement: 'If $X = U \\cup V$ with $U, V$ open and path-connected and $U \\cap V$ path-connected, then $\\pi_1(X) \\cong \\pi_1(U) *_{\\pi_1(U\\cap V)} \\pi_1(V)$.', proof: 'Build the pushout of groupoids induced by the cover, then pass to fundamental groups — the amalgam records loops that stay in $U$, stay in $V$, or cross through $U \\cap V$.', revealed: false },
++      { id: 'att2', type: 'Lemma', name: 'Fundamental group of the circle', statement: '$\\pi_1(S^1) \\cong \\mathbb{Z}$, generated by the loop winding once around.', proof: 'Use the covering $p: \\mathbb{R} \\to S^1$, $t \\mapsto e^{2\\pi i t}$; paths and homotopies lift uniquely, and the winding number gives the isomorphism.', revealed: false },
++      { id: 'att3', type: 'Definition', name: 'CW complex', statement: 'A space built inductively by attaching $n$-cells $D^n$ along maps $\\partial D^n \\to X^{(n-1)}$.', proof: 'Key idea: the cellular structure lets homology be computed from a chain complex on the free abelian groups generated by the cells.', revealed: false },
++    ],
++    problems: [
++      { id: 'atp1', title: 'Compute $\\pi_1$ of the figure-eight', problem: 'Show the wedge of two circles has fundamental group the free group $F_2$.', solution: 'Cover by two open sets, each deformation-retracting to one circle, overlapping in a contractible neighbourhood of the wedge point. Van Kampen gives $\\mathbb{Z} * \\mathbb{Z} = F_2$.', revealed: false },
++      { id: 'atp2', title: 'Non-orientable surface', problem: 'Compute $\\pi_1(\\mathbb{RP}^2)$.', solution: '$S^2 \\to \\mathbb{RP}^2$ is a degree-2 cover with deck group $\\mathbb{Z}/2$; since $S^2$ is simply connected, $\\pi_1(\\mathbb{RP}^2) \\cong \\mathbb{Z}/2$.', revealed: false },
++    ],
++    notes: [
++      { id: 'atn1', text: "Keep re-deriving van Kampen from the groupoid version until it's obvious why $U \\cap V$ needs to be connected — the group version hides it.", date: '2026-07-20' },
++    ],
++  },
++  {
++    id: 'meastheory', name: 'Measure Theory', glyph: '∫dμ', nickname: 'Measure',
++    assignments: [
++      { id: 'mt1', title: 'Problem Set 2 — Outer measures', due: '2026-08-05', status: 'todo' },
++      { id: 'mt2', title: 'Problem Set 1 — σ-algebras', due: '2026-07-27', status: 'doing' },
++    ],
++    theorems: [
++      { id: 'mtt1', type: 'Theorem', name: 'Carathéodory Extension Theorem', statement: 'A premeasure $\\mu_0$ on an algebra $\\mathcal{A}$ extends to a measure on $\\sigma(\\mathcal{A})$.', proof: 'Define an outer measure $\\mu^*$ via countable covers by elements of $\\mathcal{A}$; the $\\mu^*$-measurable sets (Carathéodory criterion) form a $\\sigma$-algebra on which $\\mu^*$ is countably additive.', revealed: false },
++      { id: 'mtt2', type: 'Theorem', name: 'Dominated Convergence Theorem', statement: 'If $f_n \\to f$ a.e. and $|f_n| \\le g$ with $g$ integrable, then $\\int f_n \\to \\int f$.', proof: "Apply Fatou's lemma to $g - f_n$ and $g + f_n$ at once, squeezing $\\int f$ between $\\liminf$ and $\\limsup$ of $\\int f_n$.", revealed: false },
++      { id: 'mtt3', type: 'Lemma', name: "Fatou's Lemma", statement: 'For nonnegative measurable $f_n$, $\\int \\liminf f_n \\le \\liminf \\int f_n$.', proof: 'Key idea: apply monotone convergence to $g_n = \\inf_{k \\ge n} f_k$, which increases to $\\liminf f_n$.', revealed: false },
++    ],
++    problems: [
++      { id: 'mtp1', title: 'Non-measurable set', problem: 'Construct a subset of $[0,1]$ that is not Lebesgue measurable.', solution: "Vitali's construction: choose one representative from each coset of $\\mathbb{Q}$ in $[0,1)$ under mod-1 addition via the axiom of choice; translation-invariance plus countable additivity contradict measurability.", revealed: false },
++    ],
++    notes: [],
++  },
++  {
++    id: 'chern', name: 'Chern Classes — Research', glyph: 'c(E)', nickname: 'Chern',
++    assignments: [
++      { id: 'ch1', title: 'Read Milnor–Stasheff ch. 14', due: '2026-08-01', status: 'todo' },
++      { id: 'ch2', title: 'Draft: splitting principle writeup', due: '2026-08-15', status: 'todo' },
++      { id: 'ch3', title: 'Meeting notes — advisor check-in', due: '2026-07-25', status: 'doing' },
++    ],
++    theorems: [
++      { id: 'cht1', type: 'Fact', name: 'Whitney Sum Formula', statement: '$c(E \\oplus F) = c(E) \\smile c(F)$ in $H^*(X)$.', proof: 'Follows from the splitting principle: pull back to a space where both bundles split into line bundles, where the formula is a product of first Chern classes.', revealed: false },
++      { id: 'cht2', type: 'Fact', name: 'Splitting Principle', statement: 'For a vector bundle $E \\to X$ there is $f: F(E) \\to X$ with $f^*$ injective on cohomology and $f^*E$ a sum of line bundles.', proof: 'Key idea: build $F(E)$ as the flag bundle of $E$; Leray–Hirsch gives the injectivity.', revealed: false },
++    ],
++    problems: [],
++    notes: [
++      { id: 'chn1', text: 'Research thread: does the splitting-principle argument generalise cleanly to equivariant Chern classes? Ask advisor Tuesday.', date: '2026-07-22' },
++    ],
++  },
++];
+diff --git a/Tracker.jsx b/Tracker.jsx
+new file mode 100644
+--- /dev/null
++++ b/Tracker.jsx
+@@ -0,0 +1,424 @@
++// Tracker.jsx — The Proof Lab: assignments, revision canon, problem arena,
++// margin notes, calendar, quiz mode. State persists to localStorage.
++const { useState, useEffect, useMemo, useCallback } = React;
++
++const STORE_KEY = 'proofLabData';
++const STATUS_ORDER = ['todo', 'doing', 'done'];
++const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
++const isoOf = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
++
++// ── KaTeX inline: render $…$ spans without touching the surrounding DOM ──
++function Math({ children }) {
++  const str = String(children == null ? '' : children);
++  if (!window.katex || str.indexOf('$') === -1) return str;
++  const parts = str.split(/\$([^$]+)\$/g);
++  return parts.map((p, i) => {
++    if (i % 2 === 0) return p;
++    let html;
++    try { html = katex.renderToString(p, { throwOnError: false }); } catch (e) { return '$' + p + '$'; }
++    return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
++  });
++}
++
++function daysInfo(due, status) {
++  if (!due || status === 'done') return null;
++  const today = new Date(); today.setHours(0,0,0,0);
++  const diff = Math.round((new Date(due + 'T00:00:00') - today) / 86400000);
++  if (diff < 0) return { label: `overdue ${-diff}d`, cls: 'overdue' };
++  if (diff === 0) return { label: 'due today', cls: 'today' };
++  return { label: `${diff}d left`, cls: diff <= 3 ? 'soon' : '' };
++}
++
++function SectionLabel({ children, sub }) {
++  return <div className="tk-section-label">{children}{sub && <span className="sub">— {sub}</span>}</div>;
++}
++
++function Empty({ icon, children }) {
++  return <div className="tk-empty"><div className="icon">{icon}</div><div className="title">{children}</div></div>;
++}
++
++function StatusPill({ status, onCycle }) {
++  const label = { todo: 'TODO', doing: 'WIP', done: 'DONE' }[status];
++  return <button className={`tk-pill ${status}`} onClick={onCycle} title="click to cycle status">{label}</button>;
++}
++
++function AssignmentRow({ a, showCourse, onCycle, onRemove }) {
++  const di = daysInfo(a.due, a.status);
++  return (
++    <div className="tk-tl-item">
++      <div className="tk-row-card">
++        <div style={{ minWidth: 0 }}>
++          <div className={`tk-row-title${a.status === 'done' ? ' done' : ''}`}>{a.title}</div>
++          <div className="tk-row-meta">{showCourse ? `${showCourse} · ` : ''}{a.due || 'no due date'}</div>
++        </div>
++        <div className="tk-row-actions">
++          {di && <span className={`tk-days ${di.cls}`}>{di.label}</span>}
++          <StatusPill status={a.status} onCycle={onCycle} />
++          {onRemove && <button className="tk-x-btn" onClick={onRemove}>×</button>}
++        </div>
++      </div>
++    </div>
++  );
++}
++
++function RevealCard({ badge, name, body, hidden, hiddenLabels, revealed, onToggle }) {
++  return (
++    <div className="tk-card">
++      <div className="tk-card-head">
++        {badge && <span className="tk-type">{badge}</span>}
++        <span className="tk-card-name"><Math>{name}</Math></span>
++      </div>
++      <div className="tk-card-body"><Math>{body}</Math></div>
++      <button className="tk-mono-btn" style={{ marginTop: '.85rem' }} onClick={onToggle}>
++        {revealed ? hiddenLabels[1] : hiddenLabels[0]}
++      </button>
++      {revealed && <div className="tk-reveal"><Math>{hidden}</Math></div>}
++    </div>
++  );
++}
++
++function Calendar({ courses, cursor, onShift, selected, onSelect }) {
++  const { y, m } = cursor;
++  const todayIso = isoOf(new Date());
++  const dueMap = useMemo(() => {
++    const map = {};
++    courses.forEach(c => c.assignments.forEach(a => {
++      if (a.due && a.status !== 'done') (map[a.due] = map[a.due] || []).push({ title: a.title, glyph: c.glyph });
++    }));
++    return map;
++  }, [courses]);
++  const first = new Date(y, m, 1);
++  const startIdx = (first.getDay() + 6) % 7;
++  const cells = [];
++  for (let i = 0; i < 42; i++) {
++    const d = new Date(y, m, i - startIdx + 1);
++    cells.push({ d, iso: isoOf(d), inMonth: d.getMonth() === m });
++  }
++  const selItems = selected ? (dueMap[selected] || []) : [];
++  const selD = selected ? new Date(selected + 'T00:00:00') : null;
++  return (
++    <div className="tk-cal">
++      <div className="tk-cal-head">
++        <span className="tk-cal-label">{MONTHS[m]} {y}</span>
++        <div style={{ display: 'flex', gap: '.25rem' }}>
++          <button className="tk-cal-btn" onClick={() => onShift(-1)}>‹</button>
++          <button className="tk-cal-btn" onClick={() => onShift(1)}>›</button>
++        </div>
++      </div>
++      <div className="tk-cal-grid" style={{ marginBottom: 2 }}>
++        {['M','T','W','T','F','S','S'].map((d, i) => <span key={i} className="tk-cal-dow">{d}</span>)}
++      </div>
++      <div className="tk-cal-grid">
++        {cells.map(({ d, iso, inMonth }) => {
++          const cls = ['tk-cal-cell', !inMonth && 'out', iso === todayIso && 'today', iso === selected && 'selected'].filter(Boolean).join(' ');
++          return (
++            <div key={iso} className={cls} onClick={() => inMonth && onSelect(selected === iso ? null : iso)}>
++              {d.getDate()}
++              {inMonth && dueMap[iso] && <span className="due-dot" />}
++            </div>
++          );
++        })}
++      </div>
++      {selected && (
++        <div className="tk-cal-detail">
++          <div className="tk-cal-detail-date">due {String(selD.getDate()).padStart(2,'0')} {MONTHS[selD.getMonth()]}</div>
++          {selItems.map((it, i) => (
++            <div key={i} className="tk-cal-detail-row"><span className="glyph">{it.glyph}</span><span className="title">{it.title}</span></div>
++          ))}
++          {!selItems.length && <div className="tk-cal-detail-empty">Nothing due. A gift.</div>}
++        </div>
++      )}
++    </div>
++  );
++}
++
++function Quiz({ courses, scope, onClose }) {
++  const pool = useMemo(() => {
++    const p = [];
++    courses.forEach(c => { if (!scope || c.id === scope) c.theorems.forEach(t => p.push({ course: c, t })); });
++    return p;
++  }, [courses, scope]);
++  const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
++  const [revealed, setRevealed] = useState(false);
++  useEffect(() => {
++    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
++    window.addEventListener('keydown', onKey);
++    return () => window.removeEventListener('keydown', onKey);
++  }, [onClose]);
++  if (!pool.length) return null;
++  const { course, t } = pool[idx % pool.length];
++  const next = () => {
++    if (pool.length > 1) { let n; do { n = (Math.random() * pool.length) | 0; } while (n === idx); setIdx(n); }
++    setRevealed(false);
++  };
++  return (
++    <React.Fragment>
++      <div className="tk-quiz-backdrop" onClick={onClose} />
++      <div className="tk-quiz-wrap">
++        <div className="tk-quiz">
++          <div className="tk-quiz-top">
++            <span className="tk-quiz-eyebrow">Prove it.</span>
++            <span className="tk-quiz-course">{course.name}</span>
++          </div>
++          <div className="tk-card-head">
++            <span className="tk-type">{t.type}</span>
++            <span className="tk-quiz-name">{t.name}</span>
++          </div>
++          <div className="tk-quiz-body"><Math>{t.statement}</Math></div>
++          {revealed && <div className="tk-reveal"><Math>{t.proof}</Math></div>}
++          <div className="tk-quiz-foot">
++            <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setRevealed(r => !r)}>
++              {revealed ? 'hide it again' : 'reveal the idea'}
++            </button>
++            <div style={{ display: 'flex', gap: '.5rem' }}>
++              <button className="tk-mono-btn" onClick={next}>next draw ▸</button>
++              <button className="tk-mono-btn" onClick={onClose}>esc</button>
++            </div>
++          </div>
++        </div>
++      </div>
++    </React.Fragment>
++  );
++}
++
++function App() {
++  const [courses, setCourses] = useState(() => {
++    try {
++      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
++      if (saved) return saved;
++    } catch (e) {}
++    return window.TRACKER_SEED;
++  });
++  const [view, setView] = useState('dashboard');
++  const [calCursor, setCalCursor] = useState({ y: new Date().getFullYear(), m: new Date().getMonth() });
++  const [selectedDate, setSelectedDate] = useState(null);
++  const [quizScope, setQuizScope] = useState(undefined); // undefined = closed, null = all courses
++  const [drafts, setDrafts] = useState({});
++
++  useEffect(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(courses)); } catch (e) {} }, [courses]);
++
++  const mutate = useCallback((courseId, fn) => {
++    setCourses(cs => cs.map(c => c.id === courseId ? fn(c) : c));
++  }, []);
++  const cycle = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.map(a => a.id !== id ? a : { ...a, status: STATUS_ORDER[(STATUS_ORDER.indexOf(a.status) + 1) % 3] }) }));
++  const removeA = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.filter(a => a.id !== id) }));
++  const toggle = (cid, kind, id) => mutate(cid, c => ({ ...c, [kind]: c[kind].map(x => x.id !== id ? x : { ...x, revealed: !x.revealed }) }));
++  const addNote = (cid, text) => {
++    const t = (text || '').trim();
++    if (!t) return;
++    mutate(cid, c => ({ ...c, notes: [{ id: 'n' + Date.now(), text: t, date: isoOf(new Date()) }, ...c.notes] }));
++  };
++  const removeNote = (cid, id) => mutate(cid, c => ({ ...c, notes: c.notes.filter(n => n.id !== id) }));
++  const draft = (k) => drafts[k] || '';
++  const setDraft = (k, v) => setDrafts(d => ({ ...d, [k]: v }));
++  const addAssignment = (cid) => {
++    const title = draft(cid + ':title').trim();
++    if (!title) return;
++    mutate(cid, c => ({ ...c, assignments: [...c.assignments, { id: 'a' + Date.now(), title, due: draft(cid + ':due'), status: 'todo' }] }));
++    setDrafts(d => ({ ...d, [cid + ':title']: '', [cid + ':due']: '' }));
++  };
++
++  const current = courses.find(c => c.id === view);
++  const totals = {
++    all: courses.reduce((s, c) => s + c.assignments.length, 0),
++    done: courses.reduce((s, c) => s + c.assignments.filter(a => a.status === 'done').length, 0),
++    theorems: courses.reduce((s, c) => s + c.theorems.length, 0),
++  };
++  const upcoming = courses
++    .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
++    .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
++  const allNotes = courses
++    .flatMap(c => c.notes.map(n => ({ ...n, course: c })))
++    .sort((a, b) => b.date.localeCompare(a.date));
++  const now = new Date();
++
++  return (
++    <div className="tk-app">
++      <MathParticles />
++      <div className="math-deco">∂(due)/∂t &gt; 0 · · · ∮ proofs dγ</div>
++
++      <aside className="tk-sidebar">
++        <div className="tk-brand">
++          <div className="tk-avatar">
++            <span className="tk-avatar-glyph">∮</span>
++            <div className="tk-avatar-ring" />
++          </div>
++          <div>
++            <div className="tk-brand-name">The Proof Lab</div>
++            <div className="tk-brand-sub">NUS · Mathematics</div>
++          </div>
++        </div>
++        <ul className="tk-nav">
++          <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}><span className="dot" />Dashboard</a></li>
++          {courses.map(c => (
++            <li key={c.id}>
++              <a className={view === c.id ? 'active' : ''} onClick={() => setView(c.id)}>
++                <span className="dot" />{c.nickname}
++                <span className="count">{c.assignments.filter(a => a.status !== 'done').length}</span>
++              </a>
++            </li>
++          ))}
++          <li><a className={view === 'margin' ? 'active' : ''} onClick={() => setView('margin')}><span className="dot" />The Margin</a></li>
++        </ul>
++        <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
++          onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
++        <div className="tk-sidebar-foot">saved to this browser ·<br/>wire Firebase for cross-device sync</div>
++      </aside>
++
++      <main className="tk-main">
++        {view === 'dashboard' && (
++          <section>
++            <div className="tk-hero fade-up">
++              <div>
++                <h1>Right then — <em>what's due.</em></h1>
++                <div className="tk-hero-meta">{String(now.getDate()).padStart(2,'0')} {MONTHS[now.getMonth()]} {now.getFullYear()} · semester: chaos, mostly organised</div>
++              </div>
++              <button className="tk-btn tk-btn-primary" onClick={() => setQuizScope(null)}>∴ Quiz me</button>
++            </div>
++            <div className="tk-stats fade-up d1">
++              <div className="tk-stat"><div className="tk-stat-num">{totals.all - totals.done}</div><div className="tk-stat-cap">Owed to the universe</div></div>
++              <div className="tk-stat"><div className="tk-stat-num">{totals.done}<span>/{totals.all}</span></div><div className="tk-stat-cap">Cleared</div></div>
++              <div className="tk-stat"><div className="tk-stat-num">{totals.theorems}</div><div className="tk-stat-cap">Results in the canon</div></div>
++            </div>
++            <div className="fade-up d2">
++              <SectionLabel sub="every course, soonest first">The Queue</SectionLabel>
++              {upcoming.length ? (
++                <div className="tk-timeline" style={{ marginBottom: '3.2rem' }}>
++                  {upcoming.map(a => (
++                    <AssignmentRow key={a.id} a={a} showCourse={`${a.course.glyph} · ${a.course.name}`} onCycle={() => cycle(a.course.id, a.id)} />
++                  ))}
++                </div>
++              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending. Suspicious.</Empty></div>}
++            </div>
++            <div className="fade-up d3">
++              <SectionLabel>Jump in</SectionLabel>
++              <div className="tk-jump-grid">
++                {courses.map(c => {
++                  const done = c.assignments.filter(a => a.status === 'done').length;
++                  const pct = c.assignments.length ? Math.round(done / c.assignments.length * 100) : 0;
++                  return (
++                    <div key={c.id} className="tk-jump" onClick={() => setView(c.id)}>
++                      <div className="tk-jump-glyph">{c.glyph}</div>
++                      <div className="tk-jump-name">{c.name}</div>
++                      <div className="tk-jump-meta">{c.assignments.length - done} open · {c.theorems.length} results · {c.notes.length} notes</div>
++                      <div className="tk-progress"><div className="tk-progress-fill" style={{ width: pct + '%' }} /></div>
++                    </div>
++                  );
++                })}
++              </div>
++            </div>
++          </section>
++        )}
++
++        {current && (
++          <section key={current.id}>
++            <div className="fade-up">
++              <div className="tk-hero">
++                <div>
++                  <div className="tk-course-head">
++                    <span className="tk-course-glyph">{current.glyph}</span>
++                    <span className="tk-course-name">{current.name}</span>
++                  </div>
++                  <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open · {current.theorems.length} in the canon · {current.notes.length} margin notes</div>
++                </div>
++                <button className="tk-btn tk-btn-outline" onClick={() => setQuizScope(current.id)}>∴ Quiz me</button>
++              </div>
++              <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
++                <div className="tk-progress-fill" style={{ width: (current.assignments.length ? Math.round(current.assignments.filter(a => a.status === 'done').length / current.assignments.length * 100) : 0) + '%' }} />
++              </div>
++            </div>
++
++            <div className="fade-up d1">
++              <SectionLabel>The Queue</SectionLabel>
++              <div className="tk-timeline">
++                {current.assignments.map(a => (
++                  <AssignmentRow key={a.id} a={a} onCycle={() => cycle(current.id, a.id)} onRemove={() => removeA(current.id, a.id)} />
++                ))}
++              </div>
++              <div className="tk-form-row">
++                <input className="tk-input" placeholder="new assignment…" value={draft(current.id + ':title')} onChange={e => setDraft(current.id + ':title', e.target.value)} onKeyDown={e => e.key === 'Enter' && addAssignment(current.id)} />
++                <input className="tk-input tk-input-date" type="date" value={draft(current.id + ':due')} onChange={e => setDraft(current.id + ':due', e.target.value)} />
++                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => addAssignment(current.id)}>Add</button>
++              </div>
++            </div>
++
++            <div className="fade-up d2">
++              <SectionLabel sub="key facts, theorems, lemmas">The Canon</SectionLabel>
++              <div className="tk-stack">
++                {current.theorems.map(t => (
++                  <RevealCard key={t.id} badge={t.type} name={t.name} body={t.statement} hidden={t.proof}
++                    hiddenLabels={['reveal proof ▸', 'hide proof ▾']} revealed={t.revealed} onToggle={() => toggle(current.id, 'theorems', t.id)} />
++                ))}
++                {!current.theorems.length && <Empty icon="🔧">Canon is empty. Add results as you meet them.</Empty>}
++              </div>
++            </div>
++
++            <div className="fade-up d3">
++              <SectionLabel sub="problems, then the reveal">The Arena</SectionLabel>
++              <div className="tk-stack">
++                {current.problems.map(p => (
++                  <RevealCard key={p.id} name={p.title} body={p.problem} hidden={p.solution}
++                    hiddenLabels={['show worked solution ▸', 'hide solution ▾']} revealed={p.revealed} onToggle={() => toggle(current.id, 'problems', p.id)} />
++                ))}
++                {!current.problems.length && <Empty icon="⚔️">No problems logged yet.</Empty>}
++              </div>
++            </div>
++
++            <div className="fade-up d4">
++              <SectionLabel>The Margin</SectionLabel>
++              <textarea className="tk-textarea" placeholder="scribble a thought before it evaporates… ($math$ works)" value={draft(current.id + ':note')} onChange={e => setDraft(current.id + ':note', e.target.value)} />
++              <div className="tk-note-actions">
++                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => { addNote(current.id, draft(current.id + ':note')); setDraft(current.id + ':note', ''); }}>Pin note</button>
++              </div>
++              <div className="tk-stack" style={{ marginBottom: 0 }}>
++                {current.notes.map(n => (
++                  <div key={n.id} className="tk-note">
++                    <div className="tk-note-date">{n.date}</div>
++                    <div className="tk-note-text"><Math>{n.text}</Math></div>
++                    <button className="tk-x-btn" onClick={() => removeNote(current.id, n.id)}>×</button>
++                  </div>
++                ))}
++              </div>
++            </div>
++          </section>
++        )}
++
++        {view === 'margin' && (
++          <section>
++            <div className="fade-up">
++              <div className="tk-course-name" style={{ marginBottom: '.4rem' }}>The Margin</div>
++              <div className="tk-hero-meta" style={{ marginBottom: '2.5rem' }}>every scribble, across every course · "I have discovered a truly marvellous proof of this…"</div>
++            </div>
++            <div className="tk-card fade-up d1" style={{ marginBottom: '2.5rem', borderLeft: '1px solid var(--border)' }}>
++              <select className="tk-select" style={{ marginBottom: '.7rem' }} value={draft('margin:course') || courses[0].id} onChange={e => setDraft('margin:course', e.target.value)}>
++                {courses.map(c => <option key={c.id} value={c.id}>{c.nickname}</option>)}
++              </select>
++              <textarea className="tk-textarea" placeholder="scribble a thought before it evaporates… ($math$ works)" value={draft('margin:note')} onChange={e => setDraft('margin:note', e.target.value)} />
++              <div className="tk-note-actions" style={{ margin: '.7rem 0 0' }}>
++                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => { addNote(draft('margin:course') || courses[0].id, draft('margin:note')); setDraft('margin:note', ''); }}>Pin note</button>
++              </div>
++            </div>
++            <div className="tk-stack fade-up d2" style={{ marginBottom: 0 }}>
++              {allNotes.map(n => (
++                <div key={n.id} className="tk-note">
++                  <div className="tk-note-head">
++                    <span className="glyph">{n.course.glyph}</span>
++                    <span className="course">{n.course.name}</span>
++                    <span className="date">· {n.date}</span>
++                  </div>
++                  <div className="tk-note-text"><Math>{n.text}</Math></div>
++                  <button className="tk-x-btn" onClick={() => removeNote(n.course.id, n.id)}>×</button>
++                </div>
++              ))}
++              {!allNotes.length && <Empty icon="✍️">Margins are blank. For now.</Empty>}
++            </div>
++          </section>
++        )}
++      </main>
++
++      {quizScope !== undefined && <Quiz courses={courses} scope={quizScope} onClose={() => setQuizScope(undefined)} />}
++    </div>
++  );
++}
++
++ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+diff --git a/colors_and_type.css b/colors_and_type.css
+new file mode 100644
+--- /dev/null
++++ b/colors_and_type.css
+@@ -0,0 +1,310 @@
++/* ══════════════════════════════════════════════════════════════════════
++   DALLEN LEE — Design System
++   colors_and_type.css
++
++   Single source of truth for color tokens and type styles.
++   Includes both BASE tokens (--fg1, --serif-display, etc.) and
++   SEMANTIC roles (h1, h2, body, code, …).
++
++   Two themes are supported via [data-theme="dark"|"light"].
++   Default is dark (the original site's preferred theme).
++   ══════════════════════════════════════════════════════════════════════ */
++
++
++/* ──────────────────────────────────────────────────────────────────────
++   FONTS
++   ──────────────────────────────────────────────────────────────────────
++   Loaded via Google Fonts. Local copies live in fonts/ as a backup.
++   Body:  Nunito (300, 400, 500, 600, 700; italic 400, 500)
++   Mono:  DM Mono (300, 400, 500)
++   Math:  KaTeX serves its own fonts via CSS at runtime.
++   ────────────────────────────────────────────────────────────────────── */
++@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap');
++
++
++/* ──────────────────────────────────────────────────────────────────────
++   1. STRUCTURAL / SHAPE TOKENS  (theme-independent)
++   ────────────────────────────────────────────────────────────────────── */
++:root {
++  /* Layout */
++  --sidebar-w: 280px;
++  --content-max-w: 860px;
++  --post-max-w: 720px;
++
++  /* Radii */
++  --radius-xs: 4px;
++  --radius-sm: 8px;
++  --radius-md: 10px;
++  --radius-lg: 14px;
++  --radius-pill: 20px;
++  --radius-full: 50px;
++
++  /* Spacing scale (rem) — used loosely; the system also uses ad-hoc rem values */
++  --space-1: 0.25rem;
++  --space-2: 0.5rem;
++  --space-3: 0.75rem;
++  --space-4: 1rem;
++  --space-5: 1.5rem;
++  --space-6: 2rem;
++  --space-8: 3rem;
++  --space-10: 5rem;
++
++  /* Motion */
++  --transition: 0.22s ease;
++  --transition-fast: 0.18s ease;
++  --transition-slow: 0.6s ease;
++
++  /* Type families */
++  --font-sans: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
++  --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
++  --font-display: 'Nunito', system-ui, sans-serif;     /* same family, used at large sizes */
++  --font-math: 'DM Mono', monospace;                   /* for inline math glyphs/decoration */
++
++  /* Type scale (rem) */
++  --fs-xs:    0.62rem;   /*  9.92 px — micro labels, tiny tags */
++  --fs-2xs:   0.65rem;   /* 10.40 px — pill labels, course dept */
++  --fs-sm:    0.68rem;   /* 10.88 px — meta, breadcrumbs, deco */
++  --fs-base:  0.72rem;   /* 11.52 px — small UI, links */
++  --fs-md:    0.78rem;   /* 12.48 px — buttons, micro body */
++  --fs-lg:    0.85rem;   /* 13.60 px — bullet copy */
++  --fs-xl:    0.96rem;   /*  ~15.4 px — body */
++  --fs-2xl:   1.05rem;   /* 16.80 px — h3 */
++  --fs-3xl:   1.25rem;   /* 20.00 px — h2 */
++  --fs-4xl:   1.6rem;    /* 25.60 px — small display */
++  --fs-5xl:   2.1rem;    /* 33.60 px — post title */
++  --fs-6xl:   2.8rem;    /* 44.80 px — hero greeting */
++
++  /* Font weights */
++  --fw-light: 300;
++  --fw-regular: 400;
++  --fw-medium: 500;
++  --fw-semibold: 600;
++  --fw-bold: 700;
++  --fw-black: 800;
++
++  /* Tracking (letter-spacing) */
++  --tracking-tight: -0.03em;     /* hero greeting */
++  --tracking-snug: -0.025em;     /* post title */
++  --tracking-normal: 0;
++  --tracking-wide: 0.04em;
++  --tracking-wider: 0.06em;
++  --tracking-widest: 0.07em;
++  --tracking-uppercase: 0.18em;  /* section labels */
++
++  /* Line heights */
++  --lh-tight: 1.15;
++  --lh-snug: 1.4;
++  --lh-base: 1.6;
++  --lh-relaxed: 1.75;
++  --lh-loose: 1.85;
++}
++
++
++/* ──────────────────────────────────────────────────────────────────────
++   2. COLOR TOKENS — DARK (default)
++   ──────────────────────────────────────────────────────────────────────
++   The palette is intentionally MONOCHROMATIC: pure black/white plus
++   five grays. Color = restraint; the math motifs and copy carry the
++   identity instead of hue.
++   ────────────────────────────────────────────────────────────────────── */
++:root,
++[data-theme="dark"] {
++  /* Surfaces (background → elevated) */
++  --bg:        #0c0c0c;   /* page background */
++  --surface:   #141414;   /* cards, sidebar */
++  --surface-2: #1c1c1c;   /* nested fill, tags, code blocks */
++
++  /* Borders / dividers */
++  --border:    #2a2a2a;
++
++  /* Foreground text (decreasing emphasis) */
++  --fg-1:      #f0f0f0;   /* primary text */
++  --fg-2:      #a0a0a0;   /* body / secondary */
++  --fg-muted:  #555555;   /* meta, dates, deco */
++
++  /* Accents (hierarchy of monochrome) */
++  --accent:    #ffffff;   /* primary accent — labels, active nav, CTA fg */
++  --accent-2:  #c0c0c0;   /* secondary accent — links, italic body emphasis */
++  --accent-3:  #e0e0e0;   /* tertiary — status text */
++
++  /* Glow / overlays */
++  --glow:      rgba(255, 255, 255, 0.06);
++  --glow-strong: rgba(255, 255, 255, 0.15);
++
++  /* Shadows */
++  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.15);
++  --shadow-md: 0 4px 18px var(--glow);
++  --shadow-lg: 0 8px 32px var(--glow);
++  --shadow-glow: 0 2px 18px var(--glow);
++}
++
++/* ──────────────────────────────────────────────────────────────────────
++   3. COLOR TOKENS — LIGHT
++   ────────────────────────────────────────────────────────────────────── */
++[data-theme="light"] {
++  --bg:        #f8f8f8;
++  --surface:   #ffffff;
++  --surface-2: #f0f0f0;
++  --border:    #e0e0e0;
++
++  --fg-1:      #0c0c0c;
++  --fg-2:      #444444;
++  --fg-muted:  #999999;
++
++  --accent:    #000000;
++  --accent-2:  #333333;
++  --accent-3:  #555555;
++
++  --glow:      rgba(0, 0, 0, 0.06);
++  --glow-strong: rgba(0, 0, 0, 0.15);
++
++  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.08);
++  --shadow-md: 0 4px 18px var(--glow);
++  --shadow-lg: 0 8px 32px var(--glow);
++  --shadow-glow: 0 2px 18px var(--glow);
++}
++
++
++/* ──────────────────────────────────────────────────────────────────────
++   4. SEMANTIC TYPE STYLES
++   ──────────────────────────────────────────────────────────────────────
++   Use these classes (or extend them in your own selectors) instead of
++   redefining sizes/weights inline.
++   ────────────────────────────────────────────────────────────────────── */
++
++/* Hero / greeting line — "Hi, I'm Dallen." */
++.t-display {
++  font-family: var(--font-display);
++  font-size: var(--fs-6xl);
++  font-weight: var(--fw-bold);
++  line-height: var(--lh-tight);
++  letter-spacing: var(--tracking-tight);
++  color: var(--fg-1);
++}
++
++/* Article / post title */
++.t-h1 {
++  font-family: var(--font-sans);
++  font-size: var(--fs-5xl);
++  font-weight: var(--fw-bold);
++  line-height: 1.2;
++  letter-spacing: var(--tracking-snug);
++  color: var(--fg-1);
++}
++
++/* Section header inside a post */
++.t-h2 {
++  font-family: var(--font-sans);
++  font-size: var(--fs-3xl);
++  font-weight: var(--fw-bold);
++  line-height: var(--lh-snug);
++  letter-spacing: -0.015em;
++  color: var(--fg-1);
++}
++
++/* Sub-section / card title */
++.t-h3 {
++  font-family: var(--font-sans);
++  font-size: var(--fs-2xl);
++  font-weight: var(--fw-bold);
++  color: var(--fg-1);
++}
++
++/* Section LABEL — uppercase, tracked, used above each main section */
++.t-section-label {
++  font-family: var(--font-sans);
++  font-size: var(--fs-sm);
++  font-weight: var(--fw-black);
++  letter-spacing: var(--tracking-uppercase);
++  text-transform: uppercase;
++  color: var(--accent);
++}
++
++/* Body — long-form prose */
++.t-body {
++  font-family: var(--font-sans);
++  font-size: var(--fs-xl);
++  font-weight: var(--fw-regular);
++  line-height: var(--lh-relaxed);
++  color: var(--fg-2);
++}
++
++/* Body small — bullets, descriptions */
++.t-body-sm {
++  font-family: var(--font-sans);
++  font-size: var(--fs-lg);
++  line-height: var(--lh-base);
++  color: var(--fg-2);
++}
++
++/* Italic emphasis on a key term inside body copy */
++.t-em {
++  font-style: normal;
++  font-weight: var(--fw-semibold);
++  color: var(--accent-2);
++}
++
++/* Small caps-ish meta — uppercase, tracked, monochrome */
++.t-eyebrow {
++  font-family: var(--font-sans);
++  font-size: var(--fs-base);
++  font-weight: var(--fw-bold);
++  letter-spacing: var(--tracking-widest);
++  text-transform: uppercase;
++  color: var(--accent);
++}
++
++/* Mono — code, dates, course codes, breadcrumbs */
++.t-mono {
++  font-family: var(--font-mono);
++  font-size: var(--fs-sm);
++  font-weight: var(--fw-medium);
++  letter-spacing: var(--tracking-wide);
++  color: var(--fg-muted);
++}
++
++.t-mono-accent {
++  font-family: var(--font-mono);
++  font-size: var(--fs-base);
++  font-weight: var(--fw-medium);
++  color: var(--accent);
++  letter-spacing: var(--tracking-wide);
++}
++
++/* Inline code */
++.t-code {
++  font-family: var(--font-mono);
++  font-size: 0.85em;
++  background: var(--surface-2);
++  border: 1px solid var(--border);
++  padding: 0.1em 0.4em;
++  border-radius: var(--radius-xs);
++  color: var(--accent-2);
++}
++
++/* Caption / micro */
++.t-caption {
++  font-family: var(--font-sans);
++  font-size: var(--fs-xs);
++  font-weight: var(--fw-bold);
++  letter-spacing: var(--tracking-widest);
++  text-transform: uppercase;
++  color: var(--fg-muted);
++}
++
++
++/* ──────────────────────────────────────────────────────────────────────
++   5. ELEMENT DEFAULTS — opt-in by adding to <body> or a wrapper
++   ────────────────────────────────────────────────────────────────────── */
++.dl-prose {
++  font-family: var(--font-sans);
++  font-size: var(--fs-xl);
++  line-height: var(--lh-relaxed);
++  color: var(--fg-2);
++}
++.dl-prose h1 { @extend .t-h1; }       /* note: PostCSS or just copy these inline if no preprocessor */
++.dl-prose em { color: var(--accent-2); font-style: normal; font-weight: var(--fw-semibold); }
++.dl-prose strong { color: var(--fg-1); font-weight: var(--fw-bold); }
++.dl-prose code { font-family: var(--font-mono); font-size: 0.85em; background: var(--surface-2);
++                 border: 1px solid var(--border); padding: 0.1em 0.4em; border-radius: var(--radius-xs);
++                 color: var(--accent-2); }
+diff --git a/MathParticles.jsx b/MathParticles.jsx
+new file mode 100644
+--- /dev/null
++++ b/MathParticles.jsx
+@@ -0,0 +1,43 @@
++// MathParticles.jsx — animated math-glyph background canvas
++function MathParticles() {
++  const ref = React.useRef(null);
++  React.useEffect(() => {
++    const canvas = ref.current;
++    const ctx = canvas.getContext('2d');
++    const SYMBOLS = ['∂','∇','∑','ℝ','ℂ','∞','π','∫','√','θ','λ','μ','σ','⊕','∈'];
++    let W, H, particles = [], raf;
++    const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
++    const mk = () => ({
++      x: Math.random()*W, y: Math.random()*H,
++      sym: SYMBOLS[(Math.random()*SYMBOLS.length)|0],
++      size: 9 + Math.random()*10,
++      vx: (Math.random()-.5)*.15,
++      vy: -.12 - Math.random()*.18,
++      life: Math.random(),
++    });
++    const draw = () => {
++      ctx.clearRect(0,0,W,H);
++      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
++      const base = isDark ? '200,200,200' : '80,80,80';
++      particles.forEach(p => {
++        p.life += .002; p.x += p.vx; p.y += p.vy;
++        if (p.y < -30) Object.assign(p, mk(), { y: H + 10, x: Math.random()*W });
++        const alpha = .04 + .09*Math.sin(p.life*Math.PI);
++        ctx.save();
++        ctx.font = `${p.size}px 'DM Mono', monospace`;
++        ctx.fillStyle = `rgba(${base},${alpha})`;
++        ctx.fillText(p.sym, p.x, p.y);
++        ctx.restore();
++      });
++      raf = requestAnimationFrame(draw);
++    };
++    resize();
++    particles = Array.from({length:28}, mk);
++    draw();
++    window.addEventListener('resize', resize);
++    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
++  }, []);
++  return <canvas id="particles" ref={ref} aria-hidden="true" />;
++}
++
++window.MathParticles = MathParticles;
+--
+2.43.0
