@@ -20,6 +20,7 @@ window.TRACKER_SEED = [
     notes: [
       { id: 'atn1', text: "Keep re-deriving van Kampen from the groupoid version until it's obvious why $U \\cap V$ needs to be connected — the group version hides it.", date: '2026-07-20' },
     ],
+    chapters: [],
   },
   {
     id: 'meastheory', name: 'Measure Theory', glyph: '∫dμ', nickname: 'Measure',
@@ -36,6 +37,7 @@ window.TRACKER_SEED = [
       { id: 'mtp1', title: 'Non-measurable set', problem: 'Construct a subset of $[0,1]$ that is not Lebesgue measurable.', solution: "Vitali's construction: choose one representative from each coset of $\\mathbb{Q}$ in $[0,1)$ under mod-1 addition via the axiom of choice; translation-invariance plus countable additivity contradict measurability.", revealed: false },
     ],
     notes: [],
+    chapters: [],
   },
   {
     id: 'chern', name: 'Chern Classes — Research', glyph: 'c(E)', nickname: 'Chern',
@@ -52,5 +54,6 @@ window.TRACKER_SEED = [
     notes: [
       { id: 'chn1', text: 'Research thread: does the splitting-principle argument generalise cleanly to equivariant Chern classes? Ask advisor Tuesday.', date: '2026-07-22' },
     ],
+    chapters: [],
   },
 ];

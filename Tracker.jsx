@@ -1,6 +1,6 @@
 // Tracker.jsx — The Proof Lab: assignments, revision canon, problem arena,
 // margin notes, calendar, quiz mode. State persists to localStorage.
-const { useState, useEffect, useMemo, useCallback } = React;
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 const STORE_KEY = 'proofLabData';
 const STATUS_ORDER = ['todo', 'doing', 'done'];
@@ -18,6 +18,134 @@ function MathTex({ children }) {
     try { html = katex.renderToString(p, { throwOnError: false }); } catch (e) { return '$' + p + '$'; }
     return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
   });
+}
+
+// ── markdown + KaTeX renderer for chapter notes ──
+const BLOCK_LABELS = { definition: 'Definition', lemma: 'Lemma', theorem: 'Theorem', proposition: 'Proposition', corollary: 'Corollary', example: 'Example', remark: 'Remark', proof: 'Proof' };
+const BLOCK_TYPES = Object.keys(BLOCK_LABELS).map(cmd => ({ cmd, label: BLOCK_LABELS[cmd] }));
+
+function katexHtml(src, displayMode) {
+  if (!window.katex) return null;
+  try { return katex.renderToString(src, { throwOnError: false, displayMode }); }
+  catch (e) { return null; }
+}
+
+function renderInline(text, keyPrefix) {
+  if (!text) return null;
+  const parts = String(text).split(/(\$\$[^$]+\$\$|\$[^$]+\$|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|_[^_]+_)/g);
+  return parts.map((part, i) => {
+    const key = `${keyPrefix}-${i}`;
+    if (!part) return null;
+    if (part.startsWith('$$') && part.endsWith('$$') && part.length > 3) {
+      const html = katexHtml(part.slice(2, -2), true);
+      return html ? <span key={key} dangerouslySetInnerHTML={{ __html: html }} /> : <React.Fragment key={key}>{part}</React.Fragment>;
+    }
+    if (part.startsWith('$') && part.endsWith('$') && part.length > 1) {
+      const html = katexHtml(part.slice(1, -1), false);
+      return html ? <span key={key} dangerouslySetInnerHTML={{ __html: html }} /> : <React.Fragment key={key}>{part}</React.Fragment>;
+    }
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 3) {
+      return <strong key={key}>{renderInline(part.slice(2, -2), key)}</strong>;
+    }
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
+      return <code key={key} className="t-code">{part.slice(1, -1)}</code>;
+    }
+    if ((part.startsWith('*') && part.endsWith('*') && part.length > 1) || (part.startsWith('_') && part.endsWith('_') && part.length > 1)) {
+      return <em key={key}>{renderInline(part.slice(1, -1), key)}</em>;
+    }
+    return <React.Fragment key={key}>{part}</React.Fragment>;
+  });
+}
+
+function renderBlocks(text) {
+  const lines = String(text || '').split('\n');
+  const out = [];
+  let para = [], list = [], quote = [];
+  const flushPara = () => { if (para.length) { out.push(<p key={'p' + out.length} className="tk-note-p">{renderInline(para.join(' '), 'p' + out.length)}</p>); para = []; } };
+  const flushList = () => { if (list.length) { out.push(<ul key={'ul' + out.length} className="tk-note-ul">{list.map((it, li) => <li key={li}>{renderInline(it, 'li' + out.length + '-' + li)}</li>)}</ul>); list = []; } };
+  const flushQuote = () => { if (quote.length) { out.push(<blockquote key={'bq' + out.length} className="tk-note-bq">{renderInline(quote.join(' '), 'bq' + out.length)}</blockquote>); quote = []; } };
+  const flushAll = () => { flushPara(); flushList(); flushQuote(); };
+
+  let i = 0;
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+
+    const blockMatch = trimmed.match(/^:::(\w+)\s*(.*)$/);
+    if (blockMatch) {
+      flushAll();
+      const type = blockMatch[1].toLowerCase();
+      const name = blockMatch[2].trim();
+      const bodyLines = [];
+      i++;
+      while (i < lines.length && lines[i].trim() !== ':::') { bodyLines.push(lines[i]); i++; }
+      i++;
+      const label = BLOCK_LABELS[type] || type;
+      out.push(
+        <div key={'blk' + out.length} className={`tk-note-block tk-note-block-${type}`}>
+          <div className="tk-note-block-head">
+            <span className="tk-type">{label}</span>
+            {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
+          </div>
+          <div className="tk-note-block-body">{renderBlocks(bodyLines.join('\n'))}</div>
+        </div>
+      );
+      continue;
+    }
+
+    if (trimmed.startsWith('$$') && trimmed.endsWith('$$') && trimmed.length > 3) {
+      flushAll();
+      const html = katexHtml(trimmed.slice(2, -2), true);
+      out.push(html
+        ? <div key={'dm' + out.length} className="tk-note-display-math" dangerouslySetInnerHTML={{ __html: html }} />
+        : <p key={'dm' + out.length} className="tk-note-p">{trimmed}</p>);
+      i++;
+      continue;
+    }
+
+    const headMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+    if (headMatch) {
+      flushAll();
+      const level = headMatch[1].length;
+      const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
+      out.push(React.createElement(Tag, { key: 'h' + out.length, className: `tk-note-h${level}` }, renderInline(headMatch[2], 'h' + out.length)));
+      i++;
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      flushPara(); flushQuote();
+      list.push(trimmed.replace(/^[-*]\s+/, ''));
+      i++;
+      continue;
+    }
+
+    if (trimmed.startsWith('> ')) {
+      flushPara(); flushList();
+      quote.push(trimmed.slice(2));
+      i++;
+      continue;
+    }
+
+    if (trimmed === '') { flushAll(); i++; continue; }
+
+    flushList(); flushQuote();
+    para.push(trimmed);
+    i++;
+  }
+  flushAll();
+  return out;
+}
+
+function blockTemplate(cmd) {
+  const hasName = cmd !== 'proof';
+  const prefix = `:::${cmd}` + (hasName ? ' ' : '');
+  const namePlaceholder = hasName ? 'Name' : '';
+  const bodyPlaceholder = cmd === 'proof' ? 'Proof.' : 'Statement.';
+  const line1 = prefix + namePlaceholder;
+  const text = `${line1}\n${bodyPlaceholder}\n:::\n`;
+  const selStart = hasName ? prefix.length : line1.length + 1;
+  const selEnd = hasName ? prefix.length + namePlaceholder.length : line1.length + 1 + bodyPlaceholder.length;
+  return { text, selStart, selEnd };
 }
 
 function daysInfo(due, status) {
@@ -125,7 +253,7 @@ function Calendar({ courses, cursor, onShift, selected, onSelect }) {
           {selItems.map((it, i) => (
             <div key={i} className="tk-cal-detail-row"><span className="glyph">{it.glyph}</span><span className="title">{it.title}</span></div>
           ))}
-          {!selItems.length && <div className="tk-cal-detail-empty">Nothing due. A gift.</div>}
+          {!selItems.length && <div className="tk-cal-detail-empty">Nothing due.</div>}
         </div>
       )}
     </div>
@@ -145,8 +273,8 @@ function Quiz({ courses, scope, onClose }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-  if (!pool.length) return null;
-  const { course, t } = pool[idx % pool.length];
+  const has = pool.length > 0;
+  const current = has ? pool[idx % pool.length] : null;
   const next = () => {
     if (pool.length > 1) { let n; do { n = (Math.random() * pool.length) | 0; } while (n === idx); setIdx(n); }
     setRevealed(false);
@@ -157,24 +285,99 @@ function Quiz({ courses, scope, onClose }) {
       <div className="tk-quiz-wrap">
         <div className="tk-quiz">
           <div className="tk-quiz-top">
-            <span className="tk-quiz-eyebrow">Prove it.</span>
-            <span className="tk-quiz-course">{course.name}</span>
+            <span className="tk-quiz-eyebrow">Quiz</span>
+            {has && <span className="tk-quiz-course">{current.course.name}</span>}
           </div>
-          <div className="tk-card-head">
-            <span className="tk-type">{t.type}</span>
-            <span className="tk-quiz-name">{t.name}</span>
+          {has ? (
+            <React.Fragment>
+              <div className="tk-card-head">
+                <span className="tk-type">{current.t.type}</span>
+                <span className="tk-quiz-name">{current.t.name}</span>
+              </div>
+              <div className="tk-quiz-body"><MathTex>{current.t.statement}</MathTex></div>
+              {revealed && <div className="tk-reveal"><MathTex>{current.t.proof}</MathTex></div>}
+              <div className="tk-quiz-foot">
+                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setRevealed(r => !r)}>
+                  {revealed ? 'Hide proof' : 'Show proof'}
+                </button>
+                <div style={{ display: 'flex', gap: '.5rem' }}>
+                  <button className="tk-mono-btn" onClick={next}>Next</button>
+                  <button className="tk-mono-btn" onClick={onClose}>Close</button>
+                </div>
+              </div>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <Empty icon="🔧">No theorems to quiz yet.</Empty>
+              <div className="tk-quiz-foot" style={{ justifyContent: 'flex-end' }}>
+                <button className="tk-mono-btn" onClick={onClose}>Close</button>
+              </div>
+            </React.Fragment>
+          )}
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+function Flashcards({ courses, scope, onClose }) {
+  const pool = useMemo(() => {
+    const p = [];
+    courses.forEach(c => { if (!scope || c.id === scope) c.theorems.forEach(t => { if (t.type === 'Definition') p.push({ course: c, t }); }); });
+    return p;
+  }, [courses, scope]);
+  const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === ' ') { e.preventDefault(); setFlipped(f => !f); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  const has = pool.length > 0;
+  const current = has ? pool[idx % pool.length] : null;
+  const next = () => {
+    if (pool.length > 1) { let n; do { n = (Math.random() * pool.length) | 0; } while (n === idx); setIdx(n); }
+    setFlipped(false);
+  };
+  return (
+    <React.Fragment>
+      <div className="tk-quiz-backdrop" onClick={onClose} />
+      <div className="tk-quiz-wrap">
+        <div className="tk-quiz tk-flashcard" onClick={() => has && setFlipped(f => !f)}>
+          <div className="tk-quiz-top">
+            <span className="tk-quiz-eyebrow">Flashcards</span>
+            {has && <span className="tk-quiz-course">{current.course.name}</span>}
           </div>
-          <div className="tk-quiz-body"><MathTex>{t.statement}</MathTex></div>
-          {revealed && <div className="tk-reveal"><MathTex>{t.proof}</MathTex></div>}
-          <div className="tk-quiz-foot">
-            <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setRevealed(r => !r)}>
-              {revealed ? 'hide it again' : 'reveal the idea'}
-            </button>
-            <div style={{ display: 'flex', gap: '.5rem' }}>
-              <button className="tk-mono-btn" onClick={next}>next draw ▸</button>
-              <button className="tk-mono-btn" onClick={onClose}>esc</button>
-            </div>
-          </div>
+          {has ? (
+            <React.Fragment>
+              <div className="tk-flash-face">
+                {!flipped ? (
+                  <div className="tk-flash-term">{current.t.name}</div>
+                ) : (
+                  <div className="tk-quiz-body"><MathTex>{current.t.statement}</MathTex></div>
+                )}
+              </div>
+              <div className="tk-quiz-foot" onClick={(e) => e.stopPropagation()}>
+                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setFlipped(f => !f)}>
+                  {flipped ? 'Show term' : 'Show definition'}
+                </button>
+                <div style={{ display: 'flex', gap: '.5rem' }}>
+                  <button className="tk-mono-btn" onClick={next}>Next</button>
+                  <button className="tk-mono-btn" onClick={onClose}>Close</button>
+                </div>
+              </div>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <Empty icon="📇">No definitions to review yet.</Empty>
+              <div className="tk-quiz-foot" style={{ justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
+                <button className="tk-mono-btn" onClick={onClose}>Close</button>
+              </div>
+            </React.Fragment>
+          )}
         </div>
       </div>
     </React.Fragment>
@@ -193,9 +396,18 @@ function App() {
   const [calCursor, setCalCursor] = useState({ y: new Date().getFullYear(), m: new Date().getMonth() });
   const [selectedDate, setSelectedDate] = useState(null);
   const [quizScope, setQuizScope] = useState(undefined); // undefined = closed, null = all courses
+  const [flashScope, setFlashScope] = useState(undefined); // undefined = closed, null = all courses
   const [drafts, setDrafts] = useState({});
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
+  const [activeChapter, setActiveChapter] = useState({});
+  const [slash, setSlash] = useState(null);
+  const chapterTaRef = useRef(null);
 
   useEffect(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(courses)); } catch (e) {} }, [courses]);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('proofLabTheme', theme); } catch (e) {}
+  }, [theme]);
 
   const mutate = useCallback((courseId, fn) => {
     setCourses(cs => cs.map(c => c.id === courseId ? fn(c) : c));
@@ -218,6 +430,66 @@ function App() {
     setDrafts(d => ({ ...d, [cid + ':title']: '', [cid + ':due']: '' }));
   };
 
+  const addChapter = (cid, title) => {
+    const id = 'ch' + Date.now();
+    mutate(cid, c => ({ ...c, chapters: [...(c.chapters || []), { id, title, body: '' }] }));
+    setActiveChapter(a => ({ ...a, [cid]: id }));
+  };
+  const submitAddChapter = (cid) => {
+    const title = draft(cid + ':chapterTitle').trim();
+    if (!title) return;
+    addChapter(cid, title);
+    setDraft(cid + ':chapterTitle', '');
+  };
+  const removeChapter = (cid, id) => {
+    mutate(cid, c => ({ ...c, chapters: (c.chapters || []).filter(ch => ch.id !== id) }));
+    setActiveChapter(a => { const n = { ...a }; if (n[cid] === id) delete n[cid]; return n; });
+  };
+  const updateChapterBody = (cid, id, body) => {
+    mutate(cid, c => ({ ...c, chapters: (c.chapters || []).map(ch => ch.id === id ? { ...ch, body } : ch) }));
+  };
+  const handleChapterChange = (cid, chid, e) => {
+    const val = e.target.value;
+    const pos = e.target.selectionStart;
+    updateChapterBody(cid, chid, val);
+    const lineStart = val.lastIndexOf('\n', pos - 1) + 1;
+    const line = val.slice(lineStart, pos);
+    const m = line.match(/^\/(\w*)$/);
+    if (m) setSlash({ courseId: cid, chapterId: chid, query: m[1], start: lineStart, end: pos });
+    else setSlash(null);
+  };
+  const insertBlock = (cid, chid, cmd, replaceRange) => {
+    const ta = chapterTaRef.current;
+    const course = courses.find(c => c.id === cid);
+    const ch = ((course && course.chapters) || []).find(x => x.id === chid);
+    const value = ch ? ch.body : '';
+    const { text, selStart, selEnd } = blockTemplate(cmd);
+    const start = replaceRange ? replaceRange.start : (ta ? ta.selectionStart : value.length);
+    const end = replaceRange ? replaceRange.end : (ta ? ta.selectionEnd : value.length);
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const pad = before.length && !before.endsWith('\n') ? '\n' : '';
+    updateChapterBody(cid, chid, before + pad + text + after);
+    const base = before.length + pad.length;
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(base + selStart, base + selEnd);
+    });
+  };
+  const onChapterKeyDown = (e, cid, chid) => {
+    if (!slash || slash.courseId !== cid || slash.chapterId !== chid) return;
+    if (e.key === 'Escape') { setSlash(null); return; }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      const matches = BLOCK_TYPES.filter(b => b.cmd.startsWith(slash.query.toLowerCase()));
+      if (matches.length) {
+        e.preventDefault();
+        insertBlock(cid, chid, matches[0].cmd, slash);
+        setSlash(null);
+      }
+    }
+  };
+
   const current = courses.find(c => c.id === view);
   const totals = {
     all: courses.reduce((s, c) => s + c.assignments.length, 0),
@@ -235,7 +507,6 @@ function App() {
   return (
     <div className="tk-app">
       <MathParticles />
-      <div className="math-deco">∂(due)/∂t &gt; 0 · · · ∮ proofs dγ</div>
 
       <aside className="tk-sidebar">
         <div className="tk-brand">
@@ -248,6 +519,9 @@ function App() {
             <div className="tk-brand-sub">NUS · Mathematics</div>
           </div>
         </div>
+        <button className="tk-theme-toggle" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
         <ul className="tk-nav">
           <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}><span className="dot" />Dashboard</a></li>
           {courses.map(c => (
@@ -258,11 +532,11 @@ function App() {
               </a>
             </li>
           ))}
-          <li><a className={view === 'margin' ? 'active' : ''} onClick={() => setView('margin')}><span className="dot" />The Margin</a></li>
+          <li><a className={view === 'margin' ? 'active' : ''} onClick={() => setView('margin')}><span className="dot" />Notes</a></li>
         </ul>
         <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
           onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
-        <div className="tk-sidebar-foot">saved to this browser ·<br/>wire Firebase for cross-device sync</div>
+        <div className="tk-sidebar-foot">Saved locally in this browser.</div>
       </aside>
 
       <main className="tk-main">
@@ -270,28 +544,31 @@ function App() {
           <section>
             <div className="tk-hero fade-up">
               <div>
-                <h1>Right then — <em>what's due.</em></h1>
-                <div className="tk-hero-meta">{String(now.getDate()).padStart(2,'0')} {MONTHS[now.getMonth()]} {now.getFullYear()} · semester: chaos, mostly organised</div>
+                <h1>Dashboard</h1>
+                <div className="tk-hero-meta">{String(now.getDate()).padStart(2,'0')} {MONTHS[now.getMonth()]} {now.getFullYear()}</div>
               </div>
-              <button className="tk-btn tk-btn-primary" onClick={() => setQuizScope(null)}>∴ Quiz me</button>
+              <div style={{ display: 'flex', gap: '.6rem' }}>
+                <button className="tk-btn tk-btn-outline" onClick={() => setFlashScope(null)}>Flashcards</button>
+                <button className="tk-btn tk-btn-primary" onClick={() => setQuizScope(null)}>Quiz</button>
+              </div>
             </div>
             <div className="tk-stats fade-up d1">
-              <div className="tk-stat"><div className="tk-stat-num">{totals.all - totals.done}</div><div className="tk-stat-cap">Owed to the universe</div></div>
-              <div className="tk-stat"><div className="tk-stat-num">{totals.done}<span>/{totals.all}</span></div><div className="tk-stat-cap">Cleared</div></div>
-              <div className="tk-stat"><div className="tk-stat-num">{totals.theorems}</div><div className="tk-stat-cap">Results in the canon</div></div>
+              <div className="tk-stat"><div className="tk-stat-num">{totals.all - totals.done}</div><div className="tk-stat-cap">Pending</div></div>
+              <div className="tk-stat"><div className="tk-stat-num">{totals.done}<span>/{totals.all}</span></div><div className="tk-stat-cap">Completed</div></div>
+              <div className="tk-stat"><div className="tk-stat-num">{totals.theorems}</div><div className="tk-stat-cap">Theorems</div></div>
             </div>
             <div className="fade-up d2">
-              <SectionLabel sub="every course, soonest first">The Queue</SectionLabel>
+              <SectionLabel sub="soonest due first">Assignments</SectionLabel>
               {upcoming.length ? (
                 <div className="tk-timeline" style={{ marginBottom: '3.2rem' }}>
                   {upcoming.map(a => (
                     <AssignmentRow key={a.id} a={a} showCourse={`${a.course.glyph} · ${a.course.name}`} onCycle={() => cycle(a.course.id, a.id)} />
                   ))}
                 </div>
-              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending. Suspicious.</Empty></div>}
+              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending.</Empty></div>}
             </div>
             <div className="fade-up d3">
-              <SectionLabel>Jump in</SectionLabel>
+              <SectionLabel>Courses</SectionLabel>
               <div className="tk-jump-grid">
                 {courses.map(c => {
                   const done = c.assignments.filter(a => a.status === 'done').length;
@@ -319,9 +596,12 @@ function App() {
                     <span className="tk-course-glyph">{current.glyph}</span>
                     <span className="tk-course-name">{current.name}</span>
                   </div>
-                  <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open · {current.theorems.length} in the canon · {current.notes.length} margin notes</div>
+                  <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open · {current.theorems.length} theorems · {current.notes.length} notes</div>
                 </div>
-                <button className="tk-btn tk-btn-outline" onClick={() => setQuizScope(current.id)}>∴ Quiz me</button>
+                <div style={{ display: 'flex', gap: '.6rem' }}>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setFlashScope(current.id)}>Flashcards</button>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setQuizScope(current.id)}>Quiz</button>
+                </div>
               </div>
               <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
                 <div className="tk-progress-fill" style={{ width: (current.assignments.length ? Math.round(current.assignments.filter(a => a.status === 'done').length / current.assignments.length * 100) : 0) + '%' }} />
@@ -329,7 +609,7 @@ function App() {
             </div>
 
             <div className="fade-up d1">
-              <SectionLabel>The Queue</SectionLabel>
+              <SectionLabel>Assignments</SectionLabel>
               <div className="tk-timeline">
                 {current.assignments.map(a => (
                   <AssignmentRow key={a.id} a={a} onCycle={() => cycle(current.id, a.id)} onRemove={() => removeA(current.id, a.id)} />
@@ -343,30 +623,92 @@ function App() {
             </div>
 
             <div className="fade-up d2">
-              <SectionLabel sub="key facts, theorems, lemmas">The Canon</SectionLabel>
-              <div className="tk-stack">
-                {current.theorems.map(t => (
-                  <RevealCard key={t.id} badge={t.type} name={t.name} body={t.statement} hidden={t.proof}
-                    hiddenLabels={['reveal proof ▸', 'hide proof ▾']} revealed={t.revealed} onToggle={() => toggle(current.id, 'theorems', t.id)} />
-                ))}
-                {!current.theorems.length && <Empty icon="🔧">Canon is empty. Add results as you meet them.</Empty>}
-              </div>
+              <SectionLabel sub="write in markdown + KaTeX, organised by chapter">Chapters</SectionLabel>
+              {(() => {
+                const chapters = current.chapters || [];
+                const activeId = activeChapter[current.id] || (chapters[0] && chapters[0].id);
+                const chapter = chapters.find(ch => ch.id === activeId) || null;
+                const activeSlash = slash && slash.courseId === current.id && chapter && slash.chapterId === chapter.id ? slash : null;
+                const slashMatches = activeSlash ? BLOCK_TYPES.filter(b => b.cmd.startsWith(activeSlash.query.toLowerCase())) : [];
+                return (
+                  <React.Fragment>
+                    <div className="tk-chapter-tabs">
+                      {chapters.map(ch => (
+                        <button key={ch.id} className={`tk-chapter-tab${ch.id === activeId ? ' active' : ''}`}
+                          onClick={() => setActiveChapter(a => ({ ...a, [current.id]: ch.id }))}>{ch.title}</button>
+                      ))}
+                    </div>
+                    <div className="tk-form-row">
+                      <input className="tk-input" placeholder="new chapter title…" value={draft(current.id + ':chapterTitle')}
+                        onChange={e => setDraft(current.id + ':chapterTitle', e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && submitAddChapter(current.id)} />
+                      <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => submitAddChapter(current.id)}>Add chapter</button>
+                    </div>
+                    {chapter ? (
+                      <div className="tk-chapter-editor">
+                        <div className="tk-chapter-toolbar">
+                          {BLOCK_TYPES.map(b => (
+                            <button key={b.cmd} className="tk-mono-btn" onClick={() => insertBlock(current.id, chapter.id, b.cmd)}>/{b.cmd}</button>
+                          ))}
+                          <button className="tk-x-btn" style={{ marginLeft: 'auto' }} title="delete chapter" onClick={() => removeChapter(current.id, chapter.id)}>×</button>
+                        </div>
+                        <div className="tk-chapter-panes">
+                          <div className="tk-chapter-pane-edit">
+                            <textarea
+                              ref={chapterTaRef}
+                              className="tk-textarea tk-chapter-textarea"
+                              placeholder="Write here. Type /definition, /lemma, /theorem… for a template."
+                              value={chapter.body}
+                              onChange={e => handleChapterChange(current.id, chapter.id, e)}
+                              onKeyDown={e => onChapterKeyDown(e, current.id, chapter.id)}
+                            />
+                            {activeSlash && (
+                              <div className="tk-slash-menu">
+                                {slashMatches.length ? slashMatches.map(b => (
+                                  <button key={b.cmd} className="tk-slash-item"
+                                    onClick={() => { insertBlock(current.id, chapter.id, b.cmd, activeSlash); setSlash(null); }}>
+                                    /{b.cmd} <span>{b.label}</span>
+                                  </button>
+                                )) : <div className="tk-slash-empty">no match</div>}
+                              </div>
+                            )}
+                          </div>
+                          <div className="tk-chapter-pane-preview">
+                            {chapter.body.trim() ? renderBlocks(chapter.body) : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+                          </div>
+                        </div>
+                      </div>
+                    ) : <Empty icon="📓">No chapters yet. Add one above.</Empty>}
+                  </React.Fragment>
+                );
+              })()}
             </div>
 
             <div className="fade-up d3">
-              <SectionLabel sub="problems, then the reveal">The Arena</SectionLabel>
+              <SectionLabel sub="definitions, lemmas, theorems">Theorems</SectionLabel>
+              <div className="tk-stack">
+                {current.theorems.map(t => (
+                  <RevealCard key={t.id} badge={t.type} name={t.name} body={t.statement} hidden={t.proof}
+                    hiddenLabels={['Show proof', 'Hide proof']} revealed={t.revealed} onToggle={() => toggle(current.id, 'theorems', t.id)} />
+                ))}
+                {!current.theorems.length && <Empty icon="🔧">No theorems yet.</Empty>}
+              </div>
+            </div>
+
+            <div className="fade-up d4">
+              <SectionLabel sub="attempt, then check the solution">Problems</SectionLabel>
               <div className="tk-stack">
                 {current.problems.map(p => (
                   <RevealCard key={p.id} name={p.title} body={p.problem} hidden={p.solution}
-                    hiddenLabels={['show worked solution ▸', 'hide solution ▾']} revealed={p.revealed} onToggle={() => toggle(current.id, 'problems', p.id)} />
+                    hiddenLabels={['Show solution', 'Hide solution']} revealed={p.revealed} onToggle={() => toggle(current.id, 'problems', p.id)} />
                 ))}
                 {!current.problems.length && <Empty icon="⚔️">No problems logged yet.</Empty>}
               </div>
             </div>
 
             <div className="fade-up d4">
-              <SectionLabel>The Margin</SectionLabel>
-              <textarea className="tk-textarea" placeholder="scribble a thought before it evaporates… ($math$ works)" value={draft(current.id + ':note')} onChange={e => setDraft(current.id + ':note', e.target.value)} />
+              <SectionLabel>Notes</SectionLabel>
+              <textarea className="tk-textarea" placeholder="write a note… ($math$ works)" value={draft(current.id + ':note')} onChange={e => setDraft(current.id + ':note', e.target.value)} />
               <div className="tk-note-actions">
                 <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => { addNote(current.id, draft(current.id + ':note')); setDraft(current.id + ':note', ''); }}>Pin note</button>
               </div>
@@ -386,14 +728,14 @@ function App() {
         {view === 'margin' && (
           <section>
             <div className="fade-up">
-              <div className="tk-course-name" style={{ marginBottom: '.4rem' }}>The Margin</div>
-              <div className="tk-hero-meta" style={{ marginBottom: '2.5rem' }}>every scribble, across every course · "I have discovered a truly marvellous proof of this…"</div>
+              <div className="tk-course-name" style={{ marginBottom: '.4rem' }}>Notes</div>
+              <div className="tk-hero-meta" style={{ marginBottom: '2.5rem' }}>All notes, across every course.</div>
             </div>
             <div className="tk-card fade-up d1" style={{ marginBottom: '2.5rem', borderLeft: '1px solid var(--border)' }}>
               <select className="tk-select" style={{ marginBottom: '.7rem' }} value={draft('margin:course') || courses[0].id} onChange={e => setDraft('margin:course', e.target.value)}>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.nickname}</option>)}
               </select>
-              <textarea className="tk-textarea" placeholder="scribble a thought before it evaporates… ($math$ works)" value={draft('margin:note')} onChange={e => setDraft('margin:note', e.target.value)} />
+              <textarea className="tk-textarea" placeholder="write a note… ($math$ works)" value={draft('margin:note')} onChange={e => setDraft('margin:note', e.target.value)} />
               <div className="tk-note-actions" style={{ margin: '.7rem 0 0' }}>
                 <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => { addNote(draft('margin:course') || courses[0].id, draft('margin:note')); setDraft('margin:note', ''); }}>Pin note</button>
               </div>
@@ -410,13 +752,14 @@ function App() {
                   <button className="tk-x-btn" onClick={() => removeNote(n.course.id, n.id)}>×</button>
                 </div>
               ))}
-              {!allNotes.length && <Empty icon="✍️">Margins are blank. For now.</Empty>}
+              {!allNotes.length && <Empty icon="✍️">No notes yet.</Empty>}
             </div>
           </section>
         )}
       </main>
 
       {quizScope !== undefined && <Quiz courses={courses} scope={quizScope} onClose={() => setQuizScope(undefined)} />}
+      {flashScope !== undefined && <Flashcards courses={courses} scope={flashScope} onClose={() => setFlashScope(undefined)} />}
     </div>
   );
 }
