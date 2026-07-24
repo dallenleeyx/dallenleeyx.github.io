@@ -145,6 +145,15 @@ function renderBlockView(block) {
   return <p className="tk-note-p">{block.text ? renderInline(block.text, block.id) : <span className="tk-note-empty">Type something, or "/" for a block type…</span>}</p>;
 }
 
+// definitions/lemmas/theorems/etc. written into chapters, aggregated for the Theorems tab, Quiz, and Flashcards
+function courseTheoremBlocks(course) {
+  const out = [];
+  (course.chapters || []).forEach(ch => (ch.blocks || []).forEach(b => {
+    if (ADMONITION_TYPES.has(b.type)) out.push({ ...b, chapterId: ch.id, chapterTitle: ch.title });
+  }));
+  return out;
+}
+
 function ChapterEditor({ course, chapter, onClose, onDeleteChapter, addBlock, updateBlock, removeBlock }) {
   const [editingId, setEditingId] = useState(null);
   const [slash, setSlash] = useState(null); // { blockId, query }
@@ -398,7 +407,7 @@ function Calendar({ courses, cursor, onShift, selected, onSelect }) {
 function Quiz({ courses, scope, onClose }) {
   const pool = useMemo(() => {
     const p = [];
-    courses.forEach(c => { if (!scope || c.id === scope) c.theorems.forEach(t => p.push({ course: c, t })); });
+    courses.forEach(c => { if (!scope || c.id === scope) courseTheoremBlocks(c).forEach(t => p.push({ course: c, t })); });
     return p;
   }, [courses, scope]);
   const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
@@ -426,14 +435,13 @@ function Quiz({ courses, scope, onClose }) {
           {has ? (
             <React.Fragment>
               <div className="tk-card-head">
-                <span className="tk-type">{current.t.type}</span>
-                <span className="tk-quiz-name">{current.t.name}</span>
+                <span className="tk-type">{BLOCK_LABELS[current.t.type] || current.t.type}</span>
+                <span className="tk-quiz-name">{current.t.name || <span className="tk-note-empty">Untitled</span>}</span>
               </div>
-              <div className="tk-quiz-body"><MathTex>{current.t.statement}</MathTex></div>
-              {revealed && <div className="tk-reveal"><MathTex>{current.t.proof}</MathTex></div>}
+              {revealed && <div className="tk-reveal">{current.t.text ? <p className="tk-note-p">{renderInline(current.t.text, 'qz')}</p> : <span className="tk-note-empty">Empty</span>}</div>}
               <div className="tk-quiz-foot">
                 <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setRevealed(r => !r)}>
-                  {revealed ? 'Hide proof' : 'Show proof'}
+                  {revealed ? 'Hide' : 'Show'}
                 </button>
                 <div style={{ display: 'flex', gap: '.5rem' }}>
                   <button className="tk-mono-btn" onClick={next}>Next</button>
@@ -458,7 +466,7 @@ function Quiz({ courses, scope, onClose }) {
 function Flashcards({ courses, scope, onClose }) {
   const pool = useMemo(() => {
     const p = [];
-    courses.forEach(c => { if (!scope || c.id === scope) c.theorems.forEach(t => { if (t.type === 'Definition') p.push({ course: c, t }); }); });
+    courses.forEach(c => { if (!scope || c.id === scope) courseTheoremBlocks(c).forEach(t => { if (t.type === 'definition') p.push({ course: c, t }); }); });
     return p;
   }, [courses, scope]);
   const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
@@ -490,9 +498,9 @@ function Flashcards({ courses, scope, onClose }) {
             <React.Fragment>
               <div className="tk-flash-face">
                 {!flipped ? (
-                  <div className="tk-flash-term">{current.t.name}</div>
+                  <div className="tk-flash-term">{current.t.name || <span className="tk-note-empty">Untitled</span>}</div>
                 ) : (
-                  <div className="tk-quiz-body"><MathTex>{current.t.statement}</MathTex></div>
+                  <div className="tk-quiz-body">{current.t.text ? <p className="tk-note-p">{renderInline(current.t.text, 'fc')}</p> : <span className="tk-note-empty">Empty</span>}</div>
                 )}
               </div>
               <div className="tk-quiz-foot" onClick={(e) => e.stopPropagation()}>
@@ -607,7 +615,7 @@ function App() {
   const totals = {
     all: courses.reduce((s, c) => s + c.assignments.length, 0),
     done: courses.reduce((s, c) => s + c.assignments.filter(a => a.status === 'done').length, 0),
-    theorems: courses.reduce((s, c) => s + c.theorems.length, 0),
+    theorems: courses.reduce((s, c) => s + courseTheoremBlocks(c).length, 0),
   };
   const upcoming = courses
     .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
@@ -690,7 +698,7 @@ function App() {
                     <div key={c.id} className="tk-jump" onClick={() => setView(c.id)}>
                       <div className="tk-jump-glyph">{c.glyph}</div>
                       <div className="tk-jump-name">{c.name}</div>
-                      <div className="tk-jump-meta">{c.assignments.length - done} open · {c.theorems.length} results · {c.notes.length} notes</div>
+                      <div className="tk-jump-meta">{c.assignments.length - done} open · {courseTheoremBlocks(c).length} results · {c.notes.length} notes</div>
                       <div className="tk-progress"><div className="tk-progress-fill" style={{ width: pct + '%' }} /></div>
                     </div>
                   );
@@ -709,7 +717,7 @@ function App() {
                     <span className="tk-course-glyph">{current.glyph}</span>
                     <span className="tk-course-name">{current.name}</span>
                   </div>
-                  <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open · {current.theorems.length} theorems · {current.notes.length} notes</div>
+                  <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open · {courseTheoremBlocks(current).length} theorems · {current.notes.length} notes</div>
                 </div>
                 <div style={{ display: 'flex', gap: '.6rem' }}>
                   <button className="tk-btn tk-btn-outline" onClick={() => setFlashScope(current.id)}>Flashcards</button>
@@ -756,13 +764,15 @@ function App() {
             </div>
 
             <div className="fade-up d3">
-              <SectionLabel sub="definitions, lemmas, theorems">Theorems</SectionLabel>
+              <SectionLabel sub="definitions, lemmas, theorems written in your chapters">Theorems</SectionLabel>
               <div className="tk-stack">
-                {current.theorems.map(t => (
-                  <RevealCard key={t.id} badge={t.type} name={t.name} body={t.statement} hidden={t.proof}
-                    hiddenLabels={['Show proof', 'Hide proof']} revealed={t.revealed} onToggle={() => toggle(current.id, 'theorems', t.id)} />
+                {courseTheoremBlocks(current).map(t => (
+                  <div key={t.id} className="tk-theorem-card" onClick={() => setOpenChapter({ courseId: current.id, chapterId: t.chapterId })}>
+                    <div className="tk-block-source">{t.chapterTitle}</div>
+                    {renderBlockView(t)}
+                  </div>
                 ))}
-                {!current.theorems.length && <Empty icon="🔧">No theorems yet.</Empty>}
+                {!courseTheoremBlocks(current).length && <Empty icon="🔧">No theorems yet — add one from a chapter with /definition, /theorem, /lemma…</Empty>}
               </div>
             </div>
 

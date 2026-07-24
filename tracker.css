@@ -238,6 +238,12 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-note-block-name{font-size:.95rem;font-weight:700;color:var(--fg-1);}
 .tk-note-block-body{font-size:.95rem;color:var(--fg-2);}
 
+/* Theorems tab — read-only, click through to the source chapter */
+.tk-theorem-card{cursor:pointer;transition:transform var(--transition-fast);}
+.tk-theorem-card:hover{transform:translateY(-2px);}
+.tk-theorem-card:hover .tk-note-block{border-color:var(--accent);}
+.tk-block-source{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+
 @media (max-width: 900px){
   .tk-sidebar{position:static;width:100%;min-width:0;border-right:none;border-bottom:1px solid var(--border);}
   .tk-app{flex-direction:column;}
