@@ -1,0 +1,1696 @@
+/* ==========================================================================
+   Design tokens
+   Five selectable color themes, each with light + dark variants — the
+   accent/status/level colors change per theme, but every OTHER rule in this
+   file only ever reads the --jp-paper/--jp-ink/--jp-indigo/etc. custom properties
+   below, never a literal color, so a theme is fully defined right here and
+   nowhere else needs to change.
+   Selected via [data-jp-color-theme] on the .jp-shell wrapper div (Settings →
+   Theme), not on <html> — this app shares a document with the math site's own
+   [data-theme] toggle, so it gets its own namespaced attributes/properties to
+   avoid colliding with the math site's identically-named CSS custom
+   properties (e.g. --radius-sm) and to avoid the math site's own (unscoped)
+   [data-theme="dark"] selector matching this wrapper too. Light/dark stays a
+   second, orthogonal toggle via [data-jp-theme]. The base .jp-shell block (no
+   attribute needed) is the "slate" theme's light variant, so anything that
+   predates the theme picker still renders correctly.
+   Type: Shippori Mincho for Japanese text, Inter for UI/English.
+   ========================================================================== */
+.jp-shell {
+  /* ---- slate (default): cool neutrals + a single vivid blue accent ---- */
+  --jp-paper: #F1F5F9;
+  --jp-paper-alt: #E2E8F0;
+  --jp-paper-deep: #CBD5E1;
+  --jp-ink: #0F172A;
+  --jp-ink-soft: #64748B;
+  --jp-line: #CBD5E1;
+
+  --jp-indigo: #3B6DF4;
+  --jp-indigo-deep: #1E3A8A;
+  --jp-seal: #DC2626;
+  --jp-seal-bg: #FEE2E2;
+
+  --jp-n5: #C7D9FB;
+  --jp-n4: #9FBBF5;
+  --jp-n3: #7398EE;
+  --jp-n2: #5480E0;
+  --jp-n1: #3B6DF4;
+
+  --jp-learning: #D97706;
+  --jp-learning-bg: #FEF3C7;
+  --jp-mastered: #16A34A;
+  --jp-mastered-bg: #DCFCE7;
+
+  --jp-glow-color: rgba(59, 109, 244, 0.35);
+
+  /* spacing scale — every gap/margin/padding in the site should trace back
+     to one of these instead of a one-off px value */
+  --jp-space-1: 4px;
+  --jp-space-2: 8px;
+  --jp-space-3: 12px;
+  --jp-space-4: 16px;
+  --jp-space-5: 24px;
+  --jp-space-6: 32px;
+  --jp-space-7: 48px;
+  --jp-space-8: 64px;
+
+  /* corner radius scale — sm for tight callouts/badges-that-aren't-pills,
+     md for list rows/panels/inputs, lg for freestanding "cards", pill for
+     anything fully rounded (chips, toggles, tags) */
+  --jp-radius-sm: 4px;
+  --jp-radius-md: 8px;
+  --jp-radius-lg: 14px;
+  --jp-radius-pill: 999px;
+  --jp-radius: var(--jp-radius-md); /* kept as an alias — still referenced below */
+
+  /* elevation — all shadows share the ink hue so depth reads as
+     part of the palette rather than generic drop-shadow grey */
+  --jp-shadow-color: 15, 23, 42;
+  --jp-shadow-sm: 0 3px 8px rgba(var(--jp-shadow-color), .12);
+  --jp-shadow-md: 0 10px 24px rgba(var(--jp-shadow-color), .14);
+  --jp-shadow-lg: 0 20px 40px rgba(var(--jp-shadow-color), .25);
+
+  /* the "meta text" cluster (tags, badges, hints, table heads) had crept
+     into 6+ near-identical sizes between 0.7rem and 0.82rem — collapsed
+     down to two */
+  --jp-fs-2xs: 0.72rem;
+  --jp-fs-xs: 0.8rem;
+
+  --jp-font-jp: 'Shippori Mincho', serif;
+  --jp-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.jp-shell[data-jp-color-theme="slate"] {
+  --jp-paper: #F1F5F9;
+  --jp-paper-alt: #E2E8F0;
+  --jp-paper-deep: #CBD5E1;
+  --jp-ink: #0F172A;
+  --jp-ink-soft: #64748B;
+  --jp-line: #CBD5E1;
+  --jp-indigo: #3B6DF4;
+  --jp-indigo-deep: #1E3A8A;
+  --jp-seal: #DC2626;
+  --jp-seal-bg: #FEE2E2;
+  --jp-n5: #C7D9FB;
+  --jp-n4: #9FBBF5;
+  --jp-n3: #7398EE;
+  --jp-n2: #5480E0;
+  --jp-n1: #3B6DF4;
+  --jp-learning: #D97706;
+  --jp-learning-bg: #FEF3C7;
+  --jp-mastered: #16A34A;
+  --jp-mastered-bg: #DCFCE7;
+  --jp-glow-color: rgba(59, 109, 244, 0.35);
+}
+.jp-shell[data-jp-color-theme="slate"][data-jp-theme="dark"] {
+  --jp-paper: #0F172A;
+  --jp-paper-alt: #1E293B;
+  --jp-paper-deep: #334155;
+  --jp-ink: #E2E8F0;
+  --jp-ink-soft: #94A3B8;
+  --jp-line: #334155;
+  --jp-indigo: #60A5FA;
+  --jp-indigo-deep: #93C5FD;
+  --jp-seal: #F87171;
+  --jp-seal-bg: #431417;
+  --jp-learning: #FBBF24;
+  --jp-learning-bg: #422006;
+  --jp-mastered: #4ADE80;
+  --jp-mastered-bg: #0F2E1B;
+  --jp-glow-color: rgba(147, 197, 253, 0.45);
+}
+
+/* ---- pastel ("In the Sunshine"): cream, mint, peach, steel blue ---- */
+.jp-shell[data-jp-color-theme="pastel"] {
+  --jp-paper: #F2EAE0;
+  --jp-paper-alt: #F0E2C3;
+  --jp-paper-deep: #DCECE9;
+  --jp-ink: #4E3F33;
+  --jp-ink-soft: #8C7A6B;
+  --jp-line: #C3DEDD;
+  --jp-indigo: #82B2C0;
+  --jp-indigo-deep: #5C8A98;
+  --jp-seal: #D97757;
+  --jp-seal-bg: #F6C7B3;
+  --jp-n5: #DCECE9;
+  --jp-n4: #C3DEDD;
+  --jp-n3: #9FC5C7;
+  --jp-n2: #82B2C0;
+  --jp-n1: #5C8A98;
+  --jp-learning: #CC9A4D;
+  --jp-learning-bg: #F0E2C3;
+  --jp-mastered: #6B9C93;
+  --jp-mastered-bg: #DCECE9;
+  --jp-glow-color: rgba(130, 178, 192, 0.4);
+}
+.jp-shell[data-jp-color-theme="pastel"][data-jp-theme="dark"] {
+  --jp-paper: #2A211B;
+  --jp-paper-alt: #362B23;
+  --jp-paper-deep: #443627;
+  --jp-ink: #F2EAE0;
+  --jp-ink-soft: #C9B8A8;
+  --jp-line: #4A3B2C;
+  --jp-indigo: #9FCAD6;
+  --jp-indigo-deep: #C3DEDD;
+  --jp-seal: #F0A583;
+  --jp-seal-bg: #4A2E22;
+  --jp-learning: #F0C97A;
+  --jp-learning-bg: #4A3B1A;
+  --jp-mastered: #8FC4BA;
+  --jp-mastered-bg: #1F3530;
+  --jp-glow-color: rgba(159, 202, 214, 0.45);
+}
+
+/* ---- warm (refined warm neutrals): beige-gray + navy + muted brick ---- */
+.jp-shell[data-jp-color-theme="warm"] {
+  --jp-paper: #E8E4D9;
+  --jp-paper-alt: #DED8C8;
+  --jp-paper-deep: #D1C9B5;
+  --jp-ink: #2A2A28;
+  --jp-ink-soft: #6E6A5C;
+  --jp-line: #C7BFA8;
+  --jp-indigo: #22314F;
+  --jp-indigo-deep: #131D33;
+  --jp-seal: #9C4A3C;
+  --jp-seal-bg: #F2DAD3;
+  --jp-n5: #8C9BBD;
+  --jp-n4: #6E80A6;
+  --jp-n3: #52658F;
+  --jp-n2: #384E78;
+  --jp-n1: #22314F;
+  --jp-learning: #B98B3E;
+  --jp-learning-bg: #F1E4C7;
+  --jp-mastered: #4F7A5B;
+  --jp-mastered-bg: #DCEAE0;
+  --jp-glow-color: rgba(34, 49, 79, 0.35);
+}
+.jp-shell[data-jp-color-theme="warm"][data-jp-theme="dark"] {
+  --jp-paper: #1B1A16;
+  --jp-paper-alt: #232019;
+  --jp-paper-deep: #2B271E;
+  --jp-ink: #EAE5D8;
+  --jp-ink-soft: #A79E88;
+  --jp-line: #3D3728;
+  --jp-indigo: #7E93C4;
+  --jp-indigo-deep: #B7C4E8;
+  --jp-seal: #D97B67;
+  --jp-seal-bg: #3A211D;
+  --jp-learning: #E0AD5C;
+  --jp-learning-bg: #3A2E15;
+  --jp-mastered: #7FBF92;
+  --jp-mastered-bg: #1E3327;
+  --jp-glow-color: rgba(126, 147, 196, 0.45);
+}
+
+/* ---- sumi (ink wash + single teal accent): near-monochrome, minimal ---- */
+.jp-shell[data-jp-color-theme="sumi"] {
+  --jp-paper: #F2F0EC;
+  --jp-paper-alt: #E7E4DD;
+  --jp-paper-deep: #D8D4CA;
+  --jp-ink: #2B2B2B;
+  --jp-ink-soft: #6B6B68;
+  --jp-line: #CFCBC0;
+  --jp-indigo: #1F6F6B;
+  --jp-indigo-deep: #12433F;
+  --jp-seal: #B0413A;
+  --jp-seal-bg: #F3DEDC;
+  --jp-n5: #A9CFCC;
+  --jp-n4: #7FB6B1;
+  --jp-n3: #55A19A;
+  --jp-n2: #34897F;
+  --jp-n1: #1F6F6B;
+  --jp-learning: #A9822F;
+  --jp-learning-bg: #EFE3C4;
+  --jp-mastered: #3F7A52;
+  --jp-mastered-bg: #D9EBDD;
+  --jp-glow-color: rgba(31, 111, 107, 0.35);
+}
+.jp-shell[data-jp-color-theme="sumi"][data-jp-theme="dark"] {
+  --jp-paper: #1A1A1A;
+  --jp-paper-alt: #232323;
+  --jp-paper-deep: #2E2E2E;
+  --jp-ink: #EDEBE6;
+  --jp-ink-soft: #9C9A93;
+  --jp-line: #3A3A3A;
+  --jp-indigo: #4FADA7;
+  --jp-indigo-deep: #8FD4CE;
+  --jp-seal: #E2685A;
+  --jp-seal-bg: #3A211D;
+  --jp-learning: #D9AE5C;
+  --jp-learning-bg: #3A2E15;
+  --jp-mastered: #6FBF8A;
+  --jp-mastered-bg: #1E3327;
+  --jp-glow-color: rgba(79, 173, 167, 0.45);
+}
+
+/* ---- matcha (sage green + cream + brown text, gold status) ---- */
+.jp-shell[data-jp-color-theme="matcha"] {
+  --jp-paper: #F3EFE1;
+  --jp-paper-alt: #E9E2CC;
+  --jp-paper-deep: #DCD3B5;
+  --jp-ink: #3A3527;
+  --jp-ink-soft: #7C7458;
+  --jp-line: #D0C6A5;
+  --jp-indigo: #5C7A5A;
+  --jp-indigo-deep: #3D5A3B;
+  --jp-seal: #B0553E;
+  --jp-seal-bg: #F0DCD0;
+  --jp-n5: #B9CBA8;
+  --jp-n4: #9CB98A;
+  --jp-n3: #7FA56C;
+  --jp-n2: #6B8F5C;
+  --jp-n1: #5C7A5A;
+  --jp-learning: #C9A24B;
+  --jp-learning-bg: #F1E4B8;
+  --jp-mastered: #4E8A5E;
+  --jp-mastered-bg: #DCEFDD;
+  --jp-glow-color: rgba(92, 122, 90, 0.35);
+}
+.jp-shell[data-jp-color-theme="matcha"][data-jp-theme="dark"] {
+  --jp-paper: #1D2018;
+  --jp-paper-alt: #262A1F;
+  --jp-paper-deep: #313627;
+  --jp-ink: #EDE7D6;
+  --jp-ink-soft: #A6A188;
+  --jp-line: #3B4130;
+  --jp-indigo: #8FBB80;
+  --jp-indigo-deep: #C3DDB5;
+  --jp-seal: #E08A6D;
+  --jp-seal-bg: #3A2419;
+  --jp-learning: #E0BE6C;
+  --jp-learning-bg: #3A2E12;
+  --jp-mastered: #7FCB8F;
+  --jp-mastered-bg: #1B3320;
+  --jp-glow-color: rgba(143, 187, 128, 0.45);
+}
+
+/* Legacy dark-mode-only toggle (no theme picked yet / pre-theme-picker
+   saved state) — same as the slate dark variant above. */
+.jp-shell[data-jp-theme="dark"]:not([data-jp-color-theme]) {
+  --jp-paper: #0F172A;
+  --jp-paper-alt: #1E293B;
+  --jp-paper-deep: #334155;
+  --jp-ink: #E2E8F0;
+  --jp-ink-soft: #94A3B8;
+  --jp-line: #334155;
+  --jp-indigo: #60A5FA;
+  --jp-indigo-deep: #93C5FD;
+  --jp-seal: #F87171;
+  --jp-seal-bg: #431417;
+  --jp-learning: #FBBF24;
+  --jp-learning-bg: #422006;
+  --jp-mastered: #4ADE80;
+  --jp-mastered-bg: #0F2E1B;
+  --jp-glow-color: rgba(147, 197, 253, 0.45);
+}
+
+/* ---------- motion ----------
+   Every keyframe used across the site lives here. Entrance animations are
+   attached to elements that get freshly created via innerHTML re-renders
+   (grammar detail, dashboard rows, exam banners) so they replay naturally
+   each time that content changes, with no JS bookkeeping required. The few
+   that need a JS-driven restart (flashcard refresh) are called out where
+   they're used. */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.7); }
+  70% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes stampImpact {
+  0% { opacity: 0; transform: rotate(-8deg) scale(1.9); }
+  55% { opacity: 1; transform: rotate(-8deg) scale(0.92); }
+  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+}
+@keyframes growFill {
+  from { width: 0; }
+}
+@keyframes shimmerSweep {
+  0% { background-position: -160% 0; }
+  100% { background-position: 160% 0; }
+}
+@keyframes softGlow {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  50% { text-shadow: 0 0 18px var(--jp-glow-color); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes flashCorrect {
+  0% { box-shadow: 0 0 0 0 var(--jp-mastered-bg); }
+  40% { box-shadow: 0 0 0 6px var(--jp-mastered-bg); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes flashWrong {
+  0% { box-shadow: 0 0 0 0 var(--jp-seal-bg); }
+  40% { box-shadow: 0 0 0 6px var(--jp-seal-bg); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+* { box-sizing: border-box; }
+
+/* The [hidden] attribute must always win over any class's own `display`
+   value — otherwise a class like `.modal-overlay { display: flex; }` (author
+   CSS) silently overrides the browser's built-in `[hidden] { display: none }`
+   (user-agent CSS), since author rules beat user-agent rules regardless of
+   selector specificity. This bit several elements toggled via `el.hidden`
+   in app.js/sync.js (modal, grade buttons, multiple-choice options, lesson
+   chips) — this single rule is the fix for all of them, present and future. */
+[hidden] { display: none !important; }
+
+/* The original scoped this to body, relying on :root-level custom
+   properties being visible everywhere. Here the theme custom properties are
+   scoped to .jp-shell instead (a descendant of body, not an ancestor), so
+   this rule has to live on .jp-shell itself to actually see them. */
+.jp-shell {
+  margin: 0;
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  font-family: var(--jp-font-ui);
+  transition: background 0.15s, color 0.15s;
+  min-height: 100vh;
+}
+
+/* ---------- header ---------- */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--jp-space-4);
+  padding: var(--jp-space-6) clamp(20px, 5vw, 64px) 0;
+}
+.brand {
+  display: block;
+  text-align: left;
+}
+.brand-jp {
+  display: block;
+  font-family: var(--jp-font-jp);
+  font-size: 1.8rem;
+  color: var(--jp-indigo-deep);
+}
+.brand-en {
+  display: block;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--jp-ink-soft);
+  margin-top: 2px;
+}
+
+.view-tabs {
+  display: flex;
+  gap: var(--jp-space-1);
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* A flex-wrap container lines up items by their unshrunk hypothetical
+     size before flex-shrink ever gets a say, so letting this size to its
+     natural content width (7 tabs' worth) meant it either forced
+     .header-right's other controls onto an orphan line, or — on a
+     narrow phone — dragged the whole page into horizontal scroll. A
+     hard cap sidesteps that fight entirely: past this width the tab
+     strip scrolls internally instead of pushing on its neighbors. */
+  max-width: min(560px, 100%);
+}
+.view-tabs::-webkit-scrollbar { display: none; }
+.tab {
+  font-family: var(--jp-font-ui);
+  font-size: 0.9rem;
+  padding: var(--jp-space-3) var(--jp-space-5);
+  border: 1px solid var(--jp-line);
+  border-bottom: none;
+  border-radius: var(--jp-radius-md) var(--jp-radius-md) 0 0;
+  background: var(--jp-paper-deep);
+  color: var(--jp-ink-soft);
+  cursor: pointer;
+  transition: background .2s, color .2s, transform .15s;
+}
+.tab:hover:not(.active) { transform: translateY(-2px); color: var(--jp-indigo-deep); }
+.tab:active { transform: translateY(0) scale(0.97); }
+.tab.active {
+  background: var(--jp-paper-alt);
+  color: var(--jp-indigo-deep);
+  font-weight: 600;
+}
+.tab-indicator {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  background: var(--jp-seal);
+  border-radius: 2px;
+  transition: left .25s cubic-bezier(.4, .2, .2, 1), width .25s cubic-bezier(.4, .2, .2, 1);
+  pointer-events: none;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--jp-space-4);
+  flex-wrap: wrap;
+}
+.lang-toggle .dir-btn { font-size: var(--jp-fs-2xs); padding: var(--jp-space-1) var(--jp-space-3); }
+
+.sync-status { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); }
+.sync-active-status { display: inline-flex; align-items: center; gap: var(--jp-space-2); color: var(--jp-ink-soft); }
+.sync-dot { color: var(--jp-mastered); font-size: 0.6rem; }
+.sync-signin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--jp-space-2);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  font-weight: 600;
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border-radius: var(--jp-radius-pill);
+  border: 1.5px solid var(--jp-indigo);
+  background: var(--jp-paper-alt);
+  color: var(--jp-indigo-deep);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform .12s, box-shadow .15s;
+}
+.sync-signin-pill:hover { background: var(--jp-indigo); color: #fff; transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
+.sync-signin-pill:active { transform: translateY(0) scale(0.96); }
+
+.settings-gear-btn {
+  background: none;
+  border: 1.5px solid var(--jp-line);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--jp-ink-soft);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.settings-gear-btn:hover { border-color: var(--jp-indigo); color: var(--jp-indigo-deep); transform: rotate(20deg); }
+.settings-gear-btn:active { transform: rotate(20deg) scale(0.9); }
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--jp-space-4);
+  padding: var(--jp-space-3) 0;
+  border-top: 1px solid var(--jp-line);
+}
+.settings-row:first-of-type { border-top: none; padding-top: var(--jp-space-1); }
+.settings-row-text { display: flex; flex-direction: column; gap: 2px; }
+.settings-row-label { font-family: var(--jp-font-ui); font-size: 0.9rem; font-weight: 600; color: var(--jp-ink); }
+.settings-row-desc { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); line-height: 1.4; }
+.settings-toggle {
+  flex: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--jp-radius-pill);
+  border: 1.5px solid var(--jp-line);
+  background: var(--jp-paper);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.settings-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--jp-ink-soft);
+  transition: transform 0.15s, background 0.15s;
+}
+.settings-toggle.active { background: var(--jp-indigo); border-color: var(--jp-indigo); }
+.settings-toggle.active::after { transform: translateX(18px); background: #fff; }
+
+.settings-row-column { flex-direction: column; align-items: flex-start; gap: var(--jp-space-1); }
+
+.theme-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--jp-space-3);
+  padding-bottom: var(--jp-space-3);
+  border-bottom: 1px solid var(--jp-line);
+  margin-bottom: var(--jp-space-1);
+}
+.theme-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-2);
+  padding: var(--jp-space-3);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.theme-swatch:hover { transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
+.theme-swatch:active { transform: translateY(0) scale(0.97); }
+.theme-swatch.active { border-color: var(--jp-indigo); box-shadow: 0 0 0 2px var(--jp-glow-color); }
+.theme-swatch-colors { display: flex; gap: 3px; }
+.theme-swatch-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.theme-swatch-label { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); text-align: center; line-height: 1.3; }
+.theme-swatch.active .theme-swatch-label { color: var(--jp-indigo-deep); font-weight: 600; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--jp-shadow-color), 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-box {
+  position: relative;
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-lg);
+  box-shadow: var(--jp-shadow-lg);
+  padding: var(--jp-space-5);
+  width: min(360px, 100%);
+  text-align: left;
+  animation: fadeInUp .25s ease;
+}
+.modal-box h3 { font-family: var(--jp-font-jp); font-size: 1.3rem; color: var(--jp-indigo-deep); margin: 0 0 var(--jp-space-2); }
+.modal-note { font-family: var(--jp-font-ui); font-size: 0.85rem; color: var(--jp-ink-soft); margin: 0 0 var(--jp-space-4); line-height: 1.5; }
+.modal-error { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-seal); margin: 0 0 var(--jp-space-4); }
+.modal-google-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: var(--jp-indigo);
+  border-color: var(--jp-indigo);
+  color: #fff;
+  font-weight: 600;
+  padding: var(--jp-space-3);
+  margin-bottom: var(--jp-space-3);
+  box-shadow: var(--jp-shadow-sm);
+}
+.modal-google-btn:hover { background: var(--jp-indigo-deep); border-color: var(--jp-indigo-deep); color: #fff; transform: translateY(-1px); box-shadow: var(--jp-shadow-md); }
+.modal-google-btn:active { transform: translateY(0) scale(0.97); }
+.modal-close-x {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--jp-ink-soft);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.modal-close-x:hover { color: var(--jp-ink); }
+
+/* ---------- main / views ---------- */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--jp-space-5) clamp(20px, 5vw, 64px) var(--jp-space-8);
+  border-top: 1px solid var(--jp-line);
+}
+.view { display: none; }
+.view.active { display: block; padding-top: var(--jp-space-6); animation: fadeInUp 0.35s ease; }
+/* the dashboard's stacked progress-bar rows all rode along with this
+   entrance animation every time you switched back to Home, reading as
+   the bars themselves still animating/jittering — so it's off here */
+#home-view.active { animation: none; }
+
+/* a view can now hold several sub-sections (Vocab: word list/flashcards/
+   writing; Grammar: grammar/conjugation), switched by a .direction-toggle
+   at the top of the view instead of the main tab bar */
+.subview { display: none; }
+.subview.active { display: block; margin-top: var(--jp-space-5); }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--jp-space-4);
+}
+
+.wl-search-input {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  min-width: 220px;
+}
+.wl-search-input:focus { border-color: var(--jp-indigo); outline: none; }
+.wl-search-input::placeholder { color: var(--jp-ink-soft); }
+
+.level-chips { display: flex; flex-wrap: wrap; gap: var(--jp-space-2); }
+.chip {
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border-radius: var(--jp-radius-pill);
+  border: 1px solid var(--jp-line);
+  background: var(--jp-paper);
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  color: var(--jp-ink-soft);
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s, transform .15s, box-shadow .2s;
+}
+.chip:hover { border-color: var(--jp-indigo); transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
+.chip:active { transform: translateY(0) scale(0.96); }
+.chip.active { background: var(--jp-indigo); border-color: var(--jp-indigo); color: #fff; animation: popIn .25s ease; }
+.chip.n5.active { background: var(--jp-n5); border-color: var(--jp-n5); }
+.chip.n4.active { background: var(--jp-n4); border-color: var(--jp-n4); }
+.chip.n3.active { background: var(--jp-n3); border-color: var(--jp-n3); }
+.chip.n2.active { background: var(--jp-n2); border-color: var(--jp-n2); }
+.chip.n1.active { background: var(--jp-n1); border-color: var(--jp-n1); }
+
+.direction-toggle { display: flex; border: 1px solid var(--jp-line); border-radius: var(--jp-radius-pill); overflow: hidden; }
+.dir-btn {
+  padding: var(--jp-space-2) var(--jp-space-4);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  background: var(--jp-paper);
+  color: var(--jp-ink-soft);
+  border: none;
+  cursor: pointer;
+  transition: background .2s, color .2s, transform .1s;
+}
+.dir-btn:hover:not(.active) { color: var(--jp-indigo-deep); }
+.dir-btn:active { transform: scale(0.95); }
+.dir-btn.active { background: var(--jp-indigo); color: #fff; }
+
+/* The section-switcher inside Vocab (Word List/Flashcards/Writing) and
+   Grammar (Grammar/Conjugation) sits ABOVE an in-content .direction-toggle
+   (Reference/Practice, By form/By verb/Sentences) — giving it the same
+   pill styling stacked more of the same-looking control read as "tabs
+   everywhere" with no way to tell which row controls what. This is
+   deliberately a different shape (underlined text, not a filled pill) so
+   it reads as the higher-level switch at a glance. */
+.subnav {
+  display: flex;
+  gap: var(--jp-space-5);
+  border-bottom: 1px solid var(--jp-line);
+  margin-bottom: var(--jp-space-5);
+}
+.subnav-btn {
+  font-family: var(--jp-font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: var(--jp-space-2) 0 var(--jp-space-3);
+  margin-bottom: -1px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--jp-ink-soft);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.subnav-btn:hover { color: var(--jp-indigo-deep); }
+.subnav-btn.active { color: var(--jp-indigo-deep); border-bottom-color: var(--jp-seal); }
+
+.lesson-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--jp-space-2);
+  margin-top: var(--jp-space-3);
+  padding-top: var(--jp-space-3);
+  border-top: 1px dashed var(--jp-line);
+}
+.lesson-chips .chip { font-size: var(--jp-fs-xs); padding: var(--jp-space-1) var(--jp-space-3); }
+/* A halo rather than a solid fill or a hard ring — a lesson chip can also be
+   green (chip-passed) or gold (chip-golden) at the same time, and a
+   saturated fill here would stomp on that color and make "selected"
+   indistinguishable from "passed" at a glance. Layering a vivid inner ring
+   with a pale outer glow keeps the "selected" cue strong and unmistakable
+   while still reading as a highlight sitting on top, not a competing fill —
+   so it stays legible over green/gold; the lift and bolder weight add a
+   touch more emphasis on their own. */
+.lesson-chips .chip.active {
+  border-color: var(--jp-seal);
+  box-shadow: 0 0 0 3px var(--jp-seal), 0 0 0 8px var(--jp-seal-bg);
+  transform: translateY(-1px);
+  font-weight: 700;
+}
+/* Without a status of its own, a selected lesson chip would otherwise fall
+   back to the generic .chip.active's solid indigo fill (meant for the
+   single-select level chips) — reset it back to neutral here so "selected
+   with no status yet" reads as a highlight, not a color clash. Chips that
+   DO have a status (chip-passed/chip-golden) are deliberately left alone,
+   so their own background keeps showing through underneath the halo above. */
+.lesson-chips .chip.active:not(.chip-passed):not(.chip-golden) {
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+}
+
+.study-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--jp-space-3);
+}
+.isolate-chip.active { background: var(--jp-seal); border-color: var(--jp-seal); color: #fff; }
+
+/* Shuffle toggles read the same as the isolate-weak-words chip (a ghost
+   button that fills in solid when "on"), since they're both persistent
+   on/off study settings rather than one-shot actions. */
+.shuffle-toggle.active { background: var(--jp-indigo); border-color: var(--jp-indigo); color: #fff; }
+
+/* A lesson chip that's been cleared for the current practice mode (all its
+   words cycled twice, zero mistakes, this session) turns solid green — the
+   same --jp-mastered color used everywhere else in the app for "done." */
+.lesson-chip.chip-passed { background: var(--jp-mastered); border-color: var(--jp-mastered); color: #fff; }
+
+/* Word List's lesson chips get a golden shine once a lesson has cleared
+   ALL THREE practice modes (flashcards + writing + furigana) — the full
+   "you actually know this lesson" signal, one tier up from the single-mode
+   green above. Solid gold rather than animated: it sits in a grid of up to
+   fifty chips, where anything moving is a distraction rather than a reward. */
+.lesson-chip.chip-golden {
+  background: var(--jp-learning);
+  border-color: var(--jp-learning);
+  color: #fff;
+  font-weight: 700;
+}
+.isolate-note {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  color: var(--jp-seal);
+  margin: var(--jp-space-3) 0 0;
+  font-style: italic;
+}
+.text-link {
+  background: none;
+  border: none;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  color: var(--jp-ink-soft);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  transition: color .15s;
+}
+.text-link:hover { color: var(--jp-seal); }
+
+/* ---------- flashcard ---------- */
+.card-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 48px 0 24px;
+  perspective: 1400px;
+}
+.card {
+  width: min(440px, 90vw);
+  height: 260px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4, .2, .2, 1);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.card.flipped { transform: rotateY(180deg); }
+.card.no-anim,
+.card.no-anim .seal { transition: none !important; }
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--jp-radius-lg);
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  box-shadow: var(--jp-shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--jp-space-6);
+  text-align: center;
+}
+.card-back { transform: rotateY(180deg); gap: 8px; }
+.card-refresh .card-front .card-text { animation: fadeInUp .35s ease; }
+.card-front .card-text {
+  font-family: var(--jp-font-jp);
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  color: var(--jp-ink);
+  word-break: break-word;
+}
+.card-back .card-reading { font-family: var(--jp-font-ui); font-size: 0.95rem; color: var(--jp-ink-soft); }
+.card-back .card-text {
+  font-family: var(--jp-font-jp);
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  color: var(--jp-indigo-deep);
+}
+.seal {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--jp-seal);
+  color: var(--jp-seal);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--jp-font-jp);
+  font-size: 1.2rem;
+  transform: rotate(-8deg) scale(0);
+  opacity: 0;
+}
+.card.flipped .seal { transform: rotate(-8deg) scale(1); opacity: 1; animation: stampImpact .45s ease .15s backwards; }
+.card.no-anim .seal { animation: none !important; }
+
+.card-hint { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); margin-top: var(--jp-space-3); }
+
+.grade-buttons { display: flex; gap: var(--jp-space-3); margin-top: var(--jp-space-4); }
+.grade-btn {
+  padding: var(--jp-space-3) var(--jp-space-5);
+  border-radius: var(--jp-radius-md);
+  font-family: var(--jp-font-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--jp-line);
+  background: var(--jp-paper-alt);
+  color: var(--jp-ink);
+  transition: background .15s, color .15s, border-color .15s, transform .12s, box-shadow .15s;
+}
+.grade-btn:hover { transform: translateY(-2px); box-shadow: var(--jp-shadow-sm); }
+.grade-btn:active { transform: translateY(0) scale(0.95); }
+.grade-wrong { border-color: var(--jp-seal); color: var(--jp-seal); }
+.grade-wrong:hover { background: var(--jp-seal); color: #fff; }
+.grade-right { border-color: var(--jp-mastered); color: var(--jp-mastered); }
+.grade-right:hover { background: var(--jp-mastered); color: #fff; }
+
+.deck-controls { display: flex; justify-content: space-between; align-items: center; gap: var(--jp-space-4); flex-wrap: wrap; }
+.nav-group { display: flex; align-items: center; gap: var(--jp-space-3); }
+.ghost-btn {
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper-alt);
+  color: var(--jp-ink);
+  cursor: pointer;
+  transition: border-color .15s, color .15s, transform .12s, box-shadow .15s, background .15s;
+}
+.ghost-btn:hover { border-color: var(--jp-indigo); color: var(--jp-indigo-deep); background: var(--jp-paper); transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
+.ghost-btn:active:not(:disabled) { transform: translateY(0) scale(0.96); box-shadow: none; }
+.ghost-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ghost-btn:disabled:hover { border-color: var(--jp-line); color: var(--jp-ink); background: var(--jp-paper-alt); transform: none; box-shadow: none; }
+
+/* the one or two truly primary calls to action per view (generate an
+   exam, submit an answer) get a solid, higher-contrast treatment so they
+   read as THE next step, instead of looking identical to "shuffle"/"skip" */
+.btn-primary {
+  border-color: var(--jp-indigo);
+  background: var(--jp-indigo);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: var(--jp-shadow-sm);
+}
+.btn-primary:hover { border-color: var(--jp-indigo-deep); background: var(--jp-indigo-deep); color: #fff; box-shadow: var(--jp-shadow-md); }
+
+.progress { font-family: var(--jp-font-ui); font-size: 0.85rem; color: var(--jp-ink-soft); min-width: 60px; text-align: center; }
+
+/* ---------- kanji writing practice ---------- */
+.kw-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-2);
+  margin: var(--jp-space-5) 0 var(--jp-space-4);
+  text-align: center;
+}
+.kw-hint { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; margin: 0 0 var(--jp-space-2); max-width: 480px; }
+.kw-reading { font-family: var(--jp-font-jp); font-size: clamp(1.8rem, 6vw, 2.6rem); color: var(--jp-ink); margin: 0; }
+.kw-meaning { font-family: var(--jp-font-ui); font-size: 1rem; color: var(--jp-ink-soft); margin: 0 0 var(--jp-space-3); }
+
+/* the drawing surface — as large as the layout can spare, since a
+   cramped canvas is the whole reason this feature needed to exist */
+.kw-canvas-wrap {
+  position: relative;
+  width: min(520px, 92vw);
+  margin: 0 0 var(--jp-space-4);
+}
+.kw-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  touch-action: none; /* required so a finger stroke draws instead of scrolling the page */
+  background: var(--jp-paper-alt);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-lg);
+  box-shadow: var(--jp-shadow-sm);
+  cursor: crosshair;
+}
+.kw-canvas-clear {
+  position: absolute;
+  top: var(--jp-space-3);
+  right: var(--jp-space-3);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--jp-radius-pill);
+  border: 1.5px solid var(--jp-line);
+  background: var(--jp-paper);
+  color: var(--jp-ink-soft);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, transform .15s;
+}
+.kw-canvas-clear:hover { border-color: var(--jp-seal); color: var(--jp-seal); transform: rotate(-45deg); }
+.kw-canvas-clear:active { transform: rotate(-45deg) scale(0.9); }
+
+.kw-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: var(--jp-space-3);
+  animation: popIn .3s ease;
+}
+.kw-answer-word { font-family: var(--jp-font-jp); font-size: 2.2rem; color: var(--jp-indigo-deep); font-weight: 700; }
+.kw-answer-reading { font-family: var(--jp-font-ui); font-size: 0.9rem; color: var(--jp-ink-soft); }
+
+.kw-reveal-btn { margin-bottom: var(--jp-space-2); }
+
+/* ---------- furigana practice ---------- */
+.fg-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-2);
+  margin: var(--jp-space-5) 0 var(--jp-space-4);
+  text-align: center;
+}
+.fg-hint { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; margin: 0 0 var(--jp-space-2); max-width: 480px; }
+.fg-word { font-family: var(--jp-font-jp); font-size: clamp(2rem, 7vw, 3rem); color: var(--jp-ink); margin: 0; }
+.fg-meaning { font-family: var(--jp-font-ui); font-size: 1rem; color: var(--jp-ink-soft); margin: 0 0 var(--jp-space-3); }
+.fg-input-row { display: flex; gap: var(--jp-space-2); align-items: center; flex-wrap: wrap; justify-content: center; }
+.fg-input-row input {
+  font-family: var(--jp-font-jp);
+  font-size: 1.2rem;
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  min-width: 200px;
+  text-align: center;
+}
+.fg-input-row input:focus { border-color: var(--jp-indigo); outline: none; }
+.fg-input-row input.fg-input-correct { border-color: var(--jp-mastered); background: var(--jp-mastered-bg); animation: flashCorrect .6s ease; }
+.fg-input-row input.fg-input-wrong { border-color: var(--jp-seal); background: var(--jp-seal-bg); animation: flashWrong .6s ease; }
+.fg-answer { margin-top: var(--jp-space-2); animation: popIn .3s ease; }
+.fg-answer-word { font-family: var(--jp-font-jp); font-size: 1.4rem; color: var(--jp-indigo-deep); font-weight: 700; }
+
+/* ---------- grammar ---------- */
+.grammar-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--jp-space-5);
+  margin-top: var(--jp-space-5);
+  align-items: start;
+}
+.grammar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius);
+  overflow-y: auto;
+  max-height: 480px;
+  background: var(--jp-paper-alt);
+}
+.grammar-item {
+  padding: var(--jp-space-3) var(--jp-space-4);
+  font-family: var(--jp-font-jp);
+  font-size: 1.05rem;
+  border-bottom: 1px solid var(--jp-line);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.grammar-item:last-child { border-bottom: none; }
+.grammar-item:hover { background: var(--jp-paper); }
+.grammar-item.active { border-left-color: var(--jp-seal); background: var(--jp-paper); font-weight: 600; }
+
+.grammar-detail {
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper-alt);
+  padding: var(--jp-space-5);
+  min-height: 280px;
+}
+.grammar-lesson-tag {
+  display: inline-block;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  font-weight: 700;
+  color: #fff;
+  background: var(--jp-indigo);
+  padding: 3px var(--jp-space-3);
+  border-radius: var(--jp-radius-pill);
+  margin-bottom: var(--jp-space-2);
+}
+.grammar-pattern { font-family: var(--jp-font-jp); font-size: 1.8rem; color: var(--jp-indigo-deep); margin: 0 0 6px; animation: fadeInUp .3s ease; }
+.grammar-meaning {
+  font-family: var(--jp-font-ui);
+  font-size: 1rem;
+  color: var(--jp-ink-soft);
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--jp-line);
+}
+.grammar-usage { line-height: 1.6; margin: 0 0 var(--jp-space-5); }
+.examples { display: flex; flex-direction: column; gap: var(--jp-space-4); }
+.example { padding: var(--jp-space-3) var(--jp-space-4); background: var(--jp-paper); border-left: 3px solid var(--jp-seal); border-radius: var(--jp-radius-sm); }
+.example-jp { font-family: var(--jp-font-jp); font-size: 1.1rem; margin: 0 0 4px; }
+.example-en { font-family: var(--jp-font-ui); font-size: 0.9rem; color: var(--jp-ink-soft); margin: 0; }
+.grammar-empty { color: var(--jp-ink-soft); font-style: italic; }
+.grammar-section-heading {
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--jp-indigo-deep);
+  margin: var(--jp-space-5) 0 var(--jp-space-3);
+  padding-top: var(--jp-space-4);
+  border-top: 1px solid var(--jp-line);
+}
+.grammar-uses, .grammar-mistakes { display: flex; flex-direction: column; gap: var(--jp-space-4); }
+.grammar-use {
+  padding: var(--jp-space-3) var(--jp-space-4);
+  background: var(--jp-learning-bg, var(--jp-paper));
+  border-radius: var(--jp-radius-sm);
+  animation: fadeInUp .35s ease backwards;
+}
+.grammar-use:nth-child(2) { animation-delay: .05s; }
+.grammar-use:nth-child(3) { animation-delay: .1s; }
+.grammar-mistake {
+  padding: var(--jp-space-3) var(--jp-space-4);
+  background: var(--jp-paper);
+  border-left: 3px solid var(--jp-seal);
+  border-radius: var(--jp-radius-sm);
+  animation: fadeInUp .35s ease backwards;
+}
+.grammar-mistake:nth-child(2) { animation-delay: .05s; }
+.grammar-mistake:nth-child(3) { animation-delay: .1s; }
+.grammar-use-label { font-family: var(--jp-font-ui); font-weight: 600; margin: 0 0 var(--jp-space-1); color: var(--jp-ink); }
+.grammar-use-explanation { line-height: 1.6; margin: 0 0 var(--jp-space-3); color: var(--jp-ink-soft); }
+.grammar-use .examples { gap: var(--jp-space-3); }
+.grammar-mistake-wrong { font-family: var(--jp-font-jp); font-size: 1rem; margin: 0 0 var(--jp-space-1); color: var(--jp-seal); }
+.grammar-mistake-explanation { font-family: var(--jp-font-ui); font-size: 0.9rem; line-height: 1.6; color: var(--jp-ink-soft); margin: 0; }
+
+/* ---------- grammar / sentence practice quiz card ---------- */
+.gp-card {
+  width: min(520px, 92vw);
+  min-height: 200px;
+  margin: 0 auto;
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-lg);
+  box-shadow: var(--jp-shadow-md);
+  padding: var(--jp-space-6);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-3);
+}
+.gp-pattern-tag {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--jp-indigo);
+  font-weight: 700;
+  margin: 0;
+}
+.gp-sentence {
+  font-family: var(--jp-font-jp);
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  color: var(--jp-ink);
+  line-height: 2.4; /* extra room for furigana sitting above the kanji */
+  margin: 6px 0;
+}
+.gp-sentence ruby { ruby-position: over; }
+.gp-sentence rt {
+  font-family: var(--jp-font-ui);
+  font-size: 0.55em;
+  color: var(--jp-ink-soft);
+  font-weight: 400;
+  user-select: none;
+}
+.gp-hint { font-family: var(--jp-font-ui); font-size: 0.85rem; color: var(--jp-ink-soft); font-style: italic; margin: 0; }
+.gp-options { display: flex; flex-direction: column; gap: var(--jp-space-2); width: 100%; margin-top: var(--jp-space-3); }
+.gp-option-btn {
+  font-family: var(--jp-font-jp);
+  font-size: 1rem;
+  padding: var(--jp-space-3) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s, border-color .15s, transform .12s;
+}
+.gp-option-btn:hover:not(:disabled) { border-color: var(--jp-indigo); transform: translateX(3px); }
+.gp-option-btn:active:not(:disabled) { transform: translateX(3px) scale(0.98); }
+.gp-option-btn:disabled { cursor: default; }
+.gp-option-btn.correct { border-color: var(--jp-mastered); background: var(--jp-mastered-bg); color: var(--jp-mastered); font-weight: 600; animation: flashCorrect .6s ease; }
+.gp-option-btn.wrong { border-color: var(--jp-seal); background: var(--jp-seal-bg); color: var(--jp-seal); font-weight: 600; animation: flashWrong .6s ease; }
+.gp-answer { font-family: var(--jp-font-jp); font-size: 1.3rem; color: var(--jp-indigo-deep); font-weight: 700; margin-top: 4px; }
+
+/* ---------- grammar practice ---------- */
+/* The question prompt is UI text (English instructions), while .gp-sentence
+   below it is the Japanese being tested — so they deliberately use different
+   families and weights rather than reading as one block. */
+.gp-prompt {
+  font-family: var(--jp-font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--jp-ink);
+  margin: 0;
+  text-align: center;
+}
+.gp-input-row { display: flex; gap: var(--jp-space-2); align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: var(--jp-space-3); }
+.gp-input-row input {
+  font-family: var(--jp-font-jp);
+  font-size: 1.2rem;
+  padding: var(--jp-space-2) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  min-width: 200px;
+  text-align: center;
+}
+.gp-input-row input:focus { border-color: var(--jp-indigo); outline: none; }
+
+/* The explanation is the whole point of this mode, so it gets a panel of its
+   own rather than being tucked under the answer as a footnote. */
+.gp-feedback {
+  width: 100%;
+  margin-top: var(--jp-space-4);
+  padding-top: var(--jp-space-4);
+  border-top: 1px dashed var(--jp-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-2);
+  animation: popIn .3s ease;
+}
+.gp-due-note {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  color: var(--jp-ink-soft);
+  margin: var(--jp-space-2) 0 0;
+  text-align: center;
+}
+.gp-verdict { font-family: var(--jp-font-ui); font-size: 0.95rem; font-weight: 700; margin: 0; }
+.gp-verdict-correct { color: var(--jp-mastered); }
+.gp-verdict-wrong { color: var(--jp-seal); }
+.gp-explain {
+  font-family: var(--jp-font-ui);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--jp-ink-soft);
+  margin: 0;
+  max-width: 46ch;
+  text-align: left;
+}
+
+/* ---------- word list ---------- */
+.wl-empty-note { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; margin: var(--jp-space-4) 0; }
+.wordlist-group { margin-bottom: var(--jp-space-6); }
+.wordlist-level-heading {
+  display: inline-block;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--jp-indigo);
+  padding: var(--jp-space-1) var(--jp-space-3);
+  border-radius: var(--jp-radius-pill);
+  margin: 0 0 var(--jp-space-3);
+}
+.wordlist-level-heading.n5 { background: var(--jp-n5); }
+.wordlist-level-heading.n4 { background: var(--jp-n4); }
+.wordlist-level-heading.n3 { background: var(--jp-n3); }
+.wordlist-level-heading.n2 { background: var(--jp-n2); }
+.wordlist-level-heading.n1 { background: var(--jp-n1); }
+
+.wordlist-lesson-block { margin-bottom: var(--jp-space-5); }
+.wordlist-lesson-heading {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  font-weight: 600;
+  color: var(--jp-ink-soft);
+  margin: 0 0 var(--jp-space-2);
+  padding-bottom: var(--jp-space-1);
+  border-bottom: 1px dashed var(--jp-line);
+}
+
+.wordlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+}
+.wordlist-table th,
+.wordlist-table td {
+  text-align: left;
+  padding: var(--jp-space-3) var(--jp-space-4);
+  border-bottom: 1px solid var(--jp-line);
+}
+.wordlist-table th {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--jp-ink-soft);
+  background: var(--jp-paper-deep);
+}
+.wordlist-table tr:last-child td { border-bottom: none; }
+.wl-word { font-family: var(--jp-font-jp); font-size: 1.1rem; }
+.wl-reading { font-family: var(--jp-font-ui); color: var(--jp-ink-soft); }
+.wl-meaning { font-family: var(--jp-font-ui); }
+.wl-row-weak { background: var(--jp-seal-bg); }
+.wl-row-weak .wl-word { color: var(--jp-seal); font-weight: 700; }
+
+/* ---------- conjugation ---------- */
+.conj-mode { display: none; margin-top: 24px; }
+.conj-mode.active { display: block; }
+
+.conjugation-group { margin-bottom: var(--jp-space-5); }
+.conjugation-group:last-child { margin-bottom: 0; }
+.conjugation-group-label {
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--jp-indigo-deep);
+  margin: 0 0 var(--jp-space-2);
+}
+.conj-rule-note { font-weight: 400; color: var(--jp-ink-soft); font-size: var(--jp-fs-xs); }
+
+.conjugation-table { width: 100%; border-collapse: collapse; background: var(--jp-paper); border: 1px solid var(--jp-line); border-radius: var(--jp-radius-md); }
+.conjugation-table th, .conjugation-table td { text-align: left; padding: var(--jp-space-2) var(--jp-space-3); border-bottom: 1px solid var(--jp-line); font-size: 0.9rem; }
+.conjugation-table th { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--jp-ink-soft); background: var(--jp-paper-deep); }
+.conjugation-table td { font-family: var(--jp-font-jp); }
+.conjugation-table td.conj-rule, .conjugation-table td.conj-dict { font-family: var(--jp-font-ui); color: var(--jp-ink-soft); font-size: var(--jp-fs-xs); }
+.conjugation-table tr:last-child td { border-bottom: none; }
+
+.conjugation-note {
+  margin-top: var(--jp-space-4);
+  padding: var(--jp-space-3) var(--jp-space-4);
+  background: var(--jp-paper);
+  border-left: 3px solid var(--jp-indigo);
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  color: var(--jp-ink-soft);
+  border-radius: var(--jp-radius-sm);
+}
+
+.conj-form-label {
+  display: block;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--jp-ink-soft);
+  margin-bottom: var(--jp-space-2);
+}
+.conj-reading {
+  display: block;
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+  color: var(--jp-ink-soft);
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+.conj-meaning {
+  display: block;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  color: var(--jp-ink-soft);
+  opacity: 0.75;
+  font-style: italic;
+  margin-top: var(--jp-space-2);
+}
+
+.conj-practice-mode { display: none; margin-top: var(--jp-space-5); }
+.conj-practice-mode.active { display: block; }
+
+.verb-select {
+  flex: 1;
+  min-width: 0;
+  padding: var(--jp-space-2) var(--jp-space-3);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper-alt);
+  color: var(--jp-ink);
+  font-family: var(--jp-font-ui);
+  font-size: 0.85rem;
+}
+
+.form-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--jp-space-2);
+  margin-top: var(--jp-space-4);
+}
+.breadcrumb-item {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  padding: var(--jp-space-1) var(--jp-space-3);
+  border-radius: var(--jp-radius-pill);
+  border: 1px solid var(--jp-line);
+  color: var(--jp-ink-soft);
+  background: var(--jp-paper);
+}
+.breadcrumb-item.current { border-color: var(--jp-indigo); background: var(--jp-indigo); color: #fff; font-weight: 600; }
+.breadcrumb-item.done-correct { border-color: var(--jp-mastered); background: var(--jp-mastered-bg); color: var(--jp-mastered); }
+.breadcrumb-item.done-wrong { border-color: var(--jp-seal); background: var(--jp-paper); color: var(--jp-seal); }
+
+
+/* ---------- footer ---------- */
+.site-footer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--jp-space-5) clamp(20px, 5vw, 64px) var(--jp-space-7);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  color: var(--jp-ink-soft);
+}
+.site-footer code { background: var(--jp-paper-deep); padding: 2px 6px; border-radius: var(--jp-radius-sm); }
+
+/* ---------- a11y / responsive ---------- */
+:focus-visible { outline: 2px solid var(--jp-seal); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .card, .seal { transition: none; }
+}
+
+@media (max-width: 720px) {
+  .grammar-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .site-header { flex-direction: column; align-items: flex-start; }
+  /* 7 tabs no longer fit next to sync/lang/settings on a phone-width
+     header. align-items:flex-start above means .header-right (and the
+     tab strip inside it) would otherwise size to its own content instead
+     of the viewport, so nothing actually bounds it and the whole page
+     scrolls sideways instead of just the tabs — pin both to 100% so the
+     tab strip gets a real scroll boundary and scrolls internally instead */
+  .header-right { width: 100%; }
+  .view-tabs { width: 100%; max-width: 100%; }
+}
+
+/* ---------- home: study timeline ---------- */
+/* The countdown cards, the daily checklist, and the plan panels all sit on
+   the same tokens as the rest of the site, so the timeline picks up whichever
+   of the five themes is active without any per-theme rules of its own. */
+.tl-countdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--jp-space-4);
+  margin-bottom: var(--jp-space-5);
+}
+.tl-count-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--jp-space-1);
+  padding: var(--jp-space-5) var(--jp-space-4);
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-lg);
+  box-shadow: var(--jp-shadow-sm);
+  text-align: center;
+}
+.tl-count-exam { border-color: var(--jp-seal); box-shadow: 0 0 0 3px var(--jp-seal-bg), var(--jp-shadow-sm); }
+.tl-count-num {
+  font-family: var(--jp-font-jp);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--jp-indigo);
+}
+.tl-count-exam .tl-count-num { color: var(--jp-seal); }
+.tl-count-label { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink); }
+.tl-count-sub { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); }
+
+.tl-panel {
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-lg);
+  padding: var(--jp-space-5);
+  margin-bottom: var(--jp-space-5);
+  box-shadow: var(--jp-shadow-sm);
+}
+.tl-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--jp-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--jp-space-3);
+}
+.tl-h2 { font-family: var(--jp-font-jp); font-size: 1.05rem; margin: 0; color: var(--jp-ink); }
+.tl-today-date { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); }
+.tl-status { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); margin: 0 0 var(--jp-space-3); }
+.tl-ok { color: var(--jp-mastered); }
+.tl-warn { color: var(--jp-seal); }
+
+.tl-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--jp-space-2); }
+.tl-task {
+  display: flex;
+  align-items: center;
+  gap: var(--jp-space-3);
+  padding: var(--jp-space-3);
+  background: var(--jp-paper);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+}
+.tl-task:hover { border-color: var(--jp-indigo); }
+.tl-task-done { opacity: 0.55; }
+.tl-task-done .tl-task-title { text-decoration: line-through; }
+.tl-check {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--jp-radius-sm);
+  border: 2px solid var(--jp-line);
+  background: var(--jp-paper);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tl-check[aria-pressed="true"] { background: var(--jp-mastered); border-color: var(--jp-mastered); }
+.tl-task-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.tl-task-title { font-family: var(--jp-font-jp); font-size: 0.95rem; color: var(--jp-ink); }
+.tl-task-meta { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); }
+.tl-badge {
+  flex: 0 0 auto;
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  padding: 2px var(--jp-space-2);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper-deep);
+  color: var(--jp-ink);
+}
+.tl-badge-vocab { background: var(--jp-n4); color: var(--jp-ink); }
+.tl-badge-grammar { background: var(--jp-learning-bg); color: var(--jp-ink); }
+.tl-badge-review { background: var(--jp-mastered-bg); color: var(--jp-ink); }
+.tl-empty-note { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); margin: var(--jp-space-2) 0 0; }
+
+.tl-progress-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--jp-space-4); }
+.tl-bar {
+  height: 10px;
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper-deep);
+  overflow: hidden;
+  margin: var(--jp-space-2) 0;
+}
+.tl-bar-fill { display: block; height: 100%; width: 0; background: var(--jp-mastered); transition: width 0.3s ease; }
+.tl-bar-label { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); margin: 0; }
+
+.tl-pace-row { display: flex; gap: var(--jp-space-4); flex-wrap: wrap; margin-bottom: var(--jp-space-3); }
+.tl-pace { display: flex; flex-direction: column; gap: var(--jp-space-1); font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); }
+.tl-pace input {
+  width: 90px;
+  padding: var(--jp-space-2);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.tl-forecast { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); margin: 0 0 var(--jp-space-4); }
+
+
+.tl-week { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--jp-space-2); }
+.tl-week-row {
+  display: flex;
+  gap: var(--jp-space-3);
+  align-items: baseline;
+  padding: var(--jp-space-2) var(--jp-space-3);
+  border-radius: var(--jp-radius-md);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+}
+.tl-week-today { background: var(--jp-seal-bg); }
+.tl-week-date { flex: 0 0 110px; color: var(--jp-ink-soft); font-size: var(--jp-fs-2xs); }
+.tl-week-text { color: var(--jp-ink); }
+.tl-reset-row { text-align: center; margin: 0 0 var(--jp-space-6); }
+
+@media (max-width: 560px) {
+  .tl-count-num { font-size: 1.9rem; }
+  .tl-week-row { flex-direction: column; gap: 2px; }
+  .tl-week-date { flex: none; }
+}
+
+/* A bonus row is the "you've already hit today's target" slot — present so
+   getting ahead is one click away, but visually quieter than the day's
+   actual quota so it never reads as work you still owe. */
+.tl-badge-bonus { background: var(--jp-learning); color: #fff; }
+.tl-task-bonus { border-style: dashed; }
+
+/* Quota cell: the day's target at a glance. Turns green once both tracks are
+   met and amber-ish once you're past it, so "am I done for today" is legible
+   without reading any numbers. */
+.tl-quota-split { display: flex; gap: var(--jp-space-2); flex-wrap: wrap; justify-content: center; margin-top: var(--jp-space-1); }
+.tl-qs {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  padding: 1px var(--jp-space-2);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper-deep);
+  color: var(--jp-ink);
+}
+.tl-qs-ok { background: var(--jp-mastered); color: #fff; }
+.tl-quota-met { border-color: var(--jp-mastered); box-shadow: 0 0 0 3px var(--jp-mastered-bg), var(--jp-shadow-sm); }
+.tl-quota-met .tl-count-num { color: var(--jp-mastered); }
+.tl-quota-over { border-color: var(--jp-learning); box-shadow: 0 0 0 3px var(--jp-learning-bg), var(--jp-shadow-sm); }
+.tl-quota-over .tl-count-num { color: var(--jp-learning); }
+
+/* Lesson map: one dot per lesson, green when done, click to toggle. */
+.tl-map-hint { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); margin: 0 0 var(--jp-space-4); }
+.tl-map { display: flex; flex-direction: column; gap: var(--jp-space-5); }
+.tl-map-level-title {
+  font-family: var(--jp-font-jp);
+  font-size: 1rem;
+  margin: 0 0 var(--jp-space-3);
+  padding-bottom: var(--jp-space-1);
+  border-bottom: 1px solid var(--jp-line);
+  color: var(--jp-ink);
+}
+.tl-track { margin-bottom: var(--jp-space-4); }
+.tl-track:last-child { margin-bottom: 0; }
+.tl-track-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--jp-space-2); }
+.tl-track-name { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink); font-weight: 600; }
+.tl-track-count { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); }
+.tl-dots { display: flex; flex-wrap: wrap; gap: var(--jp-space-2); }
+.tl-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--jp-line);
+  background: var(--jp-paper);
+  color: var(--jp-ink-soft);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
+}
+.tl-dot:hover { transform: translateY(-2px); border-color: var(--jp-indigo); }
+.tl-dot-done { background: var(--jp-mastered); border-color: var(--jp-mastered); color: #fff; font-weight: 700; }
+
+@media (max-width: 560px) {
+  .tl-dot { width: 30px; height: 30px; }
+}
+
+/* Projection tile: each track's own date side by side, with the one that
+   sets the overall finish highlighted — that's the only track where extra
+   work actually moves the headline date. */
+.tl-finish-split { display: flex; gap: var(--jp-space-2); flex-wrap: wrap; justify-content: center; margin-top: var(--jp-space-1); }
+.tl-fs {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  padding: 1px var(--jp-space-2);
+  border-radius: var(--jp-radius-pill);
+  background: var(--jp-paper-deep);
+  color: var(--jp-ink);
+}
+.tl-fs-limit { background: var(--jp-indigo); color: #fff; font-weight: 600; }
+.tl-finish-ok .tl-count-num { color: var(--jp-mastered); }
+.tl-finish-late { border-color: var(--jp-seal); box-shadow: 0 0 0 3px var(--jp-seal-bg), var(--jp-shadow-sm); }
+.tl-finish-late .tl-count-num { color: var(--jp-seal); }
+
+/* Writing and furigana demand a clean run: one miss and the session restarts.
+   Without a word of explanation that just looks like the app lost your place. */
+.run-reset-note {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  color: var(--jp-seal);
+  background: var(--jp-seal-bg);
+  border-radius: var(--jp-radius-md);
+  padding: var(--jp-space-2) var(--jp-space-3);
+  margin: var(--jp-space-3) 0 0;
+  text-align: center;
+}
