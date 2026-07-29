@@ -1,7 +1,10 @@
-// MathParticles.jsx — animated math-glyph background canvas
-function MathParticles() {
-  const ref = React.useRef(null);
-  React.useEffect(() => {
+'use client';
+// components/tracker/MathParticles.jsx — animated math-glyph background canvas
+import { useEffect, useRef } from 'react';
+
+export function MathParticles() {
+  const ref = useRef(null);
+  useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas.getContext('2d');
     const SYMBOLS = ['∂','∇','∑','ℝ','ℂ','∞','π','∫','√','θ','λ','μ','σ','⊕','∈'];
@@ -39,5 +42,3 @@ function MathParticles() {
   }, []);
   return <canvas id="particles" ref={ref} aria-hidden="true" />;
 }
-
-window.MathParticles = MathParticles;
