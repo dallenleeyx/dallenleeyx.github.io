@@ -422,6 +422,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [drafts, setDrafts] = useState({});
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
+  const [sidebarOpen, setSidebarOpen] = useState(() => { try { return localStorage.getItem('proofLabSidebar') !== 'closed'; } catch (e) { return true; } });
   const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [deleteCourseFor, setDeleteCourseFor] = useState(null); // course id | null
@@ -431,6 +432,9 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     try { localStorage.setItem('proofLabTheme', theme); } catch (e) {}
   }, [theme]);
+  useEffect(() => {
+    try { localStorage.setItem('proofLabSidebar', sidebarOpen ? 'open' : 'closed'); } catch (e) {}
+  }, [sidebarOpen]);
 
   const mutate = useCallback((courseId, fn) => {
     setCourses(cs => cs.map(c => c.id === courseId ? fn(c) : c));
@@ -477,10 +481,15 @@ function App() {
   };
 
   return (
-    <div className="tk-app">
+    <div className={`tk-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <MathParticles />
 
+      {!sidebarOpen && (
+        <button className="tk-sidebar-expand-btn" onClick={() => setSidebarOpen(true)} title="Expand sidebar">☰</button>
+      )}
+
       <aside className="tk-sidebar">
+        <button className="tk-sidebar-collapse-btn" onClick={() => setSidebarOpen(false)} title="Collapse sidebar">‹</button>
         <div className="tk-brand">
           <div className="tk-avatar">
             <span className="tk-avatar-glyph">∮</span>
