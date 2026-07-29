@@ -16,6 +16,7 @@ import { createContext, useContext, useState } from 'react';
 import { useJapaneseI18n } from '../../lib/japanese/I18nProvider';
 import { VocabSection } from './vocab/VocabSection';
 import { GrammarSection } from './grammar/GrammarSection';
+import { Home } from './home/Home';
 
 const VIEWS = [
   { id: 'home', labelKey: 'tabHome' },
@@ -26,12 +27,22 @@ const VIEWS = [
 const JapaneseViewContext = createContext(null);
 
 export function JapaneseViewProvider({ children }) {
-  const [activeView, setActiveView] = useState('vocab');
+  const [activeView, setActiveView] = useState('home');
   return (
     <JapaneseViewContext.Provider value={{ activeView, setActiveView }}>
       {children}
     </JapaneseViewContext.Provider>
   );
+}
+
+// Lets Home's task list jump straight to the Vocab or Grammar tab when a
+// task is opened. Deep-linking the exact subview/level/lesson selection
+// would need those sections' local subview state lifted into a shared
+// context -- out of scope here, so opening a task switches tabs only.
+export function useJapaneseView() {
+  const ctx = useContext(JapaneseViewContext);
+  if (!ctx) throw new Error('useJapaneseView must be used within JapaneseViewProvider');
+  return ctx;
 }
 
 export function JapaneseTabBar() {
@@ -57,7 +68,7 @@ export function JapaneseViewContent() {
   return (
     <main>
       <section id="home-view" className={`view${activeView === 'home' ? ' active' : ''}`}>
-        <p>Home study timeline coming in a later phase.</p>
+        <Home active={activeView === 'home'} />
       </section>
       <section id="vocab-view" className={`view${activeView === 'vocab' ? ' active' : ''}`}>
         <VocabSection active={activeView === 'vocab'} />
