@@ -7,6 +7,8 @@ import { useJapaneseI18n } from '../../../lib/japanese/I18nProvider';
 import { VocabProgressProvider } from '../../../lib/japanese/VocabProgressContext';
 import { WordList } from './WordList';
 import { Flashcards } from './Flashcards';
+import { KanjiWriting } from './KanjiWriting';
+import { Furigana } from './Furigana';
 
 const SUBVIEWS = [
   { id: 'wordlist', labelKey: 'tabWordlist' },
@@ -39,11 +41,11 @@ export function VocabSection({ active }) {
       <div className={`subview${activeSubview === 'flashcards' ? ' active' : ''}`}>
         <Flashcards active={active && activeSubview === 'flashcards'} />
       </div>
-      <div id="kanjiwrite-subview" className={`subview${activeSubview === 'kanjiwrite' ? ' active' : ''}`}>
-        <p>Writing practice coming in a later phase.</p>
+      <div className={`subview${activeSubview === 'kanjiwrite' ? ' active' : ''}`}>
+        <KanjiWriting active={active && activeSubview === 'kanjiwrite'} />
       </div>
-      <div id="furigana-subview" className={`subview${activeSubview === 'furigana' ? ' active' : ''}`}>
-        <p>Furigana practice coming in a later phase.</p>
+      <div className={`subview${activeSubview === 'furigana' ? ' active' : ''}`}>
+        <Furigana active={active && activeSubview === 'furigana'} />
       </div>
     </VocabProgressProvider>
   );

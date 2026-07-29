@@ -15,11 +15,16 @@ export function useMasteryQueue() {
   }, []);
 
   const grade = useCallback((isCorrect, onVerdict) => {
+    // The updater function must stay pure (no calls into other components'
+    // setState) -- capture the verdict into a local variable here, then fire
+    // the callback afterward, once this update itself is done.
+    let verdictOut = null;
     setState((prev) => {
       const { next, verdict } = gradeMasteryQueue(prev, isCorrect);
-      if (verdict && onVerdict) onVerdict(verdict);
+      verdictOut = verdict;
       return next;
     });
+    if (verdictOut && onVerdict) onVerdict(verdictOut);
   }, []);
 
   const skip = useCallback(() => {
