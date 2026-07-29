@@ -3,10 +3,13 @@
 // state: the SM-2 review schedule (one record per question id) and a
 // lesson-mastery flag store, kept separate from vocab's stores since grammar
 // lessons are numbered independently of vocab lessons (mixing the two golden
-// checks would make them meaningless). localStorage-backed for now; Phase 9
-// wires these into the cross-device sync registry.
+// checks would make them meaningless). localStorage-backed, and wired into
+// the cross-device sync registry as its own 'srs'/'grammarMastery' sections
+// (separate from vocab's, since Vocab and Grammar are independently-mounted
+// sections rather than sequential owners of one shared store).
 import { createContext, useContext, useEffect, useState } from 'react';
 import { scheduleCard, isDue, isNew } from './srs';
+import { useSyncSection } from './SyncContext';
 
 const GP_SRS_KEY = 'jpstudy_gp_srs_v1';
 const GP_MASTERY_KEY = 'jpstudy_gp_lesson_passed_v1';
@@ -31,8 +34,14 @@ function useSrsStore() {
   const [store, setStore] = useState(() => loadJSON(GP_SRS_KEY, {}));
   useEffect(() => { saveJSON(GP_SRS_KEY, store); }, [store]);
 
+  const schedulePush = useSyncSection('srs', {
+    get: () => store,
+    apply: (remote) => setStore(remote),
+  });
+
   const recordResult = (qid, isCorrect, now = Date.now()) => {
     setStore((prev) => ({ ...prev, [qid]: scheduleCard(prev[qid], isCorrect, now) }));
+    schedulePush();
   };
   const isCardDue = (qid, now = Date.now()) => isDue(store[qid], now);
   const isCardNew = (qid) => isNew(store[qid]);
@@ -45,7 +54,7 @@ function useSrsStore() {
     });
     return { due, fresh, total: questions.length };
   };
-  const reset = () => setStore({});
+  const reset = () => { setStore({}); schedulePush(); };
 
   return { isCardDue, isCardNew, dueCounts, recordResult, reset };
 }
@@ -53,13 +62,20 @@ function useSrsStore() {
 function useMasteryStore() {
   const [store, setStore] = useState(() => loadJSON(GP_MASTERY_KEY, {}));
   useEffect(() => { saveJSON(GP_MASTERY_KEY, store); }, [store]);
+
+  const schedulePush = useSyncSection('grammarMastery', {
+    get: () => store,
+    apply: (remote) => setStore(remote),
+  });
+
   return {
     isPassed: (level, lesson) => !!store[lessonKey(level, lesson)],
     markPassed: (level, lesson) => {
       const k = lessonKey(level, lesson);
       setStore((prev) => (prev[k] ? prev : { ...prev, [k]: true }));
+      schedulePush();
     },
-    reset: () => setStore({}),
+    reset: () => { setStore({}); schedulePush(); },
   };
 }
 

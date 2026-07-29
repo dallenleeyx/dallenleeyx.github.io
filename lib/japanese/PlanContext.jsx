@@ -1,10 +1,13 @@
 'use client';
 // lib/japanese/PlanContext.jsx — Home's study-plan state: the pace/dates
 // settings, which lessons are ticked done (and when), and the review-phase
-// daily habit checklist. localStorage-backed for now; Phase 9 wires this
-// into the cross-device sync registry.
+// daily habit checklist. localStorage-backed, and wired into the
+// cross-device sync registry as one combined 'planBundle' section (mirroring
+// how the original pushed all four pieces from a single syncContributors
+// entry).
 import { createContext, useContext, useEffect, useState } from 'react';
 import { defaultPlan, todayISO } from './timeline';
+import { useSyncSection } from './SyncContext';
 
 const PLAN_KEY = 'jpstudy_plan_v1';
 const PLAN_DONE_KEY = 'jpstudy_plan_done_v1';
@@ -39,11 +42,22 @@ export function PlanProvider({ children }) {
   useEffect(() => { saveJSON(PLAN_DAILY_KEY, planDaily); }, [planDaily]);
   useEffect(() => { saveJSON(PLAN_EDITS_KEY, planEdits); }, [planEdits]);
 
+  const schedulePush = useSyncSection('planBundle', {
+    get: () => ({ plan, planDone, planDaily, planEdits }),
+    apply: (remote) => {
+      if (remote.plan) setPlanState((prev) => ({ ...prev, ...remote.plan }));
+      if (remote.planDone) setPlanDone(remote.planDone);
+      if (remote.planDaily) setPlanDaily(remote.planDaily);
+      if (remote.planEdits) setPlanEdits({ done: remote.planEdits.done || {}, daily: remote.planEdits.daily || {} });
+    },
+  });
+
   // Only a real edit re-stamps updatedAt -- stamping on every load would
   // make this device's copy look newest on every visit, so a freshly-opened
   // second device would win a future sync merge with its untouched defaults.
   const updatePlan = (patch) => {
     setPlanState((prev) => ({ ...prev, ...patch, updatedAt: Date.now() }));
+    schedulePush();
   };
 
   const markEdit = (kind, key) => {
@@ -58,6 +72,7 @@ export function PlanProvider({ children }) {
       return next;
     });
     markEdit('done', key);
+    schedulePush();
   };
 
   const toggleHabitDone = (habitId, today = todayISO()) => {
@@ -69,6 +84,7 @@ export function PlanProvider({ children }) {
       return { ...prev, [today]: day };
     });
     markEdit('daily', dailyKey);
+    schedulePush();
   };
 
   const resetPlan = () => {
@@ -76,6 +92,7 @@ export function PlanProvider({ children }) {
     setPlanDaily({});
     setPlanEdits({ done: {}, daily: {} });
     setPlanState({ ...defaultPlan(todayISO()), updatedAt: Date.now() });
+    schedulePush();
   };
 
   return (

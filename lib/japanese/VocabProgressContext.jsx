@@ -3,10 +3,13 @@
 // word right/wrong stats for each of the three practice modes, plus a
 // per-mode lesson-mastery flag store) so Word List, Flashcards, Writing, and
 // Furigana all read/write the same live data instead of drifting out of sync
-// with their own copies. localStorage-backed for now; Phase 9 wires these
-// stores into the cross-device sync registry.
+// with their own copies. localStorage-backed, and wired into the
+// cross-device sync registry (lib/japanese/SyncContext.jsx) -- all three
+// progress maps sync under their own key ('vocab'/'writing'/'furigana'), and
+// the three lesson-mastery stores sync together under 'vocabMastery'.
 import { createContext, useContext, useEffect, useState } from 'react';
 import { wordId } from './wordId';
+import { useSyncSection } from './SyncContext';
 
 const PROGRESS_KEY = 'jpstudy_progress_v1'; // flashcards
 const KANJI_PROGRESS_KEY = 'jpstudy_kanji_progress_v1'; // writing
@@ -34,9 +37,14 @@ function lessonKey(level, lesson) {
 // Shared shape for all three per-word progress stores (flashcards' correct/
 // wrong bookkeeping isn't used, but the mastered/weak flag semantics are
 // identical: "mastered"/"weak" reflect only the LAST sitting with this word).
-function useProgressStore(storageKey) {
+function useProgressStore(storageKey, syncKey) {
   const [store, setStore] = useState(() => loadJSON(storageKey, {}));
   useEffect(() => { saveJSON(storageKey, store); }, [store]);
+
+  const schedulePush = useSyncSection(syncKey, {
+    get: () => store,
+    apply: (remote) => setStore(remote),
+  });
 
   const getStats = (item) => store[wordId(item)] || {};
   const isWeak = (item) => !!getStats(item).weak;
@@ -47,6 +55,7 @@ function useProgressStore(storageKey) {
       ...prev,
       [wordId(item)]: { mastered: masteredThisSitting, weak: !masteredThisSitting, lastSeen: new Date().toISOString() },
     }));
+    schedulePush();
   };
 
   const resetProgressFor = (items) => {
@@ -56,33 +65,53 @@ function useProgressStore(storageKey) {
       items.forEach((item) => { next[wordId(item)] = { mastered: false, weak: false, lastSeen: now }; });
       return next;
     });
+    schedulePush();
   };
 
   return { isWeak, isMastered, getStats, recordResult, resetProgressFor };
 }
 
-function useMasteryStore(storageKey) {
-  const [store, setStore] = useState(() => loadJSON(storageKey, {}));
-  useEffect(() => { saveJSON(storageKey, store); }, [store]);
-  return {
-    isPassed: (level, lesson) => !!store[lessonKey(level, lesson)],
+// fc/kw/fg lesson-mastery flags all sync together under one 'vocabMastery'
+// section (grammar practice's 'gp' badges live in GrammarProgressContext
+// instead, since Vocab and Grammar are independently-mounted sections, not
+// sequential owners of one shared store).
+function useVocabMasteryStores() {
+  const [fc, setFc] = useState(() => loadJSON(FC_MASTERY_KEY, {}));
+  const [kw, setKw] = useState(() => loadJSON(KW_MASTERY_KEY, {}));
+  const [fg, setFg] = useState(() => loadJSON(FG_MASTERY_KEY, {}));
+  useEffect(() => { saveJSON(FC_MASTERY_KEY, fc); }, [fc]);
+  useEffect(() => { saveJSON(KW_MASTERY_KEY, kw); }, [kw]);
+  useEffect(() => { saveJSON(FG_MASTERY_KEY, fg); }, [fg]);
+
+  const schedulePush = useSyncSection('vocabMastery', {
+    get: () => ({ fc, kw, fg }),
+    apply: (remote) => {
+      if (remote.fc) setFc(remote.fc);
+      if (remote.kw) setKw(remote.kw);
+      if (remote.fg) setFg(remote.fg);
+    },
+  });
+
+  const makeStore = (map, setMap) => ({
+    isPassed: (level, lesson) => !!map[lessonKey(level, lesson)],
     markPassed: (level, lesson) => {
       const k = lessonKey(level, lesson);
-      setStore((prev) => (prev[k] ? prev : { ...prev, [k]: true }));
+      setMap((prev) => (prev[k] ? prev : { ...prev, [k]: true }));
+      schedulePush();
     },
-  };
+  });
+
+  return { fcMastery: makeStore(fc, setFc), kwMastery: makeStore(kw, setKw), fgMastery: makeStore(fg, setFg) };
 }
 
 const VocabProgressContext = createContext(null);
 
 export function VocabProgressProvider({ children }) {
-  const flashcards = useProgressStore(PROGRESS_KEY);
-  const writing = useProgressStore(KANJI_PROGRESS_KEY);
-  const furigana = useProgressStore(FURIGANA_PROGRESS_KEY);
+  const flashcards = useProgressStore(PROGRESS_KEY, 'vocab');
+  const writing = useProgressStore(KANJI_PROGRESS_KEY, 'writing');
+  const furigana = useProgressStore(FURIGANA_PROGRESS_KEY, 'furigana');
 
-  const fcMastery = useMasteryStore(FC_MASTERY_KEY);
-  const kwMastery = useMasteryStore(KW_MASTERY_KEY);
-  const fgMastery = useMasteryStore(FG_MASTERY_KEY);
+  const { fcMastery, kwMastery, fgMastery } = useVocabMasteryStores();
 
   // Word List's golden lesson chip: all three practice modes cleared.
   const isFullyMastered = (level, lesson) =>
