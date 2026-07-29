@@ -1,6 +1,7 @@
 import 'katex/dist/katex.min.css';
 import './colors_and_type.css';
 import './tracker.css';
+import { AppNav } from '../components/nav/AppNav';
 
 export const metadata = {
   title: 'The Proof Lab | Dallen Lee',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
       </head>
       <body data-screen-label="tracker">
         <div id="root">{children}</div>
+        <AppNav />
       </body>
     </html>
   );
