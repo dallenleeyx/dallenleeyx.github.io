@@ -8,10 +8,6 @@ window.TRACKER_SEED = [
       { id: 'at2', title: 'Problem Set 4 — CW complexes', due: '2026-08-24', status: 'todo' },
       { id: 'at3', title: 'Problem Set 2 — Homotopy lifting', due: '2026-07-28', status: 'done' },
     ],
-    problems: [
-      { id: 'atp1', title: 'Compute $\\pi_1$ of the figure-eight', problem: 'Show the wedge of two circles has fundamental group the free group $F_2$.', solution: 'Cover by two open sets, each deformation-retracting to one circle, overlapping in a contractible neighbourhood of the wedge point. Van Kampen gives $\\mathbb{Z} * \\mathbb{Z} = F_2$.', revealed: false },
-      { id: 'atp2', title: 'Non-orientable surface', problem: 'Compute $\\pi_1(\\mathbb{RP}^2)$.', solution: '$S^2 \\to \\mathbb{RP}^2$ is a degree-2 cover with deck group $\\mathbb{Z}/2$; since $S^2$ is simply connected, $\\pi_1(\\mathbb{RP}^2) \\cong \\mathbb{Z}/2$.', revealed: false },
-    ],
     doc: `# Chapter 1 — Fundamentals
 
 ## Van Kampen's Theorem
@@ -38,9 +34,6 @@ Keep re-deriving van Kampen from the groupoid version until it's obvious why $U 
     assignments: [
       { id: 'mt1', title: 'Problem Set 2 — Outer measures', due: '2026-08-05', status: 'todo' },
       { id: 'mt2', title: 'Problem Set 1 — σ-algebras', due: '2026-07-27', status: 'doing' },
-    ],
-    problems: [
-      { id: 'mtp1', title: 'Non-measurable set', problem: 'Construct a subset of $[0,1]$ that is not Lebesgue measurable.', solution: "Vitali's construction: choose one representative from each coset of $\\mathbb{Q}$ in $[0,1)$ under mod-1 addition via the axiom of choice; translation-invariance plus countable additivity contradict measurability.", revealed: false },
     ],
     doc: `# Chapter 1 — Fundamentals
 
@@ -70,7 +63,6 @@ Key idea: apply monotone convergence to $g_n = \\inf_{k \\ge n} f_k$, which incr
       { id: 'ch2', title: 'Draft: splitting principle writeup', due: '2026-08-15', status: 'todo' },
       { id: 'ch3', title: 'Meeting notes — advisor check-in', due: '2026-07-25', status: 'doing' },
     ],
-    problems: [],
     doc: `# Chapter 1 — Fundamentals
 
 ## Whitney Sum Formula

@@ -1,24 +1,13 @@
 // Tracker.jsx — The Proof Lab: course + assignment tracking, calendar, and
-// per-course notes (markdown + KaTeX, live preview). State persists to localStorage.
-const { useState, useEffect, useMemo, useCallback } = React;
+// per-course notes (markdown + KaTeX, Overleaf-style full-screen editor).
+// State persists to localStorage.
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 const STORE_KEY = 'proofLabData';
 const STATUS_ORDER = ['todo', 'doing', 'done'];
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const isoOf = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-// ── KaTeX inline: render $…$ spans without touching the surrounding DOM ──
-function MathTex({ children }) {
-  const str = String(children == null ? '' : children);
-  if (!window.katex || str.indexOf('$') === -1) return str;
-  const parts = str.split(/\$([^$]+)\$/g);
-  return parts.map((p, i) => {
-    if (i % 2 === 0) return p;
-    let html;
-    try { html = katex.renderToString(p, { throwOnError: false }); } catch (e) { return '$' + p + '$'; }
-    return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
-  });
-}
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 // ── markdown + KaTeX renderer for the per-course notes document ──
 function katexHtml(src, displayMode) {
@@ -67,6 +56,33 @@ function extractToc(doc) {
   return toc;
 }
 
+// environment/callout blocks: ::: theorem | proposition | definition | lemma |
+// corollary | example | remark | proof | flag  Name?  …body…  :::
+const ENV_LABELS = { theorem: 'Theorem', proposition: 'Proposition', definition: 'Definition', lemma: 'Lemma', corollary: 'Corollary', example: 'Example', remark: 'Remark', proof: 'Proof' };
+const ENV_TYPES = Object.keys(ENV_LABELS);
+const MATH_CMDS = [
+  { cmd: 'mathcal', glyph: '𝒜' },
+  { cmd: 'mathfrak', glyph: '𝔄' },
+  { cmd: 'mathbb', glyph: '𝔸' },
+];
+
+function blockTemplate(type) {
+  const hasName = type !== 'proof' && type !== 'flag';
+  const prefix = `:::${type}` + (hasName ? ' ' : '');
+  const namePlaceholder = hasName ? 'Name' : '';
+  const bodyPlaceholder = type === 'proof' ? 'Proof.' : type === 'flag' ? "What don't you understand here?" : 'Statement.';
+  const line1 = prefix + namePlaceholder;
+  const text = `${line1}\n${bodyPlaceholder}\n:::\n`;
+  const selStart = hasName ? prefix.length : line1.length + 1;
+  const selEnd = hasName ? prefix.length + namePlaceholder.length : line1.length + 1 + bodyPlaceholder.length;
+  return { text, selStart, selEnd };
+}
+
+function mathTemplate(cmd) {
+  const text = `\\${cmd}{}`;
+  return { text, selStart: text.length - 1, selEnd: text.length - 1 };
+}
+
 function renderDoc(text) {
   const lines = String(text || '').split('\n');
   const out = [];
@@ -76,8 +92,32 @@ function renderDoc(text) {
   const flushQuote = () => { if (quote.length) { out.push(<blockquote key={'bq' + out.length} className="tk-note-bq">{renderInline(quote.join(' '), 'bq' + out.length)}</blockquote>); quote = []; } };
   const flushAll = () => { flushPara(); flushList(); flushQuote(); };
 
-  lines.forEach((raw, i) => {
-    const trimmed = raw.trim();
+  let i = 0;
+  while (i < lines.length) {
+    const trimmed = lines[i].trim();
+
+    const blockMatch = trimmed.match(/^:::(\w+)\s*(.*)$/);
+    if (blockMatch) {
+      flushAll();
+      const type = blockMatch[1].toLowerCase();
+      const name = blockMatch[2].trim();
+      const bodyLines = [];
+      i++;
+      while (i < lines.length && lines[i].trim() !== ':::') { bodyLines.push(lines[i]); i++; }
+      i++;
+      const isFlag = type === 'flag';
+      const label = isFlag ? '🚩 Flag' : (ENV_LABELS[type] || type);
+      out.push(
+        <div key={'blk' + out.length} className={`tk-note-block${isFlag ? ' tk-note-flag' : ''}`}>
+          <div className="tk-note-block-head">
+            <span className="tk-type">{label}</span>
+            {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
+          </div>
+          <div className="tk-note-block-body">{renderDoc(bodyLines.join('\n'))}</div>
+        </div>
+      );
+      continue;
+    }
 
     if (trimmed.startsWith('$$') && trimmed.endsWith('$$') && trimmed.length > 3) {
       flushAll();
@@ -85,7 +125,8 @@ function renderDoc(text) {
       out.push(html
         ? <div key={'dm' + i} className="tk-note-display-math" dangerouslySetInnerHTML={{ __html: html }} />
         : <p key={'dm' + i} className="tk-note-p">{trimmed}</p>);
-      return;
+      i++;
+      continue;
     }
 
     const h = trimmed.match(/^(#{1,3})\s+(.*)$/);
@@ -94,16 +135,18 @@ function renderDoc(text) {
       const level = h[1].length;
       const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
       out.push(React.createElement(Tag, { key: 'h' + i, id: 'h-' + i, className: `tk-note-h${level}` }, renderInline(h[2], 'h' + i)));
-      return;
+      i++;
+      continue;
     }
 
-    if (/^[-*]\s+/.test(trimmed)) { flushPara(); flushQuote(); list.push(trimmed.replace(/^[-*]\s+/, '')); return; }
-    if (trimmed.startsWith('> ')) { flushPara(); flushList(); quote.push(trimmed.slice(2)); return; }
-    if (trimmed === '') { flushAll(); return; }
+    if (/^[-*]\s+/.test(trimmed)) { flushPara(); flushQuote(); list.push(trimmed.replace(/^[-*]\s+/, '')); i++; continue; }
+    if (trimmed.startsWith('> ')) { flushPara(); flushList(); quote.push(trimmed.slice(2)); i++; continue; }
+    if (trimmed === '') { flushAll(); i++; continue; }
 
     flushList(); flushQuote();
     para.push(trimmed);
-  });
+    i++;
+  }
   flushAll();
   return out;
 }
@@ -145,22 +188,6 @@ function AssignmentRow({ a, showCourse, onCycle, onRemove }) {
           {onRemove && <button className="tk-x-btn" onClick={onRemove}>×</button>}
         </div>
       </div>
-    </div>
-  );
-}
-
-function RevealCard({ badge, name, body, hidden, hiddenLabels, revealed, onToggle }) {
-  return (
-    <div className="tk-card">
-      <div className="tk-card-head">
-        {badge && <span className="tk-type">{badge}</span>}
-        <span className="tk-card-name"><MathTex>{name}</MathTex></span>
-      </div>
-      <div className="tk-card-body"><MathTex>{body}</MathTex></div>
-      <button className="tk-mono-btn" style={{ marginTop: '.85rem' }} onClick={onToggle}>
-        {revealed ? hiddenLabels[1] : hiddenLabels[0]}
-      </button>
-      {revealed && <div className="tk-reveal"><MathTex>{hidden}</MathTex></div>}
     </div>
   );
 }
@@ -220,6 +247,145 @@ function Calendar({ courses, cursor, onShift, selected, onSelect }) {
   );
 }
 
+// ── full-screen, Overleaf-style notes editor ──
+function NotesEditor({ course, doc, onClose, onChange }) {
+  const taRef = useRef(null);
+  const toc = extractToc(doc);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const insertSnippet = ({ text, selStart, selEnd }, blockLevel) => {
+    const ta = taRef.current;
+    const value = doc || '';
+    const start = ta ? ta.selectionStart : value.length;
+    const end = ta ? ta.selectionEnd : value.length;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    const pad = blockLevel && before.length && !before.endsWith('\n') ? '\n' : '';
+    onChange(before + pad + text + after);
+    const base = before.length + pad.length;
+    requestAnimationFrame(() => {
+      if (!ta) return;
+      ta.focus();
+      ta.setSelectionRange(base + selStart, base + selEnd);
+    });
+  };
+
+  const scrollToHeading = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <div className="tk-editor-overlay">
+      <div className="tk-editor-topbar">
+        <button className="tk-mono-btn" onClick={onClose}>← Back</button>
+        <div className="tk-editor-course">{course.glyph} · {course.name} — Notes</div>
+        <div style={{ width: 64 }} />
+      </div>
+      <div className="tk-doc-toolbar">
+        {MATH_CMDS.map(m => (
+          <button key={m.cmd} className="tk-mono-btn" onClick={() => insertSnippet(mathTemplate(m.cmd), false)}>{m.glyph} {m.cmd}</button>
+        ))}
+        <span className="tk-toolbar-sep" />
+        {ENV_TYPES.map(t => (
+          <button key={t} className="tk-mono-btn" onClick={() => insertSnippet(blockTemplate(t), true)}>{ENV_LABELS[t]}</button>
+        ))}
+        <span className="tk-toolbar-sep" />
+        <button className="tk-mono-btn tk-flag-toolbar-btn" onClick={() => insertSnippet(blockTemplate('flag'), true)}>🚩 Flag</button>
+      </div>
+      <div className="tk-editor-body">
+        <div className="tk-doc-layout">
+          <div className="tk-doc-toc">
+            <div className="tk-doc-toc-label">Contents</div>
+            {toc.length ? toc.map(h => (
+              <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
+            )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
+          </div>
+          <div className="tk-doc-edit">
+            <textarea
+              ref={taRef}
+              className="tk-doc-textarea"
+              value={doc || ''}
+              placeholder={'# Heading\n\nWrite here — **bold**, *italic*, $x^2$, $$\\int f\\,dx$$ …\nUse the toolbar for \\mathcal, \\mathbb, theorem/definition blocks, or a flag.'}
+              onChange={e => onChange(e.target.value)}
+            />
+          </div>
+          <div className="tk-doc-preview">
+            {(doc || '').trim() ? renderDoc(doc) : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── add-course modal ──
+function AddCourseModal({ onClose, onCreate }) {
+  const [title, setTitle] = useState('');
+  const [code, setCode] = useState('');
+  const [desc, setDesc] = useState('');
+  const submit = () => {
+    if (!title.trim()) return;
+    onCreate({ title: title.trim(), code: code.trim(), desc: desc.trim() });
+  };
+  return (
+    <React.Fragment>
+      <div className="tk-modal-backdrop" onClick={onClose} />
+      <div className="tk-modal-wrap">
+        <div className="tk-modal">
+          <div className="tk-modal-title">Add a course</div>
+          <div className="tk-modal-field">
+            <label>Course title</label>
+            <input className="tk-input" autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="Linear Algebra" onKeyDown={e => e.key === 'Enter' && submit()} />
+          </div>
+          <div className="tk-modal-field">
+            <label>Course code</label>
+            <input className="tk-input" value={code} onChange={e => setCode(e.target.value)} placeholder="MA2101" onKeyDown={e => e.key === 'Enter' && submit()} />
+          </div>
+          <div className="tk-modal-field">
+            <label>Description</label>
+            <textarea className="tk-textarea" value={desc} onChange={e => setDesc(e.target.value)} placeholder="What this course covers…" />
+          </div>
+          <div className="tk-modal-foot">
+            <button className="tk-mono-btn" onClick={onClose}>Cancel</button>
+            <button className="tk-btn tk-btn-primary tk-btn-sm" disabled={!title.trim()} onClick={submit}>Add course</button>
+          </div>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+// ── delete-course modal: type DELETE to confirm ──
+function DeleteCourseModal({ course, onClose, onConfirm }) {
+  const [text, setText] = useState('');
+  const ready = text.trim().toUpperCase() === 'DELETE';
+  return (
+    <React.Fragment>
+      <div className="tk-modal-backdrop" onClick={onClose} />
+      <div className="tk-modal-wrap">
+        <div className="tk-modal">
+          <div className="tk-modal-title">Delete "{course.name}"?</div>
+          <p className="tk-note-p" style={{ marginBottom: '1rem' }}>This removes the course, its assignments, and its notes for good. This can't be undone.</p>
+          <div className="tk-modal-field">
+            <label>Type DELETE to confirm</label>
+            <input className="tk-input" autoFocus value={text} onChange={e => setText(e.target.value)} placeholder="DELETE" onKeyDown={e => e.key === 'Enter' && ready && onConfirm()} />
+          </div>
+          <div className="tk-modal-foot">
+            <button className="tk-mono-btn" onClick={onClose}>Cancel</button>
+            <button className="tk-btn tk-btn-primary tk-btn-sm" disabled={!ready} onClick={onConfirm}>Delete course</button>
+          </div>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
 function App() {
   const [courses, setCourses] = useState(() => {
     try {
@@ -233,6 +399,9 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [drafts, setDrafts] = useState({});
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
+  const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
+  const [addCourseOpen, setAddCourseOpen] = useState(false);
+  const [deleteCourseFor, setDeleteCourseFor] = useState(null); // course id | null
 
   useEffect(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(courses)); } catch (e) {} }, [courses]);
   useEffect(() => {
@@ -245,7 +414,6 @@ function App() {
   }, []);
   const cycle = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.map(a => a.id !== id ? a : { ...a, status: STATUS_ORDER[(STATUS_ORDER.indexOf(a.status) + 1) % 3] }) }));
   const removeA = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.filter(a => a.id !== id) }));
-  const toggle = (cid, kind, id) => mutate(cid, c => ({ ...c, [kind]: c[kind].map(x => x.id !== id ? x : { ...x, revealed: !x.revealed }) }));
   const updateDoc = (cid, text) => mutate(cid, c => ({ ...c, doc: text }));
   const draft = (k) => drafts[k] || '';
   const setDraft = (k, v) => setDrafts(d => ({ ...d, [k]: v }));
@@ -255,9 +423,18 @@ function App() {
     mutate(cid, c => ({ ...c, assignments: [...c.assignments, { id: 'a' + Date.now(), title, due: draft(cid + ':due'), status: 'todo' }] }));
     setDrafts(d => ({ ...d, [cid + ':title']: '', [cid + ':due']: '' }));
   };
-  const scrollToHeading = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const addCourse = ({ title, code, desc }) => {
+    const id = 'c' + newId();
+    const label = code || title.slice(0, 2).toUpperCase();
+    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, description: desc, assignments: [], doc: '' }]);
+    setAddCourseOpen(false);
+    setView(id);
+  };
+  const removeCourse = (cid) => {
+    setCourses(cs => cs.filter(c => c.id !== cid));
+    if (view === cid) setView('dashboard');
+    if (notesOpenFor === cid) setNotesOpenFor(null);
+    setDeleteCourseFor(null);
   };
 
   const current = courses.find(c => c.id === view);
@@ -269,7 +446,7 @@ function App() {
     .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
-  const toc = current ? extractToc(current.doc) : [];
+  const courseToDelete = deleteCourseFor ? courses.find(c => c.id === deleteCourseFor) : null;
 
   return (
     <div className="tk-app">
@@ -299,6 +476,7 @@ function App() {
               </a>
             </li>
           ))}
+          <li><a className="tk-nav-add" onClick={() => setAddCourseOpen(true)}><span className="dot" />+ Add course</a></li>
         </ul>
         <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
           onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
@@ -343,6 +521,10 @@ function App() {
                     </div>
                   );
                 })}
+                <div className="tk-jump tk-jump-add" onClick={() => setAddCourseOpen(true)}>
+                  <div className="tk-jump-add-plus">+</div>
+                  <div className="tk-jump-name">Add course</div>
+                </div>
               </div>
             </div>
           </section>
@@ -357,7 +539,12 @@ function App() {
                     <span className="tk-course-glyph">{current.glyph}</span>
                     <span className="tk-course-name">{current.name}</span>
                   </div>
+                  {current.description && <div className="tk-course-desc">{current.description}</div>}
                   <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open</div>
+                </div>
+                <div style={{ display: 'flex', gap: '.6rem' }}>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setNotesOpenFor(current.id)}>Notes</button>
+                  <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
                 </div>
               </div>
               <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
@@ -378,43 +565,18 @@ function App() {
                 <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => addAssignment(current.id)}>Add</button>
               </div>
             </div>
-
-            <div className="fade-up d2">
-              <SectionLabel sub="markdown + KaTeX — renders live as you type">Notes</SectionLabel>
-              <div className="tk-doc-layout">
-                <div className="tk-doc-toc">
-                  <div className="tk-doc-toc-label">Contents</div>
-                  {toc.length ? toc.map(h => (
-                    <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
-                  )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
-                </div>
-                <div className="tk-doc-edit">
-                  <textarea
-                    className="tk-doc-textarea"
-                    value={current.doc || ''}
-                    placeholder={'# Heading\n\nWrite here — **bold**, *italic*, $x^2$, $$\\int f\\,dx$$ …'}
-                    onChange={e => updateDoc(current.id, e.target.value)}
-                  />
-                </div>
-                <div className="tk-doc-preview">
-                  {(current.doc || '').trim() ? renderDoc(current.doc) : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
-                </div>
-              </div>
-            </div>
-
-            <div className="fade-up d3">
-              <SectionLabel sub="attempt, then check the solution">Problems</SectionLabel>
-              <div className="tk-stack">
-                {current.problems.map(p => (
-                  <RevealCard key={p.id} name={p.title} body={p.problem} hidden={p.solution}
-                    hiddenLabels={['Show solution', 'Hide solution']} revealed={p.revealed} onToggle={() => toggle(current.id, 'problems', p.id)} />
-                ))}
-                {!current.problems.length && <Empty icon="⚔️">No problems logged yet.</Empty>}
-              </div>
-            </div>
           </section>
         )}
       </main>
+
+      {notesOpenFor && (() => {
+        const c = courses.find(x => x.id === notesOpenFor);
+        if (!c) return null;
+        return <NotesEditor course={c} doc={c.doc} onClose={() => setNotesOpenFor(null)} onChange={(text) => updateDoc(c.id, text)} />;
+      })()}
+
+      {addCourseOpen && <AddCourseModal onClose={() => setAddCourseOpen(false)} onCreate={addCourse} />}
+      {courseToDelete && <DeleteCourseModal course={courseToDelete} onClose={() => setDeleteCourseFor(null)} onConfirm={() => removeCourse(courseToDelete.id)} />}
     </div>
   );
 }
