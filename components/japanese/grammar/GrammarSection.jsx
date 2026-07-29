@@ -7,6 +7,7 @@ import { useJapaneseI18n } from '../../../lib/japanese/I18nProvider';
 import { GrammarProgressProvider } from '../../../lib/japanese/GrammarProgressContext';
 import { Reference } from './Reference';
 import { Practice } from './Practice';
+import { Conjugation } from './Conjugation';
 
 const SUBVIEWS = [
   { id: 'grammar', labelKey: 'tabGrammar' },
@@ -39,7 +40,7 @@ export function GrammarSection({ active }) {
         <Practice active={active && activeSubview === 'grammarpractice'} />
       </div>
       <div className={`subview${activeSubview === 'conjugation' ? ' active' : ''}`}>
-        <p>Conjugation coming in a later phase.</p>
+        <Conjugation active={active && activeSubview === 'conjugation'} />
       </div>
     </GrammarProgressProvider>
   );
