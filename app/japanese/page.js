@@ -1,12 +1,14 @@
+import './japanese.css';
 import { auth } from '../../lib/auth';
 import { SignInGate } from '../../components/auth/SignInGate';
+import { JapaneseAppShell } from '../../components/japanese/JapaneseAppShell';
 
 export default async function Page() {
   const session = await auth();
   if (!session) return <SignInGate />;
   return (
-    <div className="tk-loading-screen">
-      <div style={{ textAlign: 'center' }}>Japanese app coming soon.</div>
-    </div>
+    <JapaneseAppShell>
+      <main>Japanese app coming soon — theme picker and settings are wired up above.</main>
+    </JapaneseAppShell>
   );
 }
