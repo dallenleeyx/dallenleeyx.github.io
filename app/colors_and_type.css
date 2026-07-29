@@ -14,12 +14,17 @@
 /* ──────────────────────────────────────────────────────────────────────
    FONTS
    ──────────────────────────────────────────────────────────────────────
-   Loaded via Google Fonts. Local copies live in fonts/ as a backup.
-   Body:  Nunito (300, 400, 500, 600, 700; italic 400, 500)
-   Mono:  DM Mono (300, 400, 500)
-   Math:  KaTeX serves its own fonts via CSS at runtime.
+   Loaded via Google Fonts.
+   Display: Newsreader (500, 600, 700; italic) — a scholarly serif, used only
+            for the large hero/greeting line, giving it an academic-journal
+            weight the rest of the (sans) UI doesn't try to compete with.
+   Body/UI: Archivo (400–800) — a precise, slightly technical grotesk in
+            place of the old Nunito, which read too soft/rounded for a
+            proofs-and-topology site.
+   Mono:    DM Mono (300, 400, 500) — unchanged, already considered.
+   Math:    KaTeX serves its own fonts via CSS at runtime.
    ────────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap');
 
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -55,9 +60,9 @@
   --transition-slow: 0.6s ease;
 
   /* Type families */
-  --font-sans: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-display: 'Nunito', system-ui, sans-serif;     /* same family, used at large sizes */
+  --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;  /* the one serif moment -- hero greeting only */
   --font-math: 'DM Mono', monospace;                   /* for inline math glyphs/decoration */
 
   /* Type scale (rem) */
