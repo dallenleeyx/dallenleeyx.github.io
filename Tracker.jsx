@@ -18,7 +18,7 @@ function katexHtml(src, displayMode) {
 
 function renderInline(text, keyPrefix) {
   if (!text) return null;
-  const parts = String(text).split(/(\$\$[^$]+\$\$|\$[^$]+\$|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|_[^_]+_)/g);
+  const parts = String(text).split(/(\$\$[^$]+\$\$|\$[^$]+\$|\*\*[^*]+\*\*|`[^`]+`|\{\{[^}]+\}\}|\*[^*]+\*|_[^_]+_)/g);
   return parts.map((part, i) => {
     const key = `${keyPrefix}-${i}`;
     if (!part) return null;
@@ -36,6 +36,13 @@ function renderInline(text, keyPrefix) {
     if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
       return <code key={key} className="t-code">{part.slice(1, -1)}</code>;
     }
+    if (part.startsWith('{{') && part.endsWith('}}') && part.length > 4) {
+      return (
+        <span key={key} className="tk-flag-tab" tabIndex={0}>
+          <span className="tk-flag-tooltip">{renderInline(part.slice(2, -2), key + '-c')}</span>
+        </span>
+      );
+    }
     if ((part.startsWith('*') && part.endsWith('*') && part.length > 1) || (part.startsWith('_') && part.endsWith('_') && part.length > 1)) {
       return <em key={key}>{renderInline(part.slice(1, -1), key)}</em>;
     }
@@ -43,21 +50,25 @@ function renderInline(text, keyPrefix) {
   });
 }
 
-// table of contents: only top-level (#) and second-level (##) headings
-function extractToc(doc) {
+// table of contents: only top-level (#) and second-level (##) headings.
+// idPrefix must match the prefix passed to renderDoc() for the same content,
+// so ToC links resolve to the right heading (a page can show the same doc
+// twice — inline preview and full-screen editor — so ids must not collide).
+function extractToc(doc, idPrefix) {
+  const px = idPrefix || 'h-';
   const lines = String(doc || '').split('\n');
   const toc = [];
   lines.forEach((line, i) => {
     const h1 = line.match(/^#\s+(.*)$/);
     const h2 = !h1 && line.match(/^##\s+(.*)$/);
-    if (h1) toc.push({ level: 1, text: h1[1].trim(), id: 'h-' + i });
-    else if (h2) toc.push({ level: 2, text: h2[1].trim(), id: 'h-' + i });
+    if (h1) toc.push({ level: 1, text: h1[1].trim(), id: px + i });
+    else if (h2) toc.push({ level: 2, text: h2[1].trim(), id: px + i });
   });
   return toc;
 }
 
 // environment/callout blocks: ::: theorem | proposition | definition | lemma |
-// corollary | example | remark | proof | flag  Name?  …body…  :::
+// corollary | example | remark | proof  Name?  …body…  :::
 const ENV_LABELS = { theorem: 'Theorem', proposition: 'Proposition', definition: 'Definition', lemma: 'Lemma', corollary: 'Corollary', example: 'Example', remark: 'Remark', proof: 'Proof' };
 const ENV_TYPES = Object.keys(ENV_LABELS);
 const MATH_CMDS = [
@@ -67,10 +78,10 @@ const MATH_CMDS = [
 ];
 
 function blockTemplate(type) {
-  const hasName = type !== 'proof' && type !== 'flag';
+  const hasName = type !== 'proof';
   const prefix = `:::${type}` + (hasName ? ' ' : '');
   const namePlaceholder = hasName ? 'Name' : '';
-  const bodyPlaceholder = type === 'proof' ? 'Proof.' : type === 'flag' ? "What don't you understand here?" : 'Statement.';
+  const bodyPlaceholder = type === 'proof' ? 'Proof.' : 'Statement.';
   const line1 = prefix + namePlaceholder;
   const text = `${line1}\n${bodyPlaceholder}\n:::\n`;
   const selStart = hasName ? prefix.length : line1.length + 1;
@@ -83,7 +94,15 @@ function mathTemplate(cmd) {
   return { text, selStart: text.length - 1, selEnd: text.length - 1 };
 }
 
-function renderDoc(text) {
+// inline flag/comment: a small red tab; hover (or focus) reveals the note
+function flagInlineTemplate() {
+  const placeholder = "What don't you understand here?";
+  const text = `{{${placeholder}}}`;
+  return { text, selStart: 2, selEnd: 2 + placeholder.length };
+}
+
+function renderDoc(text, idPrefix) {
+  const px = idPrefix || 'h-';
   const lines = String(text || '').split('\n');
   const out = [];
   let para = [], list = [], quote = [];
@@ -105,15 +124,14 @@ function renderDoc(text) {
       i++;
       while (i < lines.length && lines[i].trim() !== ':::') { bodyLines.push(lines[i]); i++; }
       i++;
-      const isFlag = type === 'flag';
-      const label = isFlag ? '🚩 Flag' : (ENV_LABELS[type] || type);
+      const label = ENV_LABELS[type] || type;
       out.push(
-        <div key={'blk' + out.length} className={`tk-note-block${isFlag ? ' tk-note-flag' : ''}`}>
+        <div key={'blk' + out.length} className="tk-note-block">
           <div className="tk-note-block-head">
             <span className="tk-type">{label}</span>
             {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
           </div>
-          <div className="tk-note-block-body">{renderDoc(bodyLines.join('\n'))}</div>
+          <div className="tk-note-block-body">{renderDoc(bodyLines.join('\n'), px)}</div>
         </div>
       );
       continue;
@@ -134,7 +152,7 @@ function renderDoc(text) {
       flushAll();
       const level = h[1].length;
       const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
-      out.push(React.createElement(Tag, { key: 'h' + i, id: 'h-' + i, className: `tk-note-h${level}` }, renderInline(h[2], 'h' + i)));
+      out.push(React.createElement(Tag, { key: 'h' + i, id: px + i, className: `tk-note-h${level}` }, renderInline(h[2], 'h' + i)));
       i++;
       continue;
     }
@@ -160,8 +178,13 @@ function daysInfo(due, status) {
   return { label: `${diff}d left`, cls: diff <= 3 ? 'soon' : '' };
 }
 
-function SectionLabel({ children, sub }) {
-  return <div className="tk-section-label">{children}{sub && <span className="sub">— {sub}</span>}</div>;
+function SectionLabel({ children, sub, actions }) {
+  return (
+    <div className="tk-section-label">
+      <span>{children}{sub && <span className="sub">— {sub}</span>}</span>
+      {actions}
+    </div>
+  );
 }
 
 function Empty({ icon, children }) {
@@ -250,7 +273,7 @@ function Calendar({ courses, cursor, onShift, selected, onSelect }) {
 // ── full-screen, Overleaf-style notes editor ──
 function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
-  const toc = extractToc(doc);
+  const toc = extractToc(doc, 'nh-');
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -296,7 +319,7 @@ function NotesEditor({ course, doc, onClose, onChange }) {
           <button key={t} className="tk-mono-btn" onClick={() => insertSnippet(blockTemplate(t), true)}>{ENV_LABELS[t]}</button>
         ))}
         <span className="tk-toolbar-sep" />
-        <button className="tk-mono-btn tk-flag-toolbar-btn" onClick={() => insertSnippet(blockTemplate('flag'), true)}>🚩 Flag</button>
+        <button className="tk-mono-btn tk-flag-toolbar-btn" onClick={() => insertSnippet(flagInlineTemplate(), false)}>🚩 Flag</button>
       </div>
       <div className="tk-editor-body">
         <div className="tk-doc-layout">
@@ -316,7 +339,7 @@ function NotesEditor({ course, doc, onClose, onChange }) {
             />
           </div>
           <div className="tk-doc-preview">
-            {(doc || '').trim() ? renderDoc(doc) : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+            {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
           </div>
         </div>
       </div>
@@ -447,6 +470,11 @@ function App() {
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
   const courseToDelete = deleteCourseFor ? courses.find(c => c.id === deleteCourseFor) : null;
+  const courseToc = current ? extractToc(current.doc, 'ih-') : [];
+  const scrollToHeading = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="tk-app">
@@ -532,7 +560,7 @@ function App() {
 
         {current && (
           <section key={current.id}>
-            <div className="fade-up">
+            <div className="fade-up no-print">
               <div className="tk-hero">
                 <div>
                   <div className="tk-course-head">
@@ -542,17 +570,14 @@ function App() {
                   {current.description && <div className="tk-course-desc">{current.description}</div>}
                   <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open</div>
                 </div>
-                <div style={{ display: 'flex', gap: '.6rem' }}>
-                  <button className="tk-btn tk-btn-outline" onClick={() => setNotesOpenFor(current.id)}>Notes</button>
-                  <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
-                </div>
+                <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
               </div>
               <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
                 <div className="tk-progress-fill" style={{ width: (current.assignments.length ? Math.round(current.assignments.filter(a => a.status === 'done').length / current.assignments.length * 100) : 0) + '%' }} />
               </div>
             </div>
 
-            <div className="fade-up d1">
+            <div className="fade-up d1 no-print">
               <SectionLabel>Assignments</SectionLabel>
               <div className="tk-timeline">
                 {current.assignments.map(a => (
@@ -563,6 +588,26 @@ function App() {
                 <input className="tk-input" placeholder="new assignment…" value={draft(current.id + ':title')} onChange={e => setDraft(current.id + ':title', e.target.value)} onKeyDown={e => e.key === 'Enter' && addAssignment(current.id)} />
                 <input className="tk-input tk-input-date" type="date" value={draft(current.id + ':due')} onChange={e => setDraft(current.id + ':due', e.target.value)} />
                 <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => addAssignment(current.id)}>Add</button>
+              </div>
+            </div>
+
+            <div className="fade-up d2">
+              <SectionLabel sub="hover a red tab to read a flag" actions={
+                <div className="tk-notes-actions no-print" style={{ display: 'flex', gap: '.5rem' }}>
+                  <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setNotesOpenFor(current.id)}>Edit</button>
+                  <button className="tk-btn tk-btn-outline tk-btn-sm" onClick={() => window.print()}>Export to PDF</button>
+                </div>
+              }>Notes</SectionLabel>
+              <div className="tk-doc-preview-layout">
+                <div className="tk-doc-toc no-print">
+                  <div className="tk-doc-toc-label">Contents</div>
+                  {courseToc.length ? courseToc.map(h => (
+                    <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
+                  )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
+                </div>
+                <div className="tk-doc-preview">
+                  {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
+                </div>
               </div>
             </div>
           </section>

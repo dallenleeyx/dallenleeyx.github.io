@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-hero h1{font-size:2.3rem;font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:.4rem;}
 .tk-hero h1 em{font-style:normal;color:var(--accent);border-bottom:2px solid var(--glow-strong);}
 .tk-hero-meta{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-muted);}
-.tk-section-label{font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.4rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem;}
+.tk-section-label{font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.4rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.6rem;}
 .tk-section-label .sub{font-family:var(--font-mono);font-size:.62rem;font-weight:400;color:var(--fg-muted);letter-spacing:.03em;text-transform:none;}
 .tk-course-head{display:flex;align-items:baseline;gap:.85rem;margin-bottom:.4rem;}
 .tk-course-glyph{font-family:var(--font-mono);font-size:1.5rem;color:var(--accent);}
@@ -189,7 +189,16 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-note-block-name{font-size:.95rem;font-weight:700;color:var(--fg-1);}
 .tk-note-block-body{font-size:.95rem;color:var(--fg-2);}
 .tk-note-block-body .tk-note-p:last-child{margin-bottom:0;}
-.tk-note-flag{border-style:dashed;border-left-style:dashed;border-color:var(--fg-muted);border-left-color:var(--fg-muted);}
+
+/* Inline flag/comment — a small red tab; hover or focus reveals the note */
+.tk-flag-tab{position:relative;display:inline-block;width:.55em;height:.95em;background:#d1453b;border-radius:2px;margin:0 .2em;vertical-align:middle;cursor:help;}
+.tk-flag-tab:hover .tk-flag-tooltip,.tk-flag-tab:focus .tk-flag-tooltip{display:block;}
+.tk-flag-tooltip{display:none;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid #d1453b;color:var(--fg-1);padding:.5rem .7rem;border-radius:6px;font-size:.8rem;font-style:normal;font-weight:400;line-height:1.5;white-space:normal;width:max-content;max-width:240px;box-shadow:var(--shadow-lg);z-index:20;text-align:left;}
+
+/* Notes preview — inline on the course page: contents + rendered doc, no source */
+.tk-doc-preview-layout{display:grid;grid-template-columns:160px 1fr;gap:1.2rem;margin-bottom:3.2rem;}
+.tk-doc-preview-layout .tk-doc-toc{overflow-y:visible;}
+.tk-doc-preview-layout .tk-doc-preview{height:auto;max-height:60vh;}
 
 /* Generic modal (add/delete course, etc.) */
 .tk-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:300;animation:fadeIn .2s ease both;}
@@ -201,7 +210,7 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;}
 
 @media (max-width: 1100px){
-  .tk-doc-layout{grid-template-columns:1fr;height:auto;}
+  .tk-doc-layout, .tk-doc-preview-layout{grid-template-columns:1fr;height:auto;}
   .tk-doc-toc{border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:1rem;margin-bottom:1rem;overflow-y:visible;}
   .tk-doc-edit, .tk-doc-preview{height:60vh;}
 }
@@ -210,4 +219,12 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
   .tk-app{flex-direction:column;}
   .tk-main{margin-left:0;padding:2rem 1.4rem 4rem;}
   .tk-stats{grid-template-columns:1fr;}
+}
+
+/* Export to PDF: browser print, notes-only */
+@media print{
+  .no-print, #particles{display:none!important;}
+  .tk-main{margin-left:0!important;padding:0!important;max-width:none!important;}
+  .tk-doc-preview-layout{grid-template-columns:1fr!important;}
+  .tk-doc-preview{max-height:none!important;overflow:visible!important;border:none!important;padding:0!important;}
 }
