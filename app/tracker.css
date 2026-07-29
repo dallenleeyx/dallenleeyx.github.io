@@ -248,3 +248,11 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
   .tk-doc-preview-layout{grid-template-columns:1fr!important;}
   .tk-doc-preview{max-height:none!important;overflow:visible!important;border:none!important;padding:0!important;}
 }
+
+/* Site-wide corner nav (Dashboard / Math / Japanese) — fixed, out of flow,
+   so it never shifts any page's existing layout. */
+.app-nav{position:fixed;bottom:1.2rem;right:1.2rem;z-index:200;display:flex;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill,999px);padding:.35rem;box-shadow:var(--shadow-md);}
+.app-nav-link{font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;padding:.4rem .7rem;border-radius:var(--radius-pill,999px);transition:all var(--transition-fast);}
+.app-nav-link:hover{color:var(--fg-1);background:var(--surface-2);}
+.app-nav-link.active{color:var(--bg);background:var(--fg-1);}
+@media print{.app-nav{display:none!important;}}
