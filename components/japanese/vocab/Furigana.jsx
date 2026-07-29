@@ -112,27 +112,34 @@ export function Furigana({ active }) {
     setVerdictClass(isCorrect ? 'fg-input-correct' : 'fg-input-wrong');
     if (!isCorrect) setShowAnswer(true);
 
-    queue.grade(isCorrect, (verdict, restart) => {
-      if (!verdict) return;
-      furigana.recordResult(verdict.item, verdict.mastered);
-      if (restart) {
-        setTimeout(() => {
-          startSession(level, lessons, isolateMode);
-          setJustReset(true);
-        }, 1500);
-        return;
-      }
-      if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
-        fgMastery.markPassed(verdict.item.level, verdict.item.lesson);
-      }
-      setTimeout(() => {
-        setValue('');
-        setSubmitted(false);
-        setVerdictClass(null);
-        setShowAnswer(false);
-      }, 350);
-    });
+    queue.grade(isCorrect);
   };
+
+  // grade()'s result comes back through queue.lastResult rather than a
+  // callback -- see useCleanRunQueue.js for why.
+  useEffect(() => {
+    const result = queue.lastResult;
+    if (!result || !result.verdict) return;
+    const { verdict, restart } = result;
+    furigana.recordResult(verdict.item, verdict.mastered);
+    if (restart) {
+      setTimeout(() => {
+        startSession(level, lessons, isolateMode);
+        setJustReset(true);
+      }, 1500);
+      return;
+    }
+    if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
+      fgMastery.markPassed(verdict.item.level, verdict.item.lesson);
+    }
+    setTimeout(() => {
+      setValue('');
+      setSubmitted(false);
+      setVerdictClass(null);
+      setShowAnswer(false);
+    }, 350);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.lastResult]);
 
   const current = queue.current;
   const emptyText = queue.totalCount ? t('allMastered') : (isolateMode ? t('noWeakWords') : t('noCards'));

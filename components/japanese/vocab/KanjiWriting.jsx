@@ -102,20 +102,27 @@ export function KanjiWriting({ active }) {
   const handleGrade = (isCorrect) => {
     if (!queue.current || !revealed) return;
     setJustReset(false);
-    queue.grade(isCorrect, (verdict, restart) => {
-      if (!verdict) return;
-      writing.recordResult(verdict.item, verdict.mastered);
-      if (restart) {
-        startSession(level, lessons, isolateMode);
-        setJustReset(true);
-        return;
-      }
-      if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
-        kwMastery.markPassed(verdict.item.level, verdict.item.lesson);
-      }
-    });
+    queue.grade(isCorrect);
     setRevealed(false);
   };
+
+  // grade()'s result comes back through queue.lastResult rather than a
+  // callback -- see useCleanRunQueue.js for why.
+  useEffect(() => {
+    const result = queue.lastResult;
+    if (!result || !result.verdict) return;
+    const { verdict, restart } = result;
+    writing.recordResult(verdict.item, verdict.mastered);
+    if (restart) {
+      startSession(level, lessons, isolateMode);
+      setJustReset(true);
+      return;
+    }
+    if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
+      kwMastery.markPassed(verdict.item.level, verdict.item.lesson);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.lastResult]);
 
   const handleSkip = () => {
     if (!queue.current) return;

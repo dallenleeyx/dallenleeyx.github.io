@@ -15,6 +15,7 @@
 import { createContext, useContext, useState } from 'react';
 import { useJapaneseI18n } from '../../lib/japanese/I18nProvider';
 import { VocabSection } from './vocab/VocabSection';
+import { GrammarSection } from './grammar/GrammarSection';
 
 const VIEWS = [
   { id: 'home', labelKey: 'tabHome' },
@@ -62,7 +63,7 @@ export function JapaneseViewContent() {
         <VocabSection active={activeView === 'vocab'} />
       </section>
       <section id="grammar-view" className={`view${activeView === 'grammar' ? ' active' : ''}`}>
-        <p>Grammar reference/practice/conjugation coming in a later phase.</p>
+        <GrammarSection active={activeView === 'grammar'} />
       </section>
     </main>
   );

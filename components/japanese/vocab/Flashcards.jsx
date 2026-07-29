@@ -76,14 +76,21 @@ export function Flashcards({ active }) {
 
   const handleGrade = (isCorrect) => {
     if (!queue.current || !flipped) return;
-    queue.grade(isCorrect, (verdict) => {
-      recordSessionResult(verdict.item, verdict.mastered);
-      if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
-        fcMastery.markPassed(verdict.item.level, verdict.item.lesson);
-      }
-    });
+    queue.grade(isCorrect);
     setFlipped(false);
   };
+
+  // grade()'s result comes back through queue.lastVerdict rather than a
+  // callback -- see useMasteryQueue.js for why.
+  useEffect(() => {
+    const verdict = queue.lastVerdict;
+    if (!verdict) return;
+    recordSessionResult(verdict.item, verdict.mastered);
+    if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
+      fcMastery.markPassed(verdict.item.level, verdict.item.lesson);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.lastVerdict]);
 
   const handleSkip = () => {
     if (!queue.current) return;
