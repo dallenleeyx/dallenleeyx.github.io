@@ -11,12 +11,12 @@ import { PlanProvider } from '../../lib/japanese/PlanContext';
 import { JapaneseSyncProvider } from '../../lib/japanese/SyncContext';
 
 function ShellInner() {
-  const { theme, colorTheme } = useJapaneseTheme();
+  const { theme } = useJapaneseTheme();
   const { t } = useJapaneseI18n();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className="jp-shell" data-jp-theme={theme} data-jp-color-theme={colorTheme}>
+    <div className="jp-shell" data-jp-theme={theme}>
       <header className="site-header">
         <span className="brand">
           <span className="brand-jp">日本語ノート</span>

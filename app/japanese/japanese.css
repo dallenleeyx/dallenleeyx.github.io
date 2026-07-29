@@ -1,47 +1,58 @@
+/* Zen Kaku Gothic New (UI chrome) + Shippori Mincho (vocab/kanji display) --
+   both were previously referenced by font-family name below with nothing
+   actually loading them, so they were silently falling back to the
+   browser's default sans/serif this whole time. */
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;600;700&display=swap');
+
 /* ==========================================================================
    Design tokens
-   Five selectable color themes, each with light + dark variants — the
-   accent/status/level colors change per theme, but every OTHER rule in this
-   file only ever reads the --jp-paper/--jp-ink/--jp-indigo/etc. custom properties
-   below, never a literal color, so a theme is fully defined right here and
-   nowhere else needs to change.
-   Selected via [data-jp-color-theme] on the .jp-shell wrapper div (Settings →
-   Theme), not on <html> — this app shares a document with the math site's own
-   [data-theme] toggle, so it gets its own namespaced attributes/properties to
+   One monochrome palette (light + dark) — black, white, and grays only.
+   Every non-semantic rule in this file reads the --jp-paper/--jp-ink/etc.
+   custom properties below, never a literal color, so retheming (if it ever
+   happens again) stays a one-place edit. The only colors anywhere are
+   semantic (correct/wrong/mastered/still-learning feedback) and are kept
+   deliberately separate from the "accent" concept -- there is no accent hue
+   to carry a brand identity, on purpose.
+   Namespaced via [data-jp-theme] on the .jp-shell wrapper div (Settings →
+   dark mode), not on <html> — this app shares a document with the math
+   site's own [data-theme] toggle, so it gets its own attribute/properties to
    avoid colliding with the math site's identically-named CSS custom
    properties (e.g. --radius-sm) and to avoid the math site's own (unscoped)
-   [data-theme="dark"] selector matching this wrapper too. Light/dark stays a
-   second, orthogonal toggle via [data-jp-theme]. The base .jp-shell block (no
-   attribute needed) is the "slate" theme's light variant, so anything that
-   predates the theme picker still renders correctly.
-   Type: Shippori Mincho for Japanese text, Inter for UI/English.
+   [data-theme="dark"] selector matching this wrapper too.
+   Type: Zen Kaku Gothic New for UI chrome, Shippori Mincho reserved for
+   vocabulary/kanji display.
    ========================================================================== */
 .jp-shell {
-  /* ---- slate (default): cool neutrals + a single vivid blue accent ---- */
-  --jp-paper: #F1F5F9;
-  --jp-paper-alt: #E2E8F0;
-  --jp-paper-deep: #CBD5E1;
-  --jp-ink: #0F172A;
-  --jp-ink-soft: #64748B;
-  --jp-line: #CBD5E1;
+  --jp-paper: #FAFAF8;
+  --jp-paper-alt: #F0F0EE;
+  --jp-paper-deep: #E4E4E0;
+  --jp-ink: #111111;
+  --jp-ink-soft: #6E6E6B;
+  --jp-line: #DBDBD7;
 
-  --jp-indigo: #3B6DF4;
-  --jp-indigo-deep: #1E3A8A;
-  --jp-seal: #DC2626;
-  --jp-seal-bg: #FEE2E2;
+  /* "accent" is just ink -- active/selected states are black-on-paper, not a
+     brand hue. Kept as two tokens (not one) since a handful of rules still
+     want a lighter "deep ink" variant for large display text. */
+  --jp-indigo: #111111;
+  --jp-indigo-deep: #000000;
 
-  --jp-n5: #C7D9FB;
-  --jp-n4: #9FBBF5;
-  --jp-n3: #7398EE;
-  --jp-n2: #5480E0;
-  --jp-n1: #3B6DF4;
+  /* Semantic feedback -- these are the only color in the site */
+  --jp-seal: #B3261E;
+  --jp-seal-bg: #F8E8E7;
+  --jp-learning: #8A6417;
+  --jp-learning-bg: #F3EAD4;
+  --jp-mastered: #2E7D4F;
+  --jp-mastered-bg: #E1F0E5;
 
-  --jp-learning: #D97706;
-  --jp-learning-bg: #FEF3C7;
-  --jp-mastered: #16A34A;
-  --jp-mastered-bg: #DCFCE7;
+  /* JLPT level ramp: a grayscale intensity ladder (N5 lightest → N1 darkest)
+     instead of a hue, so levels still read as a progression at a glance. */
+  --jp-n5: #D4D4D0;
+  --jp-n4: #ADADA8;
+  --jp-n3: #86867F;
+  --jp-n2: #5C5C56;
+  --jp-n1: #111111;
 
-  --jp-glow-color: rgba(59, 109, 244, 0.35);
+  --jp-glow-color: rgba(17, 17, 17, 0.3);
 
   /* spacing scale — every gap/margin/padding in the site should trace back
      to one of these instead of a one-off px value */
@@ -65,10 +76,10 @@
 
   /* elevation — all shadows share the ink hue so depth reads as
      part of the palette rather than generic drop-shadow grey */
-  --jp-shadow-color: 15, 23, 42;
-  --jp-shadow-sm: 0 3px 8px rgba(var(--jp-shadow-color), .12);
-  --jp-shadow-md: 0 10px 24px rgba(var(--jp-shadow-color), .14);
-  --jp-shadow-lg: 0 20px 40px rgba(var(--jp-shadow-color), .25);
+  --jp-shadow-color: 17, 17, 17;
+  --jp-shadow-sm: 0 3px 8px rgba(var(--jp-shadow-color), .1);
+  --jp-shadow-md: 0 10px 24px rgba(var(--jp-shadow-color), .12);
+  --jp-shadow-lg: 0 20px 40px rgba(var(--jp-shadow-color), .2);
 
   /* the "meta text" cluster (tags, badges, hints, table heads) had crept
      into 6+ near-identical sizes between 0.7rem and 0.82rem — collapsed
@@ -76,232 +87,35 @@
   --jp-fs-2xs: 0.72rem;
   --jp-fs-xs: 0.8rem;
 
-  --jp-font-jp: 'Shippori Mincho', serif;
-  --jp-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --jp-font-jp: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+  --jp-font-ui: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', system-ui, -apple-system, sans-serif;
 }
 
-.jp-shell[data-jp-color-theme="slate"] {
-  --jp-paper: #F1F5F9;
-  --jp-paper-alt: #E2E8F0;
-  --jp-paper-deep: #CBD5E1;
-  --jp-ink: #0F172A;
-  --jp-ink-soft: #64748B;
-  --jp-line: #CBD5E1;
-  --jp-indigo: #3B6DF4;
-  --jp-indigo-deep: #1E3A8A;
-  --jp-seal: #DC2626;
-  --jp-seal-bg: #FEE2E2;
-  --jp-n5: #C7D9FB;
-  --jp-n4: #9FBBF5;
-  --jp-n3: #7398EE;
-  --jp-n2: #5480E0;
-  --jp-n1: #3B6DF4;
-  --jp-learning: #D97706;
-  --jp-learning-bg: #FEF3C7;
-  --jp-mastered: #16A34A;
-  --jp-mastered-bg: #DCFCE7;
-  --jp-glow-color: rgba(59, 109, 244, 0.35);
-}
-.jp-shell[data-jp-color-theme="slate"][data-jp-theme="dark"] {
-  --jp-paper: #0F172A;
-  --jp-paper-alt: #1E293B;
-  --jp-paper-deep: #334155;
-  --jp-ink: #E2E8F0;
-  --jp-ink-soft: #94A3B8;
-  --jp-line: #334155;
-  --jp-indigo: #60A5FA;
-  --jp-indigo-deep: #93C5FD;
-  --jp-seal: #F87171;
-  --jp-seal-bg: #431417;
-  --jp-learning: #FBBF24;
-  --jp-learning-bg: #422006;
-  --jp-mastered: #4ADE80;
-  --jp-mastered-bg: #0F2E1B;
-  --jp-glow-color: rgba(147, 197, 253, 0.45);
-}
+.jp-shell[data-jp-theme="dark"] {
+  --jp-paper: #121212;
+  --jp-paper-alt: #1C1C1C;
+  --jp-paper-deep: #292929;
+  --jp-ink: #F2F2F0;
+  --jp-ink-soft: #9C9C97;
+  --jp-line: #333331;
 
-/* ---- pastel ("In the Sunshine"): cream, mint, peach, steel blue ---- */
-.jp-shell[data-jp-color-theme="pastel"] {
-  --jp-paper: #F2EAE0;
-  --jp-paper-alt: #F0E2C3;
-  --jp-paper-deep: #DCECE9;
-  --jp-ink: #4E3F33;
-  --jp-ink-soft: #8C7A6B;
-  --jp-line: #C3DEDD;
-  --jp-indigo: #82B2C0;
-  --jp-indigo-deep: #5C8A98;
-  --jp-seal: #D97757;
-  --jp-seal-bg: #F6C7B3;
-  --jp-n5: #DCECE9;
-  --jp-n4: #C3DEDD;
-  --jp-n3: #9FC5C7;
-  --jp-n2: #82B2C0;
-  --jp-n1: #5C8A98;
-  --jp-learning: #CC9A4D;
-  --jp-learning-bg: #F0E2C3;
-  --jp-mastered: #6B9C93;
-  --jp-mastered-bg: #DCECE9;
-  --jp-glow-color: rgba(130, 178, 192, 0.4);
-}
-.jp-shell[data-jp-color-theme="pastel"][data-jp-theme="dark"] {
-  --jp-paper: #2A211B;
-  --jp-paper-alt: #362B23;
-  --jp-paper-deep: #443627;
-  --jp-ink: #F2EAE0;
-  --jp-ink-soft: #C9B8A8;
-  --jp-line: #4A3B2C;
-  --jp-indigo: #9FCAD6;
-  --jp-indigo-deep: #C3DEDD;
-  --jp-seal: #F0A583;
-  --jp-seal-bg: #4A2E22;
-  --jp-learning: #F0C97A;
-  --jp-learning-bg: #4A3B1A;
-  --jp-mastered: #8FC4BA;
-  --jp-mastered-bg: #1F3530;
-  --jp-glow-color: rgba(159, 202, 214, 0.45);
-}
+  --jp-indigo: #F2F2F0;
+  --jp-indigo-deep: #FFFFFF;
 
-/* ---- warm (refined warm neutrals): beige-gray + navy + muted brick ---- */
-.jp-shell[data-jp-color-theme="warm"] {
-  --jp-paper: #E8E4D9;
-  --jp-paper-alt: #DED8C8;
-  --jp-paper-deep: #D1C9B5;
-  --jp-ink: #2A2A28;
-  --jp-ink-soft: #6E6A5C;
-  --jp-line: #C7BFA8;
-  --jp-indigo: #22314F;
-  --jp-indigo-deep: #131D33;
-  --jp-seal: #9C4A3C;
-  --jp-seal-bg: #F2DAD3;
-  --jp-n5: #8C9BBD;
-  --jp-n4: #6E80A6;
-  --jp-n3: #52658F;
-  --jp-n2: #384E78;
-  --jp-n1: #22314F;
-  --jp-learning: #B98B3E;
-  --jp-learning-bg: #F1E4C7;
-  --jp-mastered: #4F7A5B;
-  --jp-mastered-bg: #DCEAE0;
-  --jp-glow-color: rgba(34, 49, 79, 0.35);
-}
-.jp-shell[data-jp-color-theme="warm"][data-jp-theme="dark"] {
-  --jp-paper: #1B1A16;
-  --jp-paper-alt: #232019;
-  --jp-paper-deep: #2B271E;
-  --jp-ink: #EAE5D8;
-  --jp-ink-soft: #A79E88;
-  --jp-line: #3D3728;
-  --jp-indigo: #7E93C4;
-  --jp-indigo-deep: #B7C4E8;
-  --jp-seal: #D97B67;
-  --jp-seal-bg: #3A211D;
-  --jp-learning: #E0AD5C;
-  --jp-learning-bg: #3A2E15;
-  --jp-mastered: #7FBF92;
-  --jp-mastered-bg: #1E3327;
-  --jp-glow-color: rgba(126, 147, 196, 0.45);
-}
+  --jp-seal: #E5837B;
+  --jp-seal-bg: #3A211F;
+  --jp-learning: #D7B36A;
+  --jp-learning-bg: #362C15;
+  --jp-mastered: #7FC79B;
+  --jp-mastered-bg: #16301F;
 
-/* ---- sumi (ink wash + single teal accent): near-monochrome, minimal ---- */
-.jp-shell[data-jp-color-theme="sumi"] {
-  --jp-paper: #F2F0EC;
-  --jp-paper-alt: #E7E4DD;
-  --jp-paper-deep: #D8D4CA;
-  --jp-ink: #2B2B2B;
-  --jp-ink-soft: #6B6B68;
-  --jp-line: #CFCBC0;
-  --jp-indigo: #1F6F6B;
-  --jp-indigo-deep: #12433F;
-  --jp-seal: #B0413A;
-  --jp-seal-bg: #F3DEDC;
-  --jp-n5: #A9CFCC;
-  --jp-n4: #7FB6B1;
-  --jp-n3: #55A19A;
-  --jp-n2: #34897F;
-  --jp-n1: #1F6F6B;
-  --jp-learning: #A9822F;
-  --jp-learning-bg: #EFE3C4;
-  --jp-mastered: #3F7A52;
-  --jp-mastered-bg: #D9EBDD;
-  --jp-glow-color: rgba(31, 111, 107, 0.35);
-}
-.jp-shell[data-jp-color-theme="sumi"][data-jp-theme="dark"] {
-  --jp-paper: #1A1A1A;
-  --jp-paper-alt: #232323;
-  --jp-paper-deep: #2E2E2E;
-  --jp-ink: #EDEBE6;
-  --jp-ink-soft: #9C9A93;
-  --jp-line: #3A3A3A;
-  --jp-indigo: #4FADA7;
-  --jp-indigo-deep: #8FD4CE;
-  --jp-seal: #E2685A;
-  --jp-seal-bg: #3A211D;
-  --jp-learning: #D9AE5C;
-  --jp-learning-bg: #3A2E15;
-  --jp-mastered: #6FBF8A;
-  --jp-mastered-bg: #1E3327;
-  --jp-glow-color: rgba(79, 173, 167, 0.45);
-}
+  --jp-n5: #3A3A37;
+  --jp-n4: #565650;
+  --jp-n3: #79796F;
+  --jp-n2: #ABABA0;
+  --jp-n1: #F2F2F0;
 
-/* ---- matcha (sage green + cream + brown text, gold status) ---- */
-.jp-shell[data-jp-color-theme="matcha"] {
-  --jp-paper: #F3EFE1;
-  --jp-paper-alt: #E9E2CC;
-  --jp-paper-deep: #DCD3B5;
-  --jp-ink: #3A3527;
-  --jp-ink-soft: #7C7458;
-  --jp-line: #D0C6A5;
-  --jp-indigo: #5C7A5A;
-  --jp-indigo-deep: #3D5A3B;
-  --jp-seal: #B0553E;
-  --jp-seal-bg: #F0DCD0;
-  --jp-n5: #B9CBA8;
-  --jp-n4: #9CB98A;
-  --jp-n3: #7FA56C;
-  --jp-n2: #6B8F5C;
-  --jp-n1: #5C7A5A;
-  --jp-learning: #C9A24B;
-  --jp-learning-bg: #F1E4B8;
-  --jp-mastered: #4E8A5E;
-  --jp-mastered-bg: #DCEFDD;
-  --jp-glow-color: rgba(92, 122, 90, 0.35);
-}
-.jp-shell[data-jp-color-theme="matcha"][data-jp-theme="dark"] {
-  --jp-paper: #1D2018;
-  --jp-paper-alt: #262A1F;
-  --jp-paper-deep: #313627;
-  --jp-ink: #EDE7D6;
-  --jp-ink-soft: #A6A188;
-  --jp-line: #3B4130;
-  --jp-indigo: #8FBB80;
-  --jp-indigo-deep: #C3DDB5;
-  --jp-seal: #E08A6D;
-  --jp-seal-bg: #3A2419;
-  --jp-learning: #E0BE6C;
-  --jp-learning-bg: #3A2E12;
-  --jp-mastered: #7FCB8F;
-  --jp-mastered-bg: #1B3320;
-  --jp-glow-color: rgba(143, 187, 128, 0.45);
-}
-
-/* Legacy dark-mode-only toggle (no theme picked yet / pre-theme-picker
-   saved state) — same as the slate dark variant above. */
-.jp-shell[data-jp-theme="dark"]:not([data-jp-color-theme]) {
-  --jp-paper: #0F172A;
-  --jp-paper-alt: #1E293B;
-  --jp-paper-deep: #334155;
-  --jp-ink: #E2E8F0;
-  --jp-ink-soft: #94A3B8;
-  --jp-line: #334155;
-  --jp-indigo: #60A5FA;
-  --jp-indigo-deep: #93C5FD;
-  --jp-seal: #F87171;
-  --jp-seal-bg: #431417;
-  --jp-learning: #FBBF24;
-  --jp-learning-bg: #422006;
-  --jp-mastered: #4ADE80;
-  --jp-mastered-bg: #0F2E1B;
-  --jp-glow-color: rgba(147, 197, 253, 0.45);
+  --jp-glow-color: rgba(242, 242, 240, 0.25);
 }
 
 /* ---------- motion ----------
@@ -456,27 +270,6 @@
 }
 .lang-toggle .dir-btn { font-size: var(--jp-fs-2xs); padding: var(--jp-space-1) var(--jp-space-3); }
 
-.sync-status { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); }
-.sync-active-status { display: inline-flex; align-items: center; gap: var(--jp-space-2); color: var(--jp-ink-soft); }
-.sync-dot { color: var(--jp-mastered); font-size: 0.6rem; }
-.sync-signin-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--jp-space-2);
-  font-family: var(--jp-font-ui);
-  font-size: var(--jp-fs-xs);
-  font-weight: 600;
-  padding: var(--jp-space-2) var(--jp-space-4);
-  border-radius: var(--jp-radius-pill);
-  border: 1.5px solid var(--jp-indigo);
-  background: var(--jp-paper-alt);
-  color: var(--jp-indigo-deep);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, transform .12s, box-shadow .15s;
-}
-.sync-signin-pill:hover { background: var(--jp-indigo); color: #fff; transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
-.sync-signin-pill:active { transform: translateY(0) scale(0.96); }
-
 .settings-gear-btn {
   background: none;
   border: 1.5px solid var(--jp-line);
@@ -530,39 +323,6 @@
 .settings-toggle.active::after { transform: translateX(18px); background: #fff; }
 
 .settings-row-column { flex-direction: column; align-items: flex-start; gap: var(--jp-space-1); }
-
-.theme-swatch-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: var(--jp-space-3);
-  padding-bottom: var(--jp-space-3);
-  border-bottom: 1px solid var(--jp-line);
-  margin-bottom: var(--jp-space-1);
-}
-.theme-swatch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--jp-space-2);
-  padding: var(--jp-space-3);
-  border: 1.5px solid var(--jp-line);
-  border-radius: var(--jp-radius-md);
-  background: var(--jp-paper);
-  cursor: pointer;
-  transition: border-color .15s, box-shadow .15s, transform .15s;
-}
-.theme-swatch:hover { transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
-.theme-swatch:active { transform: translateY(0) scale(0.97); }
-.theme-swatch.active { border-color: var(--jp-indigo); box-shadow: 0 0 0 2px var(--jp-glow-color); }
-.theme-swatch-colors { display: flex; gap: 3px; }
-.theme-swatch-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-.theme-swatch-label { font-family: var(--jp-font-ui); font-size: var(--jp-fs-2xs); color: var(--jp-ink-soft); text-align: center; line-height: 1.3; }
-.theme-swatch.active .theme-swatch-label { color: var(--jp-indigo-deep); font-weight: 600; }
 
 .modal-overlay {
   position: fixed;
