@@ -7,6 +7,7 @@ import { JapaneseThemeProvider, useJapaneseTheme } from '../../lib/japanese/Them
 import { JapaneseI18nProvider, useJapaneseI18n } from '../../lib/japanese/I18nProvider';
 import { JapaneseViewProvider, JapaneseTabBar, JapaneseViewContent } from './JapaneseTabs';
 import { SettingsModal } from './SettingsModal';
+import { PlanProvider } from '../../lib/japanese/PlanContext';
 
 function ShellInner() {
   const { theme, colorTheme } = useJapaneseTheme();
@@ -36,7 +37,9 @@ export function JapaneseAppShell() {
     <JapaneseThemeProvider>
       <JapaneseI18nProvider>
         <JapaneseViewProvider>
-          <ShellInner />
+          <PlanProvider>
+            <ShellInner />
+          </PlanProvider>
         </JapaneseViewProvider>
       </JapaneseI18nProvider>
     </JapaneseThemeProvider>
