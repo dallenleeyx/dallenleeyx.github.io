@@ -215,6 +215,17 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.35rem;}
 .tk-modal-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;}
 
+/* Revision — flashcard modal cycling theorem/definition/example blocks */
+.tk-revision-card{pointer-events:auto;width:min(640px,92vw);max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
+.tk-revision-card.tappable{cursor:pointer;}
+.tk-revision-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+.tk-revision-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
+.tk-revision-course{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
+.tk-revision-name{font-size:1.05rem;font-weight:700;color:var(--fg-1);}
+.tk-revision-proof{margin-top:.9rem;padding:.9rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);animation:fadeIn .25s ease both;}
+.tk-revision-proof-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
+.tk-revision-foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:.6rem;flex-wrap:wrap;}
+
 @media (max-width: 1100px){
   .tk-doc-layout, .tk-doc-preview-layout{grid-template-columns:1fr;height:auto;}
   .tk-doc-toc{border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:1rem;margin-bottom:1rem;overflow-y:visible;}

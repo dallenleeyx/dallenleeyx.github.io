@@ -101,6 +101,72 @@ function flagInlineTemplate() {
   return { text, selStart: 2, selEnd: 2 + placeholder.length };
 }
 
+// scans lines[startIdx..] for a ::: block's body, depth-aware so a nested
+// ::: block (e.g. a proof written inside a theorem) doesn't get mistaken
+// for the outer block's closing marker
+function consumeBlockBody(lines, startIdx) {
+  const bodyLines = [];
+  let i = startIdx;
+  let depth = 1;
+  while (i < lines.length && depth > 0) {
+    const t = lines[i].trim();
+    if (/^:::\w+/.test(t)) depth++;
+    else if (t === ':::') depth--;
+    if (depth > 0) bodyLines.push(lines[i]);
+    i++;
+  }
+  return { bodyLines, nextIndex: i };
+}
+
+// top-level ::: blocks in a doc, each with its raw (unparsed) body
+function extractBlocks(text) {
+  const lines = String(text || '').split('\n');
+  const blocks = [];
+  let i = 0;
+  while (i < lines.length) {
+    const m = lines[i].trim().match(/^:::(\w+)\s*(.*)$/);
+    if (m) {
+      const { bodyLines, nextIndex } = consumeBlockBody(lines, i + 1);
+      blocks.push({ type: m[1].toLowerCase(), name: m[2].trim(), body: bodyLines.join('\n') });
+      i = nextIndex;
+      continue;
+    }
+    i++;
+  }
+  return blocks;
+}
+
+// pulls a nested ::: proof ... ::: out of a block's body, leaving the rest as the statement
+function splitProof(body) {
+  const lines = String(body || '').split('\n');
+  const statementLines = [];
+  let proof = null;
+  let i = 0;
+  while (i < lines.length) {
+    const m = lines[i].trim().match(/^:::(\w+)\s*(.*)$/);
+    if (m && m[1].toLowerCase() === 'proof') {
+      const { bodyLines, nextIndex } = consumeBlockBody(lines, i + 1);
+      proof = bodyLines.join('\n');
+      i = nextIndex;
+      continue;
+    }
+    statementLines.push(lines[i]);
+    i++;
+  }
+  return { statement: statementLines.join('\n'), proof };
+}
+
+// revision flashcards: every theorem/proposition/definition/lemma/corollary/
+// example/remark block, with any proof nested inside it pulled out separately
+function extractFlashcards(doc) {
+  return extractBlocks(doc)
+    .filter(b => b.type !== 'proof' && ENV_TYPES.includes(b.type))
+    .map(b => {
+      const { statement, proof } = splitProof(b.body);
+      return { type: b.type, name: b.name, statement, proof };
+    });
+}
+
 function renderDoc(text, idPrefix) {
   const px = idPrefix || 'h-';
   const lines = String(text || '').split('\n');
@@ -120,10 +186,19 @@ function renderDoc(text, idPrefix) {
       flushAll();
       const type = blockMatch[1].toLowerCase();
       const name = blockMatch[2].trim();
-      const bodyLines = [];
-      i++;
-      while (i < lines.length && lines[i].trim() !== ':::') { bodyLines.push(lines[i]); i++; }
-      i++;
+      const { bodyLines, nextIndex } = consumeBlockBody(lines, i + 1);
+      i = nextIndex;
+      // backward-compat: older notes may still use the ":::flag ... :::" block
+      // syntax from before flags became inline tabs — render those as tabs too
+      if (type === 'flag') {
+        const comment = (name + ' ' + bodyLines.join(' ')).trim();
+        out.push(
+          <span key={'blk' + out.length} className="tk-flag-tab" tabIndex={0}>
+            <span className="tk-flag-tooltip">{renderInline(comment, 'bf' + out.length)}</span>
+          </span>
+        );
+        continue;
+      }
       const label = ENV_LABELS[type] || type;
       out.push(
         <div key={'blk' + out.length} className="tk-note-block">
@@ -347,6 +422,74 @@ function NotesEditor({ course, doc, onClose, onChange }) {
   );
 }
 
+// ── revision: cycle through the course's theorem/definition/example blocks as
+// flashcards; tap reveals the proof for anything that has one nested inside it ──
+function Revision({ course, onClose }) {
+  const pool = useMemo(() => extractFlashcards(course.doc), [course.doc]);
+  const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const has = pool.length > 0;
+  const current = has ? pool[idx % pool.length] : null;
+  const canReveal = has && !!current.proof;
+  const next = () => {
+    if (pool.length > 1) { let n; do { n = (Math.random() * pool.length) | 0; } while (n === idx); setIdx(n); }
+    setRevealed(false);
+  };
+  const flip = () => { if (canReveal) setRevealed(r => !r); };
+
+  return (
+    <React.Fragment>
+      <div className="tk-modal-backdrop" onClick={onClose} />
+      <div className="tk-modal-wrap">
+        <div className={`tk-revision-card${canReveal ? ' tappable' : ''}`} onClick={flip}>
+          <div className="tk-revision-top">
+            <span className="tk-revision-eyebrow">Revision</span>
+            <span className="tk-revision-course">{course.name}</span>
+          </div>
+          {has ? (
+            <React.Fragment>
+              <div className="tk-note-block-head">
+                <span className="tk-type">{ENV_LABELS[current.type] || current.type}</span>
+                <span className="tk-revision-name">{current.name || <span className="tk-note-empty">Untitled</span>}</span>
+              </div>
+              <div>{renderDoc(current.statement, `rv${idx}s-`)}</div>
+              {revealed && (
+                <div className="tk-revision-proof">
+                  <div className="tk-revision-proof-label">Proof</div>
+                  {renderDoc(current.proof, `rv${idx}p-`)}
+                </div>
+              )}
+              <div className="tk-revision-foot" onClick={e => e.stopPropagation()}>
+                {canReveal ? (
+                  <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={flip}>{revealed ? 'Hide proof' : 'Show proof'}</button>
+                ) : <span className="tk-note-empty" style={{ fontSize: '.72rem' }}>No proof to reveal</span>}
+                <div style={{ display: 'flex', gap: '.5rem' }}>
+                  <button className="tk-mono-btn" onClick={next}>Next</button>
+                  <button className="tk-mono-btn" onClick={onClose}>Close</button>
+                </div>
+              </div>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <Empty icon="🔧">No theorems, definitions, or examples yet — add some via the Notes editor.</Empty>
+              <div className="tk-revision-foot" style={{ justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
+                <button className="tk-mono-btn" onClick={onClose}>Close</button>
+              </div>
+            </React.Fragment>
+          )}
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
 // ── add-course modal ──
 function AddCourseModal({ onClose, onCreate }) {
   const [title, setTitle] = useState('');
@@ -424,6 +567,7 @@ function App() {
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
   const [sidebarOpen, setSidebarOpen] = useState(() => { try { return localStorage.getItem('proofLabSidebar') !== 'closed'; } catch (e) { return true; } });
   const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
+  const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [deleteCourseFor, setDeleteCourseFor] = useState(null); // course id | null
 
@@ -461,6 +605,7 @@ function App() {
     setCourses(cs => cs.filter(c => c.id !== cid));
     if (view === cid) setView('dashboard');
     if (notesOpenFor === cid) setNotesOpenFor(null);
+    if (revisionOpenFor === cid) setRevisionOpenFor(null);
     setDeleteCourseFor(null);
   };
 
@@ -579,7 +724,10 @@ function App() {
                   {current.description && <div className="tk-course-desc">{current.description}</div>}
                   <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open</div>
                 </div>
-                <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
+                <div style={{ display: 'flex', gap: '.6rem' }}>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setRevisionOpenFor(current.id)}>Revision</button>
+                  <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
+                </div>
               </div>
               <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
                 <div className="tk-progress-fill" style={{ width: (current.assignments.length ? Math.round(current.assignments.filter(a => a.status === 'done').length / current.assignments.length * 100) : 0) + '%' }} />
@@ -627,6 +775,12 @@ function App() {
         const c = courses.find(x => x.id === notesOpenFor);
         if (!c) return null;
         return <NotesEditor course={c} doc={c.doc} onClose={() => setNotesOpenFor(null)} onChange={(text) => updateDoc(c.id, text)} />;
+      })()}
+
+      {revisionOpenFor && (() => {
+        const c = courses.find(x => x.id === revisionOpenFor);
+        if (!c) return null;
+        return <Revision course={c} onClose={() => setRevisionOpenFor(null)} />;
       })()}
 
       {addCourseOpen && <AddCourseModal onClose={() => setAddCourseOpen(false)} onCreate={addCourse} />}
