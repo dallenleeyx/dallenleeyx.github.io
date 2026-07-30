@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { extractToc, renderDoc } from '../../lib/markdown';
 import { useCoursesSync } from '../../lib/useCoursesSync';
-import { getWeekSchedule, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
+import { getWeekSchedule, getWeekDueAssignments, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
@@ -166,7 +166,8 @@ export function TrackerApp() {
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
   const courseToc = current ? extractToc(current.doc, 'ih-') : [];
   const weekSchedule = getWeekSchedule(courses, now);
-  const weekByDate = groupByDate(weekSchedule);
+  const weekDue = getWeekDueAssignments(courses, now);
+  const weekByDate = groupByDate([...weekDue, ...weekSchedule]);
   const scrollToHeading = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -248,19 +249,27 @@ export function TrackerApp() {
               ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending.</Empty></div>}
             </div>
             <div className="fade-up d2">
-              <SectionLabel sub="this week, all courses combined">Schedule</SectionLabel>
-              {weekSchedule.length ? (
+              <SectionLabel sub="this week, all courses combined — due assignments in blue">Schedule</SectionLabel>
+              {(weekSchedule.length || weekDue.length) ? (
                 <div className="tk-week-schedule" style={{ marginBottom: '3.2rem' }}>
                   {[...weekByDate.entries()].map(([date, items]) => (
                     <div key={date} className="tk-week-day">
                       <div className="tk-week-day-label">{DAY_NAMES[isoWeekday(date)]} · {date.slice(8, 10)} {MONTHS[Number(date.slice(5, 7)) - 1]}</div>
                       {items.map((it, i) => (
-                        <div key={i} className="tk-week-item">
-                          <span className="tk-week-time">{it.start}–{it.end}</span>
-                          <span className="tk-week-course">{it.course.glyph}</span>
-                          <span className="tk-week-title">{it.title}</span>
-                          {it.venue && <span className="tk-week-venue">{it.venue}</span>}
-                        </div>
+                        it.kind === 'assignment' ? (
+                          <div key={i} className="tk-week-item is-assignment">
+                            <span className="tk-week-time">Due</span>
+                            <span className="tk-week-course">{it.course.glyph}</span>
+                            <span className="tk-week-title">{it.title}</span>
+                          </div>
+                        ) : (
+                          <div key={i} className="tk-week-item">
+                            <span className="tk-week-time">{it.start}–{it.end}</span>
+                            <span className="tk-week-course">{it.course.glyph}</span>
+                            <span className="tk-week-title">{it.title}</span>
+                            {it.venue && <span className="tk-week-venue">{it.venue}</span>}
+                          </div>
+                        )
                       ))}
                     </div>
                   ))}
