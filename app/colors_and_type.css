@@ -14,17 +14,15 @@
 /* ──────────────────────────────────────────────────────────────────────
    FONTS
    ──────────────────────────────────────────────────────────────────────
-   Loaded via Google Fonts.
-   Display: Newsreader (500, 600, 700; italic) — a scholarly serif, used only
-            for the large hero/greeting line, giving it an academic-journal
-            weight the rest of the (sans) UI doesn't try to compete with.
-   Body/UI: Archivo (400–800) — a precise, slightly technical grotesk in
-            place of the old Nunito, which read too soft/rounded for a
-            proofs-and-topology site.
+   Loaded once, upfront, via <link> tags in app/layout.js's <head> (not a
+   CSS @import, which would chain a second fetch behind this stylesheet).
+   Display: Fredoka (500, 600, 700) — a rounded, confident geometric sans
+            for headlines; reads playful and modern instead of stuffy.
+   Body/UI: Plus Jakarta Sans (400–800) — a warm, contemporary grotesk;
+            friendlier and more youthful than the old Archivo/Nunito.
    Mono:    DM Mono (300, 400, 500) — unchanged, already considered.
    Math:    KaTeX serves its own fonts via CSS at runtime.
    ────────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap');
 
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -60,9 +58,9 @@
   --transition-slow: 0.6s ease;
 
   /* Type families */
-  --font-sans: 'Archivo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;  /* the one serif moment -- hero greeting only */
+  --font-display: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif;  /* rounded + confident -- hero/headline moments */
   --font-math: 'DM Mono', monospace;                   /* for inline math glyphs/decoration */
 
   /* Type scale (rem) */
