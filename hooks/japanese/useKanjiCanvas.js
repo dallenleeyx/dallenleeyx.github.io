@@ -1,10 +1,7 @@
 'use client';
 // hooks/japanese/useKanjiCanvas.js — owns the actual CanvasRenderingContext2D
 // calls; the DPR-sizing/coordinate math itself lives in
-// lib/japanese/kanjiCanvas.js as pure functions. Also records every stroke's
-// raw points (in CSS-pixel canvas coordinates, with a timestamp) so a
-// caller can send them off for handwriting recognition -- see
-// lib/japanese/handwriting.js and KanjiWriting.jsx's auto-check mode.
+// lib/japanese/kanjiCanvas.js as pure functions.
 import { useCallback, useRef } from 'react';
 import { computeCanvasBackingSize, pointerToCanvasCoords } from '../../lib/japanese/kanjiCanvas';
 
@@ -12,8 +9,6 @@ export function useKanjiCanvas() {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const drawingRef = useRef(false);
-  const strokesRef = useRef([]); // Array<Array<{x, y, t}>>
-  const strokeStartRef = useRef(0);
 
   // Canvas backing-store size has to be set in real pixels (not CSS ones) for
   // crisp strokes on high-DPI screens, which also resets the context's scale/
@@ -44,7 +39,6 @@ export function useKanjiCanvas() {
     const ctx = ctxRef.current;
     if (!canvas || !ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    strokesRef.current = [];
   }, []);
 
   const onPointerDown = useCallback((e) => {
@@ -53,12 +47,10 @@ export function useKanjiCanvas() {
     if (!canvas || !ctx) return;
     drawingRef.current = true;
     ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue('--jp-ink').trim() || '#23241F';
-    strokeStartRef.current = Date.now();
     const rect = canvas.getBoundingClientRect();
     const p = pointerToCanvasCoords(rect, e.clientX, e.clientY);
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
-    strokesRef.current.push([{ x: p.x, y: p.y, t: 0 }]);
     canvas.setPointerCapture(e.pointerId);
     e.preventDefault();
   }, []);
@@ -72,21 +64,10 @@ export function useKanjiCanvas() {
     const p = pointerToCanvasCoords(rect, e.clientX, e.clientY);
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
-    const stroke = strokesRef.current[strokesRef.current.length - 1];
-    if (stroke) stroke.push({ x: p.x, y: p.y, t: Date.now() - strokeStartRef.current });
     e.preventDefault();
   }, []);
 
   const onPointerUp = useCallback(() => { drawingRef.current = false; }, []);
 
-  const getStrokes = useCallback(() => strokesRef.current, []);
-  const hasInk = useCallback(() => strokesRef.current.length > 0, []);
-  const getSize = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { width: 0, height: 0 };
-    const rect = canvas.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
-  }, []);
-
-  return { canvasRef, setup, clear, onPointerDown, onPointerMove, onPointerUp, getStrokes, hasInk, getSize };
+  return { canvasRef, setup, clear, onPointerDown, onPointerMove, onPointerUp };
 }

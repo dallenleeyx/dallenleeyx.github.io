@@ -116,12 +116,18 @@ export function Furigana({ active }) {
   };
 
   // grade()'s result comes back through queue.lastResult rather than a
-  // callback -- see useCleanRunQueue.js for why.
+  // callback -- see useCleanRunQueue.js for why. verdict is null whenever
+  // this correct answer wasn't the item's second (mastering) rep yet -- the
+  // per-question UI still needs to reset for the next card in that case, so
+  // that reset must NOT be gated behind `verdict` (only the mastery-recording
+  // below should be).
   useEffect(() => {
     const result = queue.lastResult;
-    if (!result || !result.verdict) return;
+    if (!result) return;
     const { verdict, restart } = result;
-    furigana.recordResult(verdict.item, verdict.mastered);
+    if (verdict) {
+      furigana.recordResult(verdict.item, verdict.mastered);
+    }
     if (restart) {
       setTimeout(() => {
         startSession(level, lessons, isolateMode);
@@ -129,7 +135,7 @@ export function Furigana({ active }) {
       }, 1500);
       return;
     }
-    if (!isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
+    if (verdict && !isolateMode && isLessonComplete(queue.sessionItems, verdict.item.level, verdict.item.lesson)) {
       fgMastery.markPassed(verdict.item.level, verdict.item.lesson);
     }
     setTimeout(() => {

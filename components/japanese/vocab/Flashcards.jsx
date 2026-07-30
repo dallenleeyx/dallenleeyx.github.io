@@ -10,6 +10,7 @@ import { useVocabProgress } from '../../../lib/japanese/VocabProgressContext';
 import { useMasteryQueue } from '../../../hooks/japanese/useMasteryQueue';
 import { isLessonComplete } from '../../../lib/japanese/masteryQueue';
 import { speakJapanese } from '../../../lib/japanese/speak';
+import { cardFlipDelay } from '../../../lib/japanese/flipTiming';
 import { LevelChips } from './LevelChips';
 import { LessonChips } from './LessonChips';
 
@@ -30,6 +31,7 @@ export function Flashcards({ active }) {
   const [direction, setDirection] = useState('word-meaning');
   const [shuffleOn, setShuffleOn] = useState(true);
   const [flipped, setFlipped] = useState(false);
+  const [busy, setBusy] = useState(false);
   const queue = useMasteryQueue();
 
   const startSession = (lv, ls, iso) => {
@@ -68,16 +70,25 @@ export function Flashcards({ active }) {
   };
 
   const handleFlip = () => {
-    if (!queue.current) return;
+    if (!queue.current || busy) return;
     const next = !flipped;
     setFlipped(next);
     if (next) speakJapanese(queue.current.reading || queue.current.word, silentMode);
   };
 
+  // The card's content (queue.current) must not swap to the next item until
+  // the flip-back animation has visually finished -- otherwise the back face
+  // (still on-screen mid-rotation, since backface-visibility only hides it
+  // past ~90 deg) briefly shows the NEXT card's answer instead of the one
+  // just graded.
   const handleGrade = (isCorrect) => {
-    if (!queue.current || !flipped) return;
-    queue.grade(isCorrect);
+    if (!queue.current || !flipped || busy) return;
+    setBusy(true);
     setFlipped(false);
+    setTimeout(() => {
+      queue.grade(isCorrect);
+      setBusy(false);
+    }, cardFlipDelay());
   };
 
   // grade()'s result comes back through queue.lastVerdict rather than a
@@ -93,9 +104,17 @@ export function Flashcards({ active }) {
   }, [queue.lastVerdict]);
 
   const handleSkip = () => {
-    if (!queue.current) return;
-    queue.skip();
+    if (!queue.current || busy) return;
+    if (!flipped) {
+      queue.skip();
+      return;
+    }
+    setBusy(true);
     setFlipped(false);
+    setTimeout(() => {
+      queue.skip();
+      setBusy(false);
+    }, cardFlipDelay());
   };
 
   const handleResetProgress = () => {
@@ -123,7 +142,7 @@ export function Flashcards({ active }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, flipped, queue.current, isolateMode]);
+  }, [active, flipped, busy, queue.current, isolateMode]);
 
   const current = queue.current;
   const emptyText = queue.totalCount ? t('allMastered') : (isolateMode ? t('noWeakWords') : t('noCards'));
