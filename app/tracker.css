@@ -247,24 +247,32 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-week-title{font-size:.82rem;font-weight:700;color:var(--fg-1);flex:1;}
 .tk-week-venue{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
 
-/* Calendar tab: per-course weekly schedule editor + .ics import */
+/* Calendar tab: .ics import + week nav */
 .tk-import-msg{font-size:.78rem;color:var(--fg-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.7rem 1rem;margin:1rem 0 0;}
-.tk-cal-course-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;margin-bottom:1rem;}
-.tk-cal-course-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.9rem;}
-.tk-cal-course-name{font-size:1rem;font-weight:700;color:var(--fg-1);}
-.tk-cal-entries{margin-bottom:.9rem;}
-.tk-cal-entry{display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border);}
-.tk-cal-entry:last-child{border-bottom:none;}
-.tk-cal-entry-day{font-family:var(--font-mono);font-size:.66rem;color:var(--accent-2);min-width:38px;flex-shrink:0;}
-.tk-cal-entry-time{font-family:var(--font-mono);font-size:.66rem;color:var(--fg-muted);min-width:98px;flex-shrink:0;}
-.tk-cal-entry-title{font-size:.82rem;color:var(--fg-1);flex:1;}
-.tk-cal-entry-venue{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
-.tk-cal-entries-empty{font-size:.72rem;color:var(--fg-muted);font-style:italic;margin-bottom:.9rem;}
-.tk-cal-add-row{display:flex;gap:.5rem;flex-wrap:wrap;}
-.tk-cal-add-row .tk-input{flex:1 1 140px;}
-.tk-cal-day-select{flex:0 0 90px;}
-.tk-cal-time-input{flex:0 0 110px;font-family:var(--font-mono);font-size:.72rem;color-scheme:dark;}
-[data-theme="light"] .tk-cal-time-input{color-scheme:light;}
+.wg-nav{display:flex;align-items:center;gap:.7rem;margin:1.4rem 0 1rem;}
+.wg-nav-label{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-2);letter-spacing:.04em;}
+
+/* Week-view calendar grid (Outlook/Google-Calendar style) */
+.wg-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.wg-header{display:grid;grid-template-columns:52px repeat(7,1fr);border-bottom:1px solid var(--border);}
+.wg-day-head{padding:.6rem .4rem;text-align:center;border-left:1px solid var(--border);}
+.wg-day-name{display:block;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-muted);}
+.wg-day-date{display:block;font-family:var(--font-mono);font-size:.9rem;color:var(--fg-1);margin-top:.15rem;}
+.wg-body{display:grid;grid-template-columns:52px repeat(7,1fr);position:relative;overflow-y:auto;}
+.wg-gutter{position:relative;}
+.wg-hour-label{font-family:var(--font-mono);font-size:.58rem;color:var(--fg-muted);text-align:right;padding-right:.5rem;transform:translateY(-.5em);}
+.wg-day-col{position:relative;border-left:1px solid var(--border);cursor:crosshair;user-select:none;}
+.wg-hour-line{position:absolute;left:0;right:0;height:1px;background:var(--border);pointer-events:none;}
+.wg-event{position:absolute;left:2px;right:2px;background:var(--surface-2);border:1px solid var(--accent-2);border-left:3px solid var(--accent);border-radius:6px;padding:.2rem .4rem;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;line-height:1.25;transition:all var(--transition-fast);z-index:1;}
+.wg-event:hover{border-color:var(--accent);box-shadow:0 4px 16px var(--glow);z-index:2;}
+.wg-event-course{font-family:var(--font-mono);font-size:.6rem;color:var(--accent);}
+.wg-event-title{font-size:.68rem;font-weight:700;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wg-event-time,.wg-event-venue{font-family:var(--font-mono);font-size:.56rem;color:var(--fg-muted);white-space:nowrap;}
+.wg-drag-ghost{position:absolute;left:2px;right:2px;background:var(--glow-strong);border:1px dashed var(--accent);border-radius:6px;pointer-events:none;z-index:3;}
+
+/* New-event / view-event modal extras */
+.tk-modal-checkbox{display:flex;align-items:center;gap:.5rem;font-size:.76rem;color:var(--fg-2);margin-bottom:.9rem;cursor:pointer;}
+.tk-modal-checkbox input{width:auto;}
 
 @media (max-width: 1100px){
   .tk-doc-layout, .tk-doc-preview-layout{grid-template-columns:1fr;height:auto;}
