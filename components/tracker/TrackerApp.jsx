@@ -14,6 +14,7 @@ import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
 import { CalendarTab } from './CalendarTab';
+import { SearchModal } from './SearchModal';
 import { ImportBanner } from './ImportBanner';
 
 const STATUS_ORDER = ['todo', 'doing', 'done'];
@@ -79,11 +80,39 @@ export function TrackerApp() {
   const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [pendingScrollId, setPendingScrollId] = useState(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // First-ever visit (no saved sidebar preference yet) on a narrow screen:
+  // start with the sidebar closed, since on a phone it otherwise pushes all
+  // real content below a full nav + mini-calendar before anything's visible.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('proofLabSidebar') === null && window.innerWidth <= 900) {
+        setSidebarOpen(false);
+      }
+    } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // scrolls to a specific theorem/definition block after a search result
+  // switches the view to its course -- runs again once that course's
+  // section has actually mounted.
+  useEffect(() => {
+    if (!pendingScrollId) return;
+    const el = document.getElementById(pendingScrollId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('tk-note-block-flash');
+      setTimeout(() => el.classList.remove('tk-note-block-flash'), 1600);
+      setPendingScrollId(null);
+    }
+  }, [pendingScrollId, view]);
 
   const applyTheme = (next) => {
     setTheme(next);
@@ -93,6 +122,18 @@ export function TrackerApp() {
   const applySidebar = (open) => {
     setSidebarOpen(open);
     try { localStorage.setItem('proofLabSidebar', open ? 'open' : 'closed'); } catch (e) {}
+  };
+  // on a phone the sidebar is a slide-in drawer -- picking a destination
+  // should close it so the content underneath is actually visible; on a
+  // wide screen it's a permanent panel, so leave it open there.
+  const navigateTo = (dest) => {
+    setView(dest);
+    try { if (window.innerWidth <= 900) applySidebar(false); } catch (e) {}
+  };
+  const goToSearchResult = (courseId, startLine) => {
+    setSearchOpen(false);
+    navigateTo(courseId);
+    setPendingScrollId('ih-' + startLine);
   };
 
   const mutate = useCallback((courseId, fn) => {
@@ -188,6 +229,7 @@ export function TrackerApp() {
       {!sidebarOpen && (
         <button className="tk-sidebar-expand-btn" onClick={() => applySidebar(true)} title="Expand sidebar">☰</button>
       )}
+      {sidebarOpen && <div className="tk-sidebar-backdrop" onClick={() => applySidebar(false)} />}
 
       <aside className="tk-sidebar">
         <button className="tk-sidebar-collapse-btn" onClick={() => applySidebar(false)} title="Collapse sidebar">‹</button>
@@ -204,11 +246,14 @@ export function TrackerApp() {
         <button className="tk-theme-toggle" onClick={() => applyTheme(theme === 'dark' ? 'light' : 'dark')}>
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
+        <button className="tk-search-trigger" onClick={() => setSearchOpen(true)}>
+          🔍 Search theorems…
+        </button>
         <ul className="tk-nav">
-          <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => setView('dashboard')}><span className="dot" />Dashboard</a></li>
+          <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => navigateTo('dashboard')}><span className="dot" />Dashboard</a></li>
           {courses.map(c => (
             <li key={c.id}>
-              <a className={view === c.id ? 'active' : ''} onClick={() => setView(c.id)}>
+              <a className={view === c.id ? 'active' : ''} onClick={() => navigateTo(c.id)}>
                 <span className="dot" />{c.nickname}
                 <span className="count">{c.assignments.filter(a => a.status !== 'done').length}</span>
               </a>
@@ -218,7 +263,7 @@ export function TrackerApp() {
         </ul>
         <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
           onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
-        <button className={`tk-nav-cal-btn${view === 'calendar' ? ' active' : ''}`} onClick={() => setView('calendar')}>
+        <button className={`tk-nav-cal-btn${view === 'calendar' ? ' active' : ''}`} onClick={() => navigateTo('calendar')}>
           <span className="dot" />Calendar
         </button>
         <div className="tk-sidebar-foot">
@@ -396,6 +441,9 @@ export function TrackerApp() {
           onSave={(fields) => { updateCourseMeta(courseToEdit.id, fields); setEditCourseFor(null); }}
           onDelete={() => removeCourse(courseToEdit.id)}
         />
+      )}
+      {searchOpen && (
+        <SearchModal courses={courses} onClose={() => setSearchOpen(false)} onSelect={goToSearchResult} />
       )}
     </div>
   );

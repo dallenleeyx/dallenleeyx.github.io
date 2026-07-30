@@ -37,6 +37,8 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-brand-sub{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);margin-top:.2rem;letter-spacing:.05em;}
 .tk-theme-toggle{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-sans);font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:1.2rem;transition:all var(--transition-fast);}
 .tk-theme-toggle:hover{border-color:var(--accent);color:var(--fg-1);}
+.tk-search-trigger{width:100%;text-align:left;background:transparent;border:1px solid var(--border);color:var(--fg-muted);font-family:var(--font-sans);font-size:.72rem;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:1.2rem;transition:all var(--transition-fast);}
+.tk-search-trigger:hover{border-color:var(--accent);color:var(--fg-1);}
 .tk-nav{list-style:none;margin:0 0 .4rem;}
 .tk-nav li{margin-bottom:2px;}
 .tk-nav a{display:flex;align-items:center;gap:.55rem;padding:.42rem .65rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);}
@@ -200,7 +202,9 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-note-ul li{font-size:.95rem;color:var(--fg-2);line-height:1.65;margin-bottom:.3rem;}
 .tk-note-bq{border-left:2px solid var(--border);padding-left:.8rem;margin:0 0 .9rem;color:var(--fg-muted);font-style:italic;font-size:.95rem;}
 .tk-note-display-math{margin:.6rem 0 1.1rem;text-align:center;font-size:1.05em;overflow-x:auto;}
-.tk-note-block{border:1px solid var(--border);border-left:2px solid var(--accent-2);border-radius:var(--radius-md);padding:.8rem 1rem;background:var(--surface);margin-bottom:.9rem;}
+.tk-note-block{border:1px solid var(--border);border-left:2px solid var(--accent-2);border-radius:var(--radius-md);padding:.8rem 1rem;background:var(--surface);margin-bottom:.9rem;scroll-margin-top:2rem;transition:box-shadow .3s ease,border-color .3s ease;}
+@keyframes noteBlockFlash{0%,100%{box-shadow:none;}30%{box-shadow:0 0 0 3px var(--glow-strong);border-left-color:var(--accent);}}
+.tk-note-block-flash{animation:noteBlockFlash 1.6s ease;}
 .tk-note-block-head{display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;flex-wrap:wrap;}
 .tk-note-block-name{font-size:.95rem;font-weight:700;color:var(--fg-1);}
 .tk-note-block-body{font-size:.95rem;color:var(--fg-2);}
@@ -225,6 +229,18 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.35rem;}
 .tk-modal-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;}
 .tk-modal-danger-zone{margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+
+/* Global theorem search */
+.tk-search-modal{width:min(560px,92vw);padding:1.2rem;}
+.tk-search-results{max-height:60vh;overflow-y:auto;margin-top:.9rem;}
+.tk-search-empty{font-size:.8rem;color:var(--fg-muted);padding:1rem 0;text-align:center;}
+.tk-search-result{padding:.7rem .6rem;border-radius:var(--radius-md);cursor:pointer;border-bottom:1px solid var(--border);transition:background var(--transition-fast);}
+.tk-search-result:last-child{border-bottom:none;}
+.tk-search-result:hover{background:var(--surface-2);}
+.tk-search-result-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.3rem;}
+.tk-search-result-course{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tk-search-result-name{font-size:.9rem;font-weight:700;color:var(--fg-1);margin-bottom:.2rem;}
+.tk-search-result-snippet{font-size:.78rem;color:var(--fg-2);line-height:1.5;}
 
 /* Revision — flashcard modal cycling theorem/definition/example blocks */
 .tk-revision-card{pointer-events:auto;width:min(640px,92vw);max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
@@ -302,10 +318,39 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
   .tk-doc-edit, .tk-doc-preview{height:60vh;}
 }
 @media (max-width: 900px){
-  .tk-sidebar{position:static;width:100%;min-width:0;border-right:none;border-bottom:1px solid var(--border);}
+  html{font-size:16px;}
   .tk-app{flex-direction:column;}
-  .tk-main{margin-left:0;padding:2rem 1.4rem 4rem;}
+  /* extra top padding clears the fixed hamburger button, which otherwise
+     sits directly on top of the page heading */
+  .tk-main{margin-left:0!important;padding:4.6rem 1.1rem 5rem;}
   .tk-stats{grid-template-columns:1fr;}
+
+  /* Sidebar becomes a slide-in drawer instead of pushing all content down
+     a full nav + mini-calendar before anything else is visible. */
+  .tk-sidebar{position:fixed;top:0;left:0;bottom:0;width:min(84vw,320px);min-width:0;z-index:250;transform:translateX(0);transition:transform .25s ease;box-shadow:0 0 40px rgba(0,0,0,.4);}
+  .tk-app.sidebar-collapsed .tk-sidebar{width:min(84vw,320px);min-width:0;padding:2.2rem 1.6rem 1.6rem;border-right:1px solid var(--border);overflow-y:auto;transform:translateX(-100%);}
+  .tk-sidebar-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:240;animation:fadeIn .2s ease both;}
+
+  .tk-hero h1{font-size:1.7rem;}
+  .tk-course-name{font-size:1.4rem;}
+
+  /* new-assignment row: a fixed-width date input + button never fit next
+     to a flexible text input in ~340px of usable width -- wrap instead */
+  .tk-form-row{flex-wrap:wrap;}
+  .tk-form-row .tk-input{flex:1 1 100%;}
+  .tk-input-date{flex:1 1 auto;}
+
+  /* the fixed Math/Japanese corner toggle shouldn't sit on top of content
+     people actually need to tap on a short mobile screen */
+  .app-nav{bottom:.7rem;right:.7rem;}
+
+  /* Week grid: 7 columns never fit a phone's width -- scroll horizontally
+     at a legible minimum width instead of squeezing everything unreadable. */
+  .wg-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .wg-header,.wg-allday-row,.wg-body{min-width:640px;}
+}
+@media (min-width: 901px){
+  .tk-sidebar-backdrop{display:none;}
 }
 
 /* Export to PDF: browser print, notes-only */

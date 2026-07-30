@@ -112,7 +112,11 @@ export function consumeBlockBody(lines, startIdx) {
   return { bodyLines, nextIndex: i };
 }
 
-// top-level ::: blocks in a doc, each with its raw (unparsed) body
+// top-level ::: blocks in a doc, each with its raw (unparsed) body.
+// startLine is the block's opening-line index -- renderDoc() gives that
+// same line's rendered block the DOM id `${idPrefix}${startLine}`, so
+// anything holding one of these blocks (e.g. search results) can scroll
+// straight to it.
 export function extractBlocks(text) {
   const lines = String(text || '').split('\n');
   const blocks = [];
@@ -120,8 +124,9 @@ export function extractBlocks(text) {
   while (i < lines.length) {
     const m = lines[i].trim().match(/^:::(\w+)\s*(.*)$/);
     if (m) {
+      const startLine = i;
       const { bodyLines, nextIndex } = consumeBlockBody(lines, i + 1);
-      blocks.push({ type: m[1].toLowerCase(), name: m[2].trim(), body: bodyLines.join('\n') });
+      blocks.push({ type: m[1].toLowerCase(), name: m[2].trim(), body: bodyLines.join('\n'), startLine });
       i = nextIndex;
       continue;
     }
@@ -157,7 +162,7 @@ export function extractFlashcards(doc) {
     .filter(b => b.type !== 'proof' && ENV_TYPES.includes(b.type))
     .map(b => {
       const { statement, proof } = splitProof(b.body);
-      return { type: b.type, name: b.name, statement, proof };
+      return { type: b.type, name: b.name, statement, proof, startLine: b.startLine };
     });
 }
 
@@ -180,6 +185,7 @@ export function renderDoc(text, idPrefix) {
       flushAll();
       const type = blockMatch[1].toLowerCase();
       const name = blockMatch[2].trim();
+      const blockStartLine = i;
       const { bodyLines, nextIndex } = consumeBlockBody(lines, i + 1);
       i = nextIndex;
       // backward-compat: older notes may still use the ":::flag ... :::" block
@@ -195,7 +201,7 @@ export function renderDoc(text, idPrefix) {
       }
       const label = ENV_LABELS[type] || type;
       out.push(
-        <div key={'blk' + out.length} className="tk-note-block">
+        <div key={'blk' + out.length} id={px + blockStartLine} className="tk-note-block">
           <div className="tk-note-block-head">
             <span className="tk-type">{label}</span>
             {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
