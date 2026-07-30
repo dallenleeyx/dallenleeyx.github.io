@@ -78,7 +78,9 @@ export function blockTemplate(type) {
   const text = `${line1}\n${bodyPlaceholder}\n:::\n`;
   const selStart = hasName ? prefix.length : line1.length + 1;
   const selEnd = hasName ? prefix.length + namePlaceholder.length : line1.length + 1 + bodyPlaceholder.length;
-  return { text, selStart, selEnd };
+  // hasName types get a title tab-stop (selStart/selEnd above) followed by a
+  // content tab-stop the editor can jump to on Tab -- see NotesEditor.jsx.
+  return { text, selStart, selEnd, hasName };
 }
 
 export function mathTemplate(cmd) {
