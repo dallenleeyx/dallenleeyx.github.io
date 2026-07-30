@@ -152,8 +152,13 @@ export function TrackerApp() {
   };
   const addCourse = ({ title, code, desc }) => {
     const id = 'c' + newId();
-    const label = code || title.slice(0, 2).toUpperCase();
-    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, description: desc, assignments: [], doc: '', schedule: [] }]);
+    const trimmedCode = code.trim();
+    const label = trimmedCode || title.slice(0, 2).toUpperCase();
+    // `code` is kept as its own field (used by .ics import to match events to
+    // this course) separately from glyph/nickname (purely cosmetic display),
+    // so renaming the sidebar label later can never silently break import
+    // matching, and vice versa.
+    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, code: trimmedCode, description: desc, assignments: [], doc: '', schedule: [] }]);
     setAddCourseOpen(false);
     setView(id);
   };
