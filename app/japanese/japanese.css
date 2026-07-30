@@ -1,8 +1,7 @@
 /* Zen Kaku Gothic New (UI chrome) + Shippori Mincho (vocab/kanji display) --
-   both were previously referenced by font-family name below with nothing
-   actually loading them, so they were silently falling back to the
-   browser's default sans/serif this whole time. */
-@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Shippori+Mincho:wght@400;500;600;700&display=swap');
+   loaded once, upfront, via <link> tags in app/layout.js's <head> alongside
+   the math site's fonts (not a CSS @import here, which only starts fetching
+   once this stylesheet loads -- i.e. only after navigating into /japanese). */
 
 /* ==========================================================================
    Design tokens
