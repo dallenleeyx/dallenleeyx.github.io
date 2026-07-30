@@ -5,15 +5,7 @@
 .bib-app {
   max-width: var(--content-max-w);
   margin: 0 auto;
-  padding: 3.2rem 1.5rem 6rem;
-}
-
-.bib-header-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  padding: 3rem 1.5rem 6rem;
 }
 
 .bib-title {
@@ -38,28 +30,10 @@
   color: var(--fg-muted);
 }
 
-.bib-version-select {
-  font-family: var(--font-sans);
-  font-size: var(--fs-base);
-  padding: .5rem .8rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--fg-1);
-}
-
-.bib-version-loading,
-.bib-version-error {
-  font-family: var(--font-sans);
-  font-size: var(--fs-base);
-  color: var(--fg-muted);
-  margin: 0;
-}
-
 /* ── progress header ─────────────────────────────────────────────── */
 .bib-progress {
-  margin: 2rem 0;
-  padding: 1.2rem 1.4rem;
+  margin: 1.4rem 0;
+  padding: 1rem 1.2rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -100,7 +74,7 @@
 }
 
 .bib-progress-toggle {
-  margin-top: .8rem;
+  margin-top: .6rem;
   display: block;
   background: none;
   border: none;
@@ -113,7 +87,7 @@
 .bib-progress-toggle:hover { color: var(--fg-1); }
 
 .bib-history {
-  margin: .8rem 0 0;
+  margin: .6rem 0 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--border);
@@ -130,127 +104,110 @@
 .bib-history-empty { color: var(--fg-muted); }
 .bib-history-date { font-family: var(--font-mono); color: var(--fg-muted); }
 
-/* ── book grid ────────────────────────────────────────────────────── */
-.bib-testament { margin-bottom: 1.6rem; }
-
-.bib-testament-label {
-  font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-black);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-uppercase);
-  color: var(--accent);
-  margin: 0 0 .7rem;
-}
-
-.bib-book-grid {
+/* ── compact book / chapter / version row ────────────────────────── */
+.bib-reader-controls {
   display: flex;
-  flex-wrap: wrap;
   gap: .5rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin: 0 0 .6rem;
+}
+.bib-dropdown-book { flex: 1 1 12rem; min-width: 9rem; }
+.bib-dropdown-chapter { flex: 0 1 8rem; min-width: 7rem; }
+.bib-dropdown-version { flex: 0 0 auto; min-width: 5rem; }
+
+.bib-book-actions {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.2rem;
 }
 
-.bib-book-btn {
+.bib-version-loading,
+.bib-version-error {
   font-family: var(--font-sans);
-  font-size: var(--fs-md);
-  font-weight: var(--fw-medium);
-  color: var(--fg-2);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: .5rem 1rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-}
-.bib-book-btn:hover { border-color: var(--accent); color: var(--fg-1); }
-.bib-book-btn.active { background: var(--fg-1); color: var(--bg); border-color: var(--fg-1); }
-.bib-book-btn.is-current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.bib-book-btn.is-completed { color: var(--fg-1); }
-.bib-book-check { color: var(--accent); font-weight: var(--fw-bold); }
-
-/* ── book panel ───────────────────────────────────────────────────── */
-.bib-panel {
-  margin-top: 1.6rem;
-  padding: 1.4rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  font-size: var(--fs-base);
+  color: var(--fg-muted);
+  margin: 0;
+  padding: .55rem .8rem;
 }
 
-.bib-panel-header {
+/* ── custom dropdown ("chio") ─────────────────────────────────────── */
+.bib-dropdown { position: relative; }
+.bib-dropdown-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: .8rem;
-  margin-bottom: 1rem;
-}
-
-.bib-panel-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-3xl);
-  color: var(--fg-1);
-  margin: 0;
-}
-
-.bib-panel-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
-
-.bib-chapter-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .4rem;
-}
-
-.bib-chapter-btn {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--fg-2);
-  font-family: var(--font-mono);
+  gap: .5rem;
+  width: 100%;
+  font-family: var(--font-sans);
   font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: .55rem 1rem;
   cursor: pointer;
-  position: relative;
   transition: all var(--transition-fast);
 }
-.bib-chapter-btn:hover { border-color: var(--accent); color: var(--fg-1); }
-.bib-chapter-btn.active { background: var(--fg-1); color: var(--bg); border-color: var(--fg-1); }
-.bib-chapter-btn.has-notes::after {
-  content: '';
+.bib-dropdown-trigger:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+.bib-dropdown.open .bib-dropdown-trigger { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+.bib-dropdown-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bib-dropdown-chevron { flex-shrink: 0; color: var(--fg-muted); transition: transform var(--transition-fast); }
+.bib-dropdown.open .bib-dropdown-chevron { transform: rotate(180deg); color: var(--accent); }
+
+.bib-dropdown-panel {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.bib-chapter-btn.active.has-notes::after { background: var(--bg); }
-
-.bib-chapter-detail {
-  margin-top: 1.2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid var(--border);
-}
-
-.bib-chapter-detail-title {
-  font-family: var(--font-sans);
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-lg);
-  color: var(--fg-1);
-  margin: 0 0 .8rem;
-}
-
-/* ── passage text ─────────────────────────────────────────────────── */
-.bib-passage {
-  margin-bottom: 1.2rem;
-  padding: 1rem 1.2rem;
-  background: var(--surface-2);
-  border-radius: var(--radius-md);
+  top: calc(100% + .45rem);
+  left: 0;
+  min-width: 100%;
+  max-height: 22rem;
+  overflow-y: auto;
+  background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: .4rem;
+  z-index: 50;
+  animation: bibDropdownIn .15s ease;
+}
+@keyframes bibDropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.bib-dropdown-group-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-muted);
+  padding: .5rem .6rem .2rem;
+  margin: 0;
+}
+.bib-dropdown-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-2);
+  padding: .5rem .6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bib-dropdown-option:hover { background: var(--surface-2); color: var(--fg-1); }
+.bib-dropdown-option.active { background: var(--fg-1); color: var(--bg); font-weight: var(--fw-bold); }
+
+/* ── passage / verse reader ───────────────────────────────────────── */
+.bib-passage {
+  padding: 1.4rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 .bib-passage-ref {
   font-family: var(--font-mono);
@@ -258,18 +215,16 @@
   color: var(--fg-muted);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
-  margin: 0 0 .5rem;
+  margin: 0 0 .3rem;
 }
-.bib-passage-text {
+.bib-verse-hint {
   font-family: var(--font-sans);
-  font-size: var(--fs-xl);
-  line-height: var(--lh-relaxed);
-  color: var(--fg-1);
-  white-space: pre-wrap;
-  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  margin: 0 0 1rem;
 }
 .bib-passage-copyright {
-  margin: .8rem 0 0;
+  margin: 1rem 0 0;
   font-family: var(--font-sans);
   font-size: var(--fs-xs);
   color: var(--fg-muted);
@@ -279,31 +234,103 @@
   font-family: var(--font-sans);
   font-size: var(--fs-base);
   color: var(--fg-muted);
-  margin: 0 0 1.2rem;
+  margin: 0;
+  padding: 1.4rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
-/* ── notes editor ─────────────────────────────────────────────────── */
+/* section headings inside a chapter's text -- distinct from both UI
+   headings and verse text: italic serif with an accent rule, like a study
+   Bible's section titles. */
+.bib-passage-heading {
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: var(--accent-2);
+  margin: 1.6rem 0 .5rem;
+  padding-left: .7rem;
+  border-left: 3px solid var(--accent);
+}
+.bib-verse-list > .bib-passage-heading:first-child { margin-top: 0; }
+
+.bib-verse-list { display: flex; flex-direction: column; }
+.bib-verse-row {
+  display: flex;
+  align-items: baseline;
+  gap: .55rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: .7rem .5rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+}
+.bib-verse-list > .bib-verse-row:last-child { border-bottom: none; }
+.bib-verse-row:hover { background: var(--surface-2); }
+.bib-verse-row.selected { background: var(--glow-strong); }
+.bib-verse-row.has-note { box-shadow: inset 3px 0 0 var(--accent); }
+.bib-verse-num {
+  font-family: var(--font-mono);
+  font-size: .66rem;
+  font-weight: 700;
+  color: var(--fg-muted);
+  line-height: 1;
+  min-width: 1.1rem;
+  flex-shrink: 0;
+}
+.bib-verse-text {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: 1.06rem;
+  line-height: 1.9;
+  color: var(--fg-1);
+}
+
+/* ── verse note composer ──────────────────────────────────────────── */
+.bib-verse-composer {
+  margin-top: 1.2rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.bib-verse-composer-title {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-lg);
+  color: var(--fg-1);
+  margin: 0 0 .6rem;
+}
+.bib-verse-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: .8rem;
+}
+
 .bib-notes-input {
   width: 100%;
-  min-height: 10rem;
+  min-height: 6rem;
   font-family: var(--font-sans);
   font-size: var(--fs-lg);
   line-height: var(--lh-base);
   color: var(--fg-1);
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: .9rem 1rem;
+  padding: .8rem .9rem;
   resize: vertical;
 }
-.bib-notes-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
+.bib-notes-input:focus { outline: none; border-color: var(--accent); }
 
 .bib-notes-preview {
-  margin-top: 1rem;
-  padding: 1rem 1.2rem;
+  margin-top: .8rem;
+  padding: .8rem 1rem;
   border-left: 2px solid var(--border);
 }
 .bib-note-h1 { font-family: var(--font-sans); font-size: var(--fs-2xl); color: var(--fg-1); margin: 0 0 .5rem; }
@@ -312,7 +339,52 @@
 .bib-note-ul { margin: 0 0 .6rem 1.2rem; padding: 0; color: var(--fg-2); }
 .bib-note-ul li { font-family: var(--font-sans); font-size: var(--fs-lg); line-height: var(--lh-base); }
 
+/* ── notes-in-this-chapter list ────────────────────────────────────── */
+.bib-verse-notes-list {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+.bib-verse-notes-list-title {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-muted);
+  margin: 0 0 .6rem;
+}
+.bib-verse-note-item {
+  display: flex;
+  gap: .6rem;
+  align-items: baseline;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: .5rem .3rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.bib-verse-note-item:hover { background: var(--surface-2); }
+.bib-verse-note-ref {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.bib-verse-note-snippet {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .bib-app { padding: 4.6rem 1.1rem 5rem; }
-  .bib-chapter-btn { width: 2.1rem; height: 2.1rem; }
+  .bib-passage { padding: 1.1rem 1rem; }
+  .bib-dropdown-book { flex: 1 1 100%; }
 }
