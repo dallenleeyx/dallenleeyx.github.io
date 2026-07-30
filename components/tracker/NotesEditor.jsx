@@ -9,6 +9,10 @@ import {
 export function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
   const toc = extractToc(doc, 'nh-');
+  // After inserting a titled environment (theorem, definition, …), Tab jumps
+  // from the title to the content placeholder on the next line. One-shot:
+  // cleared as soon as it's used, or as soon as another snippet/edit happens.
+  const envTabStopRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -16,7 +20,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const insertSnippet = ({ text, selStart, selEnd }, blockLevel) => {
+  const insertSnippet = ({ text, selStart, selEnd, hasName }, blockLevel) => {
     const ta = taRef.current;
     const value = doc || '';
     const start = ta ? ta.selectionStart : value.length;
@@ -26,11 +30,89 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     const pad = blockLevel && before.length && !before.endsWith('\n') ? '\n' : '';
     onChange(before + pad + text + after);
     const base = before.length + pad.length;
+    envTabStopRef.current = hasName
+      ? { titleLine: (before + pad).split('\n').length - 1 }
+      : null;
     requestAnimationFrame(() => {
       if (!ta) return;
       ta.focus();
       ta.setSelectionRange(base + selStart, base + selEnd);
     });
+  };
+
+  // Replaces the current selection with open+selection+close, leaving the
+  // wrapped text selected -- or, with no selection, places the cursor
+  // between open/close so typing immediately continues inside the pair.
+  const wrapSelection = (open, close) => {
+    const ta = taRef.current;
+    if (!ta) return;
+    const value = doc || '';
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = value.slice(start, end);
+    onChange(value.slice(0, start) + open + selected + close + value.slice(end));
+    const newStart = start + open.length;
+    const newEnd = newStart + selected.length;
+    envTabStopRef.current = null;
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(newStart, newEnd);
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    const ta = taRef.current;
+    if (!ta) return;
+    const mod = e.ctrlKey || e.metaKey;
+
+    if (mod && !e.altKey && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      wrapSelection('**', '**');
+      return;
+    }
+    if (mod && !e.altKey && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      wrapSelection('*', '*');
+      return;
+    }
+
+    if (e.key === '$' && !mod && !e.altKey) {
+      const { selectionStart: start, selectionEnd: end } = ta;
+      const value = doc || '';
+      envTabStopRef.current = null;
+      if (start === end && value[start] === '$') {
+        // typing over an already-present $ -- skip past it instead of
+        // inserting a second one
+        e.preventDefault();
+        ta.setSelectionRange(start + 1, start + 1);
+        return;
+      }
+      e.preventDefault();
+      wrapSelection('$', '$');
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      const stop = envTabStopRef.current;
+      const value = doc || '';
+      if (stop) {
+        const cursorLine = value.slice(0, ta.selectionStart).split('\n').length - 1;
+        if (cursorLine === stop.titleLine) {
+          e.preventDefault();
+          const lines = value.split('\n');
+          let offset = 0;
+          for (let i = 0; i <= stop.titleLine; i++) offset += lines[i].length + 1;
+          const contentLine = lines[stop.titleLine + 1] ?? '';
+          envTabStopRef.current = null;
+          ta.setSelectionRange(offset, offset + contentLine.length);
+          return;
+        }
+      }
+      if (ta.selectionStart === ta.selectionEnd && value[ta.selectionStart] === '$') {
+        e.preventDefault();
+        ta.setSelectionRange(ta.selectionStart + 1, ta.selectionStart + 1);
+      }
+    }
   };
 
   const scrollToHeading = (id) => {
@@ -71,6 +153,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               value={doc || ''}
               placeholder={'# Heading\n\nWrite here — **bold**, *italic*, $x^2$, $$\\int f\\,dx$$ …\nUse the toolbar for \\mathcal, \\mathbb, theorem/definition blocks, or a flag.'}
               onChange={e => onChange(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
           </div>
           <div className="tk-doc-preview">

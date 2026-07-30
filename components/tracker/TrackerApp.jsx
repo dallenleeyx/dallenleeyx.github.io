@@ -158,7 +158,7 @@ export function TrackerApp() {
             <div className="tk-avatar-ring" />
           </div>
           <div>
-            <div className="tk-brand-name">The Proof Lab</div>
+            <div className="tk-brand-name">Dallen's Math Notes</div>
             <div className="tk-brand-sub">NUS · Mathematics</div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-/* tracker.css — The Proof Lab. Extends colors_and_type.css tokens. */
+/* tracker.css — Dallen's Math Notes. Extends colors_and_type.css tokens. */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;font-size:19px;}
 body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-height:var(--lh-relaxed);min-height:100vh;overflow-x:hidden;}

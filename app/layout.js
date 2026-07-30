@@ -4,7 +4,7 @@ import './tracker.css';
 import { AppNav } from '../components/nav/AppNav';
 
 export const metadata = {
-  title: 'The Proof Lab | Dallen Lee',
+  title: "Dallen's Math Notes | Dallen Lee",
 };
 
 const THEME_INIT_SCRIPT = `
