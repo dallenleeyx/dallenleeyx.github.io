@@ -12,8 +12,11 @@ import { useCleanRunQueue } from '../../../hooks/japanese/useCleanRunQueue';
 import { useKanjiCanvas } from '../../../hooks/japanese/useKanjiCanvas';
 import { isLessonComplete } from '../../../lib/japanese/masteryQueue';
 import { speakJapanese } from '../../../lib/japanese/speak';
+import { recognizeInk, matchesTarget } from '../../../lib/japanese/handwriting';
 import { LevelChips } from './LevelChips';
 import { LessonChips } from './LessonChips';
+
+const AUTOCHECK_KEY = 'jpstudy_kw_autocheck_v1';
 
 function hasKanji(word) {
   return /[一-龯]/.test(word || '');
@@ -36,6 +39,11 @@ export function KanjiWriting({ active }) {
   const [shuffleOn, setShuffleOn] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [justReset, setJustReset] = useState(false);
+  const [autoCheck, setAutoCheck] = useState(() => {
+    try { return localStorage.getItem(AUTOCHECK_KEY) === 'on'; } catch (e) { return false; }
+  });
+  const [checking, setChecking] = useState(false);
+  const [autoResult, setAutoResult] = useState(null); // { correct, candidates } | { error } | null
   const queue = useCleanRunQueue();
   const canvas = useKanjiCanvas();
 
@@ -44,6 +52,32 @@ export function KanjiWriting({ active }) {
     queue.start(items, shuffleOn);
     setRevealed(false);
     setJustReset(false);
+    setAutoResult(null);
+  };
+
+  const toggleAutoCheck = () => {
+    const next = !autoCheck;
+    setAutoCheck(next);
+    try { localStorage.setItem(AUTOCHECK_KEY, next ? 'on' : 'off'); } catch (e) {}
+  };
+
+  const handleAutoCheck = async () => {
+    if (!queue.current || checking) return;
+    if (!canvas.hasInk()) return;
+    setChecking(true);
+    setAutoResult(null);
+    try {
+      const { width, height } = canvas.getSize();
+      const candidates = await recognizeInk(canvas.getStrokes(), width, height, 'ja');
+      const correct = matchesTarget(candidates, queue.current.word);
+      setAutoResult({ correct, candidates });
+      setRevealed(true);
+      speakJapanese(queue.current.reading || queue.current.word, silentMode);
+    } catch (e) {
+      setAutoResult({ error: true });
+    } finally {
+      setChecking(false);
+    }
   };
 
   useEffect(() => {
@@ -104,6 +138,12 @@ export function KanjiWriting({ active }) {
     setJustReset(false);
     queue.grade(isCorrect);
     setRevealed(false);
+    setAutoResult(null);
+  };
+
+  const handleClearCanvas = () => {
+    canvas.clear();
+    setAutoResult(null);
   };
 
   // grade()'s result comes back through queue.lastResult rather than a
@@ -128,6 +168,7 @@ export function KanjiWriting({ active }) {
     if (!queue.current) return;
     queue.skip();
     setRevealed(false);
+    setAutoResult(null);
   };
 
   const handleResetProgress = () => {
@@ -158,9 +199,13 @@ export function KanjiWriting({ active }) {
 
       <div className="study-options">
         <button className={`chip isolate-chip${isolateMode ? ' active' : ''}`} onClick={toggleIsolate}>{t('isolateWeak')}</button>
+        <button className={`chip autocheck-chip${autoCheck ? ' active' : ''}`} onClick={toggleAutoCheck} title="Recognize your handwriting and check it automatically, instead of self-grading">
+          Auto-check (beta)
+        </button>
         <button className="text-link" onClick={handleResetProgress}>{t('resetProgress')}</button>
       </div>
       {isolateMode && <p className="isolate-note">{t('kwIsolateNote')}</p>}
+      {autoCheck && <p className="isolate-note">Draw the kanji, then tap Check — your strokes are sent to a handwriting recognizer to judge whether you got it right.</p>}
 
       <div className="kw-stage">
         <p className="kw-hint">{t('kwHint')}</p>
@@ -177,10 +222,20 @@ export function KanjiWriting({ active }) {
             onPointerCancel={canvas.onPointerUp}
             onPointerLeave={canvas.onPointerUp}
           />
-          <button className="kw-canvas-clear" aria-label={t('kwClear')} title="clear" onClick={canvas.clear}>↺</button>
+          <button className="kw-canvas-clear" aria-label={t('kwClear')} title="clear" onClick={handleClearCanvas}>↺</button>
         </div>
 
         {justReset && <p className="run-reset-note">{t('runReset')}</p>}
+
+        {autoResult && autoResult.error && (
+          <p className="autocheck-error">Couldn't reach the handwriting recognizer — check your connection, or turn off Auto-check and grade yourself.</p>
+        )}
+        {autoResult && !autoResult.error && (
+          <p className={`autocheck-verdict ${autoResult.correct ? 'is-correct' : 'is-wrong'}`}>
+            {autoResult.correct ? '✓ Looks right!' : '✗ Doesn\'t look right.'}
+            {autoResult.candidates.length > 0 && <span className="autocheck-candidates"> Recognized: {autoResult.candidates.slice(0, 5).join('　')}</span>}
+          </p>
+        )}
 
         {revealed && current && (
           <div className="kw-answer">
@@ -189,14 +244,25 @@ export function KanjiWriting({ active }) {
           </div>
         )}
 
-        {!revealed && current && (
+        {!revealed && current && !autoCheck && (
           <button className="ghost-btn btn-primary kw-reveal-btn" onClick={handleReveal}>{t('showAnswer')}</button>
+        )}
+        {!revealed && current && autoCheck && (
+          <button className="ghost-btn btn-primary kw-reveal-btn" onClick={handleAutoCheck} disabled={checking}>
+            {checking ? 'Checking…' : 'Check my writing'}
+          </button>
         )}
 
         {revealed && (
           <div className="grade-buttons">
-            <button className="grade-btn grade-wrong" onClick={() => handleGrade(false)}>{t('didntKnow')}</button>
-            <button className="grade-btn grade-right" onClick={() => handleGrade(true)}>{t('knewIt')}</button>
+            <button
+              className={`grade-btn grade-wrong${autoResult && !autoResult.error && !autoResult.correct ? ' suggested' : ''}`}
+              onClick={() => handleGrade(false)}
+            >{t('didntKnow')}</button>
+            <button
+              className={`grade-btn grade-right${autoResult && !autoResult.error && autoResult.correct ? ' suggested' : ''}`}
+              onClick={() => handleGrade(true)}
+            >{t('knewIt')}</button>
           </div>
         )}
       </div>
