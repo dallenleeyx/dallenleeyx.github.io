@@ -9,6 +9,7 @@ export function EditCourseModal({ course, onClose, onSave, onDelete }) {
   const [title, setTitle] = useState(course.name);
   const [glyph, setGlyph] = useState(course.glyph || '');
   const [nickname, setNickname] = useState(course.nickname || '');
+  const [code, setCode] = useState(course.code || '');
   const [desc, setDesc] = useState(course.description || '');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -20,6 +21,7 @@ export function EditCourseModal({ course, onClose, onSave, onDelete }) {
       name: trimmedTitle,
       glyph: glyph.trim() || fallback,
       nickname: nickname.trim() || fallback,
+      code: code.trim(),
       description: desc.trim(),
     });
   };
@@ -41,6 +43,11 @@ export function EditCourseModal({ course, onClose, onSave, onDelete }) {
           <div className="tk-modal-field">
             <label>Sidebar label</label>
             <input className="tk-input" value={nickname} onChange={e => setNickname(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} />
+          </div>
+          <div className="tk-modal-field">
+            <label>Course code (for .ics import matching)</label>
+            <input className="tk-input" value={code} onChange={e => setCode(e.target.value)} placeholder="MA2101" onKeyDown={e => e.key === 'Enter' && submit()} />
+            <p className="tk-modal-field-hint">Must match this course's code exactly as it appears in your school's calendar export, so imported events get matched to it.</p>
           </div>
           <div className="tk-modal-field">
             <label>Description</label>

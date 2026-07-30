@@ -23,6 +23,7 @@ export function AddCourseModal({ onClose, onCreate }) {
           <div className="tk-modal-field">
             <label>Course code</label>
             <input className="tk-input" value={code} onChange={e => setCode(e.target.value)} placeholder="MA2101" onKeyDown={e => e.key === 'Enter' && submit()} />
+            <p className="tk-modal-field-hint">Must match this course's code exactly as it appears in your school's calendar export, so imported .ics events get matched to it later.</p>
           </div>
           <div className="tk-modal-field">
             <label>Description</label>
