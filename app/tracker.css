@@ -49,6 +49,11 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-nav-add{color:var(--fg-muted)!important;}
 .tk-nav-add .dot{border:1px dashed var(--fg-muted);background:transparent!important;}
 .tk-sidebar-foot{font-family:var(--font-mono);font-size:.58rem;color:var(--fg-muted);letter-spacing:.03em;margin-top:auto;padding-top:1.2rem;line-height:1.7;}
+.tk-nav-cal-btn{display:flex;align-items:center;gap:.55rem;width:100%;background:transparent;border:none;padding:.42rem .65rem;margin-top:.6rem;font-family:var(--font-sans);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);text-align:left;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);}
+.tk-nav-cal-btn:hover{color:var(--fg-1);background:var(--surface-2);}
+.tk-nav-cal-btn.active{color:var(--accent);background:var(--surface-2);}
+.tk-nav-cal-btn .dot{width:5px;height:5px;border-radius:50%;background:var(--border);flex-shrink:0;transition:all var(--transition-fast);}
+.tk-nav-cal-btn.active .dot{background:var(--accent);transform:scale(1.5);}
 
 /* Calendar */
 .tk-cal{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border);}
@@ -96,6 +101,8 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-mono-btn:hover{border-color:var(--accent);color:var(--accent);}
 .tk-x-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;transition:all var(--transition-fast);}
 .tk-x-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tk-btn-danger{background:#d1453b;color:#fff;}
+.tk-btn-danger:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(209,69,59,.4);}
 
 /* Stats */
 .tk-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin:2.2rem 0 3.2rem;}
@@ -217,6 +224,7 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-field{margin-bottom:.9rem;}
 .tk-modal-field label{display:block;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.35rem;}
 .tk-modal-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;}
+.tk-modal-danger-zone{margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
 
 /* Revision — flashcard modal cycling theorem/definition/example blocks */
 .tk-revision-card{pointer-events:auto;width:min(640px,92vw);max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
@@ -228,6 +236,35 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-revision-proof{margin-top:.9rem;padding:.9rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);animation:fadeIn .25s ease both;}
 .tk-revision-proof-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
 .tk-revision-foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:.6rem;flex-wrap:wrap;}
+
+/* Dashboard: this week's schedule, combined across all courses */
+.tk-week-schedule{display:flex;flex-direction:column;gap:1rem;}
+.tk-week-day-label{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.4rem;}
+.tk-week-item{display:flex;align-items:center;gap:.7rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.6rem .9rem;margin-bottom:.4rem;transition:all var(--transition);}
+.tk-week-item:hover{border-color:var(--accent-2);transform:translateY(-1px);box-shadow:0 4px 20px var(--glow);}
+.tk-week-time{font-family:var(--font-mono);font-size:.66rem;color:var(--fg-muted);flex-shrink:0;min-width:98px;}
+.tk-week-course{font-family:var(--font-mono);font-size:.72rem;color:var(--accent);flex-shrink:0;}
+.tk-week-title{font-size:.82rem;font-weight:700;color:var(--fg-1);flex:1;}
+.tk-week-venue{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
+
+/* Calendar tab: per-course weekly schedule editor + .ics import */
+.tk-import-msg{font-size:.78rem;color:var(--fg-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.7rem 1rem;margin:1rem 0 0;}
+.tk-cal-course-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.2rem 1.4rem;margin-bottom:1rem;}
+.tk-cal-course-head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.9rem;}
+.tk-cal-course-name{font-size:1rem;font-weight:700;color:var(--fg-1);}
+.tk-cal-entries{margin-bottom:.9rem;}
+.tk-cal-entry{display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border);}
+.tk-cal-entry:last-child{border-bottom:none;}
+.tk-cal-entry-day{font-family:var(--font-mono);font-size:.66rem;color:var(--accent-2);min-width:38px;flex-shrink:0;}
+.tk-cal-entry-time{font-family:var(--font-mono);font-size:.66rem;color:var(--fg-muted);min-width:98px;flex-shrink:0;}
+.tk-cal-entry-title{font-size:.82rem;color:var(--fg-1);flex:1;}
+.tk-cal-entry-venue{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
+.tk-cal-entries-empty{font-size:.72rem;color:var(--fg-muted);font-style:italic;margin-bottom:.9rem;}
+.tk-cal-add-row{display:flex;gap:.5rem;flex-wrap:wrap;}
+.tk-cal-add-row .tk-input{flex:1 1 140px;}
+.tk-cal-day-select{flex:0 0 90px;}
+.tk-cal-time-input{flex:0 0 110px;font-family:var(--font-mono);font-size:.72rem;color-scheme:dark;}
+[data-theme="light"] .tk-cal-time-input{color-scheme:light;}
 
 @media (max-width: 1100px){
   .tk-doc-layout, .tk-doc-preview-layout{grid-template-columns:1fr;height:auto;}

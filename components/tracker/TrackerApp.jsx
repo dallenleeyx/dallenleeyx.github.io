@@ -6,12 +6,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { extractToc, renderDoc } from '../../lib/markdown';
 import { useCoursesSync } from '../../lib/useCoursesSync';
+import { getWeekSchedule, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
 import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
-import { DeleteCourseModal } from './DeleteCourseModal';
+import { EditCourseModal } from './EditCourseModal';
+import { CalendarTab } from './CalendarTab';
 import { ImportBanner } from './ImportBanner';
 
 const STATUS_ORDER = ['todo', 'doing', 'done'];
@@ -76,7 +78,7 @@ export function TrackerApp() {
   const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
   const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
   const [addCourseOpen, setAddCourseOpen] = useState(false);
-  const [deleteCourseFor, setDeleteCourseFor] = useState(null); // course id | null
+  const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -110,16 +112,42 @@ export function TrackerApp() {
   const addCourse = ({ title, code, desc }) => {
     const id = 'c' + newId();
     const label = code || title.slice(0, 2).toUpperCase();
-    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, description: desc, assignments: [], doc: '' }]);
+    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, description: desc, assignments: [], doc: '', schedule: [] }]);
     setAddCourseOpen(false);
     setView(id);
   };
+  const updateCourseMeta = (cid, fields) => mutate(cid, c => ({ ...c, ...fields }));
   const removeCourse = (cid) => {
     setCourses(cs => cs.filter(c => c.id !== cid));
     if (view === cid) setView('dashboard');
     if (notesOpenFor === cid) setNotesOpenFor(null);
     if (revisionOpenFor === cid) setRevisionOpenFor(null);
-    setDeleteCourseFor(null);
+    setEditCourseFor(null);
+  };
+
+  // an entry "matches" an existing one if title/venue/time and either the
+  // same weekday (recurring) or the same date (one-off) agree -- used to
+  // skip duplicates on manual add and on repeated .ics imports.
+  const sameEntry = (a, b) =>
+    a.title === b.title && (a.venue || '') === (b.venue || '') && a.start === b.start && a.end === b.end &&
+    a.recurring === b.recurring && (a.recurring ? a.day === b.day : a.date === b.date);
+  const addSchedule = (cid, entry) => mutate(cid, c => {
+    const existing = c.schedule || [];
+    if (existing.some(e => sameEntry(e, entry))) return c;
+    return { ...c, schedule: [...existing, { ...entry, id: 'sc' + newId() }] };
+  });
+  const removeSchedule = (cid, id) => mutate(cid, c => ({ ...c, schedule: (c.schedule || []).filter(e => e.id !== id) }));
+  const importSchedules = (schedulesByCourseId) => {
+    setCourses(cs => cs.map(c => {
+      const incoming = schedulesByCourseId[c.id];
+      if (!incoming || !incoming.length) return c;
+      const existing = c.schedule || [];
+      const merged = [...existing];
+      incoming.forEach(entry => {
+        if (!merged.some(e => sameEntry(e, entry))) merged.push({ ...entry, id: 'sc' + newId() });
+      });
+      return { ...c, schedule: merged };
+    }));
   };
 
   if (loading || !courses) {
@@ -135,8 +163,10 @@ export function TrackerApp() {
     .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
-  const courseToDelete = deleteCourseFor ? courses.find(c => c.id === deleteCourseFor) : null;
+  const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
   const courseToc = current ? extractToc(current.doc, 'ih-') : [];
+  const weekSchedule = getWeekSchedule(courses, now);
+  const weekByDate = groupByDate(weekSchedule);
   const scrollToHeading = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -179,6 +209,9 @@ export function TrackerApp() {
         </ul>
         <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
           onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
+        <button className={`tk-nav-cal-btn${view === 'calendar' ? ' active' : ''}`} onClick={() => setView('calendar')}>
+          <span className="dot" />Calendar
+        </button>
         <div className="tk-sidebar-foot">
           {offline ? 'Offline — changes saved on this device.' : 'Synced.'}
           <button className="tk-mono-btn" style={{ marginTop: '.6rem', width: '100%' }} onClick={() => signOut()}>Sign out</button>
@@ -213,6 +246,26 @@ export function TrackerApp() {
                   ))}
                 </div>
               ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending.</Empty></div>}
+            </div>
+            <div className="fade-up d2">
+              <SectionLabel sub="this week, all courses combined">Schedule</SectionLabel>
+              {weekSchedule.length ? (
+                <div className="tk-week-schedule" style={{ marginBottom: '3.2rem' }}>
+                  {[...weekByDate.entries()].map(([date, items]) => (
+                    <div key={date} className="tk-week-day">
+                      <div className="tk-week-day-label">{DAY_NAMES[isoWeekday(date)]} · {date.slice(8, 10)} {MONTHS[Number(date.slice(5, 7)) - 1]}</div>
+                      {items.map((it, i) => (
+                        <div key={i} className="tk-week-item">
+                          <span className="tk-week-time">{it.start}–{it.end}</span>
+                          <span className="tk-week-course">{it.course.glyph}</span>
+                          <span className="tk-week-title">{it.title}</span>
+                          {it.venue && <span className="tk-week-venue">{it.venue}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="🗓️">No classes scheduled — add one from the Calendar tab.</Empty></div>}
             </div>
             <div className="fade-up d3">
               <SectionLabel>Courses</SectionLabel>
@@ -252,7 +305,7 @@ export function TrackerApp() {
                 </div>
                 <div style={{ display: 'flex', gap: '.6rem' }}>
                   <button className="tk-btn tk-btn-outline" onClick={() => setRevisionOpenFor(current.id)}>Revision</button>
-                  <button className="tk-x-btn" title="delete course" onClick={() => setDeleteCourseFor(current.id)}>×</button>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setEditCourseFor(current.id)}>Edit</button>
                 </div>
               </div>
               <div className="tk-progress" style={{ margin: '1.4rem 0 3rem', maxWidth: 420 }}>
@@ -295,6 +348,10 @@ export function TrackerApp() {
             </div>
           </section>
         )}
+
+        {view === 'calendar' && (
+          <CalendarTab courses={courses} onAddEntry={addSchedule} onRemoveEntry={removeSchedule} onImport={importSchedules} />
+        )}
       </main>
 
       {notesOpenFor && (() => {
@@ -310,7 +367,14 @@ export function TrackerApp() {
       })()}
 
       {addCourseOpen && <AddCourseModal onClose={() => setAddCourseOpen(false)} onCreate={addCourse} />}
-      {courseToDelete && <DeleteCourseModal course={courseToDelete} onClose={() => setDeleteCourseFor(null)} onConfirm={() => removeCourse(courseToDelete.id)} />}
+      {courseToEdit && (
+        <EditCourseModal
+          course={courseToEdit}
+          onClose={() => setEditCourseFor(null)}
+          onSave={(fields) => { updateCourseMeta(courseToEdit.id, fields); setEditCourseFor(null); }}
+          onDelete={() => removeCourse(courseToEdit.id)}
+        />
+      )}
     </div>
   );
 }
