@@ -203,6 +203,19 @@
 .bib-dropdown-option.active { background: var(--fg-1); color: var(--bg); font-weight: var(--fw-bold); }
 
 /* ── passage / verse reader ───────────────────────────────────────── */
+.bib-reader-layout {
+  display: flex;
+  gap: 1.4rem;
+  align-items: flex-start;
+}
+.bib-reader-main { flex: 1 1 60%; min-width: 0; }
+.bib-reader-side {
+  flex: 1 1 30rem;
+  min-width: 16rem;
+  position: sticky;
+  top: 1.2rem;
+}
+
 .bib-passage {
   padding: 1.4rem 1.5rem;
   background: var(--surface);
@@ -257,38 +270,36 @@
 .bib-verse-list > .bib-passage-heading:first-child { margin-top: 0; }
 
 .bib-verse-list { display: flex; flex-direction: column; }
-.bib-verse-row {
-  display: flex;
-  align-items: baseline;
-  gap: .55rem;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  padding: .7rem .5rem;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+
+/* Normal flowing prose -- a paragraph of verses, not one row per verse.
+   Each verse is an inline span; only the small superscript number and an
+   underline (on tap) mark it out from the surrounding text. */
+.bib-paragraph {
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: 1.08rem;
+  line-height: 1.95;
+  color: var(--fg-1);
+  margin: 0 0 1.2rem;
 }
-.bib-verse-list > .bib-verse-row:last-child { border-bottom: none; }
-.bib-verse-row:hover { background: var(--surface-2); }
-.bib-verse-row.selected { background: var(--glow-strong); }
-.bib-verse-row.has-note { box-shadow: inset 3px 0 0 var(--accent); }
+.bib-verse-span {
+  cursor: pointer;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+.bib-verse-span.has-note {
+  text-decoration: underline solid var(--accent);
+}
+.bib-verse-span.selected {
+  text-decoration: underline dotted var(--accent);
+  color: var(--fg-1);
+}
 .bib-verse-num {
   font-family: var(--font-mono);
-  font-size: .66rem;
+  font-size: .64rem;
   font-weight: 700;
   color: var(--fg-muted);
-  line-height: 1;
-  min-width: 1.1rem;
-  flex-shrink: 0;
-}
-.bib-verse-text {
-  font-family: 'Lora', Georgia, 'Times New Roman', serif;
-  font-size: 1.06rem;
-  line-height: 1.9;
-  color: var(--fg-1);
+  margin-right: .05em;
 }
 
 /* ── verse note composer ──────────────────────────────────────────── */
@@ -311,6 +322,20 @@
   justify-content: flex-end;
   gap: .5rem;
   margin-top: .8rem;
+}
+
+.bib-verse-composer-placeholder {
+  padding: 1.4rem 1.2rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+.bib-verse-composer-placeholder p {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-muted);
+  margin: 0;
 }
 
 .bib-notes-input {
@@ -381,6 +406,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .bib-reader-layout { flex-direction: column; }
+  .bib-reader-side { position: static; width: 100%; }
 }
 
 @media (max-width: 640px) {
