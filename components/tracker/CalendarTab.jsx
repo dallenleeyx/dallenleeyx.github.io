@@ -5,7 +5,7 @@
 // it, or upload an .ics export of your timetable to populate it in bulk.
 import { useRef, useState } from 'react';
 import { importIcs } from '../../lib/ics';
-import { getWeekSchedule, startOfWeek, isoDate, DAY_NAMES } from '../../lib/schedule';
+import { getWeekSchedule, getWeekDueAssignments, startOfWeek, isoDate, DAY_NAMES } from '../../lib/schedule';
 import { WeekGrid } from './WeekGrid';
 import { EventModal } from './EventModal';
 
@@ -20,6 +20,7 @@ export function CalendarTab({ courses, onAddEntry, onRemoveEntry, onImport }) {
   const weekStart = startOfWeek(new Date(Date.now() + weekOffset * 7 * 86400000));
   const weekEnd = new Date(weekStart.getTime() + 6 * 86400000);
   const items = getWeekSchedule(courses, weekStart);
+  const dueItems = getWeekDueAssignments(courses, weekStart);
 
   const handleFile = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -73,7 +74,7 @@ export function CalendarTab({ courses, onAddEntry, onRemoveEntry, onImport }) {
       </div>
       {courses.length ? (
         <div className="fade-up d1">
-          <WeekGrid weekStart={weekStart} items={items} onEmptySlot={openCreate} onEventClick={openView} />
+          <WeekGrid weekStart={weekStart} items={items} dueItems={dueItems} onEmptySlot={openCreate} onEventClick={openView} />
         </div>
       ) : (
         <div className="tk-empty"><div className="icon">🗓️</div><div className="title">Add a course first.</div></div>

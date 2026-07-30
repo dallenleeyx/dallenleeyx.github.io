@@ -20,7 +20,7 @@ const minToTopPct = (min) => ((min - START_HOUR * 60) / TOTAL_MIN) * 100;
 export const minutesToHM = (min) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 export const hmToMinutes = (hm) => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
 
-export function WeekGrid({ weekStart, items, onEmptySlot, onEventClick }) {
+export function WeekGrid({ weekStart, items, dueItems = [], onEmptySlot, onEventClick }) {
   const [drag, setDrag] = useState(null); // { day, startMin, curMin }
   const dragRef = useRef(null);
   const colRectsRef = useRef({});
@@ -76,6 +76,12 @@ export function WeekGrid({ weekStart, items, onEmptySlot, onEventClick }) {
     if (dayIdx >= 0 && dayIdx < 7) itemsByDay[dayIdx].push(it);
   });
 
+  const dueByDay = Array.from({ length: 7 }, () => []);
+  dueItems.forEach(it => {
+    const dayIdx = dayDates.findIndex(d => isoDate(d) === it.date);
+    if (dayIdx >= 0 && dayIdx < 7) dueByDay[dayIdx].push(it);
+  });
+
   return (
     <div className="wg-wrap">
       <div className="wg-header">
@@ -87,6 +93,21 @@ export function WeekGrid({ weekStart, items, onEmptySlot, onEventClick }) {
           </div>
         ))}
       </div>
+      {dueItems.length > 0 && (
+        <div className="wg-allday-row">
+          <div className="wg-gutter" />
+          {DAY_NAMES.map((_, day) => (
+            <div key={day} className="wg-allday-cell">
+              {dueByDay[day].map(it => (
+                <div key={it.id} className="wg-allday-chip" title={`${it.course.name} — ${it.title}`}>
+                  <span className="wg-allday-course">{it.course.glyph}</span>
+                  <span className="wg-allday-title">{it.title}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
       <div className="wg-body" style={{ height: GRID_HEIGHT }}>
         <div className="wg-gutter">
           {hours.map(h => (
