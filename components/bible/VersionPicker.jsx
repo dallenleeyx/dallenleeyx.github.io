@@ -1,32 +1,32 @@
 'use client';
-// components/bible/VersionPicker.jsx — picks which api.bible translation is
-// used to render passage text. The version list itself comes live from
-// api.bible via our /api/bible/versions proxy -- never hardcoded here.
+// components/bible/VersionPicker.jsx — picks which api.bible translation
+// renders passage text. Shows abbreviations only (full names can get long)
+// via the shared Dropdown component. The version list itself comes live
+// from api.bible via our /api/bible/versions proxy -- never hardcoded.
 import { useBibleVersions } from '../../lib/useBiblePassage';
+import { Dropdown } from './Dropdown';
 
 export function VersionPicker({ versionId, onChange }) {
   const { versions, error } = useBibleVersions();
 
   if (error) {
-    return <p className="bib-version-error">Couldn't load translations ({error}). Check BIBLE_API_KEY is configured.</p>;
+    return <p className="bib-version-error" title={error}>translations unavailable</p>;
   }
   if (!versions) {
-    return <p className="bib-version-loading">Loading translations…</p>;
+    return <p className="bib-version-loading">loading…</p>;
   }
   if (!versions.length) {
-    return <p className="bib-version-error">No translations available for this API key.</p>;
+    return <p className="bib-version-error">no translations</p>;
   }
 
+  const options = versions.map((v) => ({ value: v.id, label: v.abbreviation || v.name }));
   return (
-    <select
-      className="bib-version-select"
-      value={versionId || ''}
-      onChange={(e) => onChange(e.target.value || null)}
-    >
-      <option value="" disabled>Choose a translation…</option>
-      {versions.map((v) => (
-        <option key={v.id} value={v.id}>{v.name}{v.abbreviation ? ` (${v.abbreviation})` : ''}</option>
-      ))}
-    </select>
+    <Dropdown
+      value={versionId}
+      options={options}
+      onChange={onChange}
+      placeholder="Version"
+      className="bib-dropdown-version"
+    />
   );
 }
