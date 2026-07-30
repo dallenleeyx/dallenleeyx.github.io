@@ -2,10 +2,11 @@
 // components/tracker/TrackerApp.jsx — course + assignment tracking, calendar,
 // and per-course notes. Courses sync cross-device via useCoursesSync; theme
 // and sidebar-collapsed state stay local-only.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { extractToc, renderDoc } from '../../lib/markdown';
 import { useCoursesSync } from '../../lib/useCoursesSync';
+import { exportNotesToPdf } from '../../lib/exportNotesPdf';
 import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
@@ -82,6 +83,8 @@ export function TrackerApp() {
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
   const [searchOpen, setSearchOpen] = useState(false);
   const [pendingScrollId, setPendingScrollId] = useState(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const docPreviewRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -225,6 +228,17 @@ export function TrackerApp() {
   const scrollToHeading = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const handleExportPdf = async () => {
+    if (!docPreviewRef.current || exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      await exportNotesToPdf(docPreviewRef.current, current.nickname || current.name);
+    } catch (e) {
+      window.alert('Could not export notes to PDF. Please try again.');
+    } finally {
+      setExportingPdf(false);
+    }
   };
 
   return (
@@ -403,7 +417,9 @@ export function TrackerApp() {
               <SectionLabel sub="hover a red tab to read a flag" actions={
                 <div className="tk-notes-actions no-print" style={{ display: 'flex', gap: '.5rem' }}>
                   <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setNotesOpenFor(current.id)}>Edit</button>
-                  <button className="tk-btn tk-btn-outline tk-btn-sm" onClick={() => window.print()}>Export to PDF</button>
+                  <button className="tk-btn tk-btn-outline tk-btn-sm" disabled={exportingPdf} onClick={handleExportPdf}>
+                    {exportingPdf ? 'Exporting…' : 'Export to PDF'}
+                  </button>
                 </div>
               }>Notes</SectionLabel>
               <div className="tk-doc-preview-layout">
@@ -413,7 +429,7 @@ export function TrackerApp() {
                     <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
                   )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
                 </div>
-                <div className="tk-doc-preview">
+                <div className="tk-doc-preview" ref={docPreviewRef}>
                   {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
                 </div>
               </div>
