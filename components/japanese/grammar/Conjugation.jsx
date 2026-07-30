@@ -12,6 +12,7 @@ import { FORM_LABELS, FORM_SEQUENCE } from '../../../lib/japanese/conjugationFor
 import { useLeakyQueue } from '../../../hooks/japanese/useLeakyQueue';
 import { useVerbFormCycle } from '../../../hooks/japanese/useVerbFormCycle';
 import { furiganaToHtml } from '../../../lib/japanese/furiganaToHtml';
+import { cardFlipDelay } from '../../../lib/japanese/flipTiming';
 
 function buildFormDeck(form) {
   const forms = form === 'all' ? FORM_SEQUENCE : [form];
@@ -116,6 +117,7 @@ function ByFormPractice({ active }) {
   const [form, setForm] = useState('all');
   const [shuffleOn, setShuffleOn] = useState(true);
   const [flipped, setFlipped] = useState(false);
+  const [busy, setBusy] = useState(false);
   const queue = useLeakyQueue();
 
   const startSession = (f, shuffleFlag) => {
@@ -140,20 +142,37 @@ function ByFormPractice({ active }) {
   };
 
   const handleFlip = () => {
-    if (!queue.current) return;
+    if (!queue.current || busy) return;
     setFlipped((f) => !f);
   };
 
+  // The card's content (queue.current) must not swap to the next item until
+  // the flip-back animation has visually finished -- otherwise the back face
+  // (still on-screen mid-rotation, since backface-visibility only hides it
+  // past ~90 deg) briefly shows the NEXT card's answer instead of the one
+  // just graded.
   const handleGrade = (isCorrect) => {
-    if (!queue.current || !flipped) return;
-    queue.grade(isCorrect);
+    if (!queue.current || !flipped || busy) return;
+    setBusy(true);
     setFlipped(false);
+    setTimeout(() => {
+      queue.grade(isCorrect);
+      setBusy(false);
+    }, cardFlipDelay());
   };
 
   const handleSkip = () => {
-    if (!queue.current) return;
-    queue.skip();
+    if (!queue.current || busy) return;
+    if (!flipped) {
+      queue.skip();
+      return;
+    }
+    setBusy(true);
     setFlipped(false);
+    setTimeout(() => {
+      queue.skip();
+      setBusy(false);
+    }, cardFlipDelay());
   };
 
   useEffect(() => {
@@ -166,7 +185,7 @@ function ByFormPractice({ active }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, flipped, queue.current]);
+  }, [active, flipped, busy, queue.current]);
 
   const current = queue.current;
   const emptyText = queue.totalCount ? t('allMastered') : t('noVerbs');
@@ -222,9 +241,26 @@ function ByFormPractice({ active }) {
 function ByVerbPractice({ active }) {
   const { t } = useJapaneseI18n();
   const cycle = useVerbFormCycle(CONJUGATION_PRACTICE_VERBS[0]);
+  const [busy, setBusy] = useState(false);
 
-  const handleFlip = () => cycle.flip();
-  const handleGrade = (isCorrect) => cycle.grade(isCorrect);
+  const handleFlip = () => {
+    if (busy) return;
+    cycle.flip();
+  };
+
+  // Unflip (visual) immediately but hold off advancing to the next form
+  // (cycle.grade, which swaps the card's content) until the flip-back
+  // animation has actually finished -- otherwise the back face briefly
+  // shows the NEXT form's answer while still rotating into view.
+  const handleGrade = (isCorrect) => {
+    if (!cycle.flipped || busy) return;
+    setBusy(true);
+    cycle.unflip();
+    setTimeout(() => {
+      cycle.grade(isCorrect);
+      setBusy(false);
+    }, cardFlipDelay());
+  };
 
   useEffect(() => {
     if (!active) return;
@@ -236,7 +272,7 @@ function ByVerbPractice({ active }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, cycle.flipped, cycle.formIndex]);
+  }, [active, cycle.flipped, busy, cycle.formIndex]);
 
   const verbs = CONJUGATION_PRACTICE_VERBS;
   const byGroup = { I: [], II: [], III: [] };
