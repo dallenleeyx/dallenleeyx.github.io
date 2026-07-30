@@ -658,6 +658,14 @@ main {
 .grade-wrong:hover { background: var(--jp-seal); color: #fff; }
 .grade-right { border-color: var(--jp-mastered); color: var(--jp-mastered); }
 .grade-right:hover { background: var(--jp-mastered); color: #fff; }
+.grade-btn.suggested { box-shadow: 0 0 0 2px var(--jp-paper), 0 0 0 4px currentColor; }
+
+.autocheck-chip.active { background: var(--jp-indigo); border-color: var(--jp-indigo); color: #fff; }
+.autocheck-verdict { font-family: var(--jp-font-ui); font-size: 0.9rem; font-weight: 600; margin: 0 0 var(--jp-space-2); text-align: center; max-width: 480px; }
+.autocheck-verdict.is-correct { color: var(--jp-mastered); }
+.autocheck-verdict.is-wrong { color: var(--jp-seal); }
+.autocheck-candidates { font-weight: 400; color: var(--jp-ink-soft); font-family: var(--jp-font-jp); }
+.autocheck-error { font-family: var(--jp-font-ui); font-size: 0.85rem; color: var(--jp-seal); margin: 0 0 var(--jp-space-2); text-align: center; max-width: 420px; }
 
 .deck-controls { display: flex; justify-content: space-between; align-items: center; gap: var(--jp-space-4); flex-wrap: wrap; }
 .nav-group { display: flex; align-items: center; gap: var(--jp-space-3); }
@@ -711,12 +719,18 @@ main {
   position: relative;
   width: min(520px, 92vw);
   margin: 0 0 var(--jp-space-4);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* stops iOS's long-press selection/callout menu */
 }
 .kw-canvas {
   display: block;
   width: 100%;
   aspect-ratio: 1 / 1;
   touch-action: none; /* required so a finger stroke draws instead of scrolling the page */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   background: var(--jp-paper-alt);
   border: 1.5px solid var(--jp-line);
   border-radius: var(--jp-radius-lg);
