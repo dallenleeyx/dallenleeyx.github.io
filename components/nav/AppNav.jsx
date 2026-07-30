@@ -11,6 +11,7 @@ import { usePathname } from 'next/navigation';
 const LINKS = [
   { href: '/math', label: 'Math' },
   { href: '/japanese', label: 'Japanese' },
+  { href: '/bible', label: 'Bible' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
@@ -19,7 +20,7 @@ export function AppNav() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname === '/math' || pathname === '/japanese') {
+    if (LINKS.some((l) => l.href === pathname)) {
       try { localStorage.setItem(LAST_SITE_KEY, pathname); } catch (e) {}
     }
   }, [pathname]);

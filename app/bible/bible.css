@@ -1,0 +1,318 @@
+/* app/bible/bible.css — uses the shared design tokens from
+   colors_and_type.css directly (no separate theme system, unlike
+   /japanese) since this section deliberately stays simple. */
+
+.bib-app {
+  max-width: var(--content-max-w);
+  margin: 0 auto;
+  padding: 3.2rem 1.5rem 6rem;
+}
+
+.bib-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bib-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-4xl);
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+  margin: 0 0 .3rem;
+}
+
+.bib-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  color: var(--fg-2);
+  margin: 0;
+}
+
+.bib-offline {
+  margin-top: .8rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-muted);
+}
+
+.bib-version-select {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  padding: .5rem .8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg-1);
+}
+
+.bib-version-loading,
+.bib-version-error {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+/* ── progress header ─────────────────────────────────────────────── */
+.bib-progress {
+  margin: 2rem 0;
+  padding: 1.2rem 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.bib-progress-current {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.bib-progress-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--fg-muted);
+}
+
+.bib-progress-book {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+}
+
+.bib-progress-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+.bib-progress-empty {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-2);
+}
+
+.bib-progress-toggle {
+  margin-top: .8rem;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  padding: 0;
+}
+.bib-progress-toggle:hover { color: var(--fg-1); }
+
+.bib-history {
+  margin: .8rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+.bib-history li {
+  display: flex;
+  justify-content: space-between;
+  padding: .5rem 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-2);
+  border-bottom: 1px solid var(--border);
+}
+.bib-history-empty { color: var(--fg-muted); }
+.bib-history-date { font-family: var(--font-mono); color: var(--fg-muted); }
+
+/* ── book grid ────────────────────────────────────────────────────── */
+.bib-testament { margin-bottom: 1.6rem; }
+
+.bib-testament-label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-black);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-uppercase);
+  color: var(--accent);
+  margin: 0 0 .7rem;
+}
+
+.bib-book-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.bib-book-btn {
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--fg-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: .5rem 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.bib-book-btn:hover { border-color: var(--accent); color: var(--fg-1); }
+.bib-book-btn.active { background: var(--fg-1); color: var(--bg); border-color: var(--fg-1); }
+.bib-book-btn.is-current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.bib-book-btn.is-completed { color: var(--fg-1); }
+.bib-book-check { color: var(--accent); font-weight: var(--fw-bold); }
+
+/* ── book panel ───────────────────────────────────────────────────── */
+.bib-panel {
+  margin-top: 1.6rem;
+  padding: 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.bib-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-bottom: 1rem;
+}
+
+.bib-panel-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  color: var(--fg-1);
+  margin: 0;
+}
+
+.bib-panel-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.bib-chapter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.bib-chapter-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+.bib-chapter-btn:hover { border-color: var(--accent); color: var(--fg-1); }
+.bib-chapter-btn.active { background: var(--fg-1); color: var(--bg); border-color: var(--fg-1); }
+.bib-chapter-btn.has-notes::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.bib-chapter-btn.active.has-notes::after { background: var(--bg); }
+
+.bib-chapter-detail {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+
+.bib-chapter-detail-title {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-lg);
+  color: var(--fg-1);
+  margin: 0 0 .8rem;
+}
+
+/* ── passage text ─────────────────────────────────────────────────── */
+.bib-passage {
+  margin-bottom: 1.2rem;
+  padding: 1rem 1.2rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.bib-passage-ref {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin: 0 0 .5rem;
+}
+.bib-passage-text {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-1);
+  white-space: pre-wrap;
+  margin: 0;
+}
+.bib-passage-copyright {
+  margin: .8rem 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+.bib-passage-hint,
+.bib-passage-error {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--fg-muted);
+  margin: 0 0 1.2rem;
+}
+
+/* ── notes editor ─────────────────────────────────────────────────── */
+.bib-notes-input {
+  width: 100%;
+  min-height: 10rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-base);
+  color: var(--fg-1);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: .9rem 1rem;
+  resize: vertical;
+}
+.bib-notes-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.bib-notes-preview {
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
+  border-left: 2px solid var(--border);
+}
+.bib-note-h1 { font-family: var(--font-sans); font-size: var(--fs-2xl); color: var(--fg-1); margin: 0 0 .5rem; }
+.bib-note-h2 { font-family: var(--font-sans); font-size: var(--fs-xl); color: var(--fg-1); margin: .8rem 0 .4rem; }
+.bib-note-p { font-family: var(--font-sans); font-size: var(--fs-lg); color: var(--fg-2); line-height: var(--lh-base); margin: 0 0 .6rem; }
+.bib-note-ul { margin: 0 0 .6rem 1.2rem; padding: 0; color: var(--fg-2); }
+.bib-note-ul li { font-family: var(--font-sans); font-size: var(--fs-lg); line-height: var(--lh-base); }
+
+@media (max-width: 640px) {
+  .bib-app { padding: 4.6rem 1.1rem 5rem; }
+  .bib-chapter-btn { width: 2.1rem; height: 2.1rem; }
+}
