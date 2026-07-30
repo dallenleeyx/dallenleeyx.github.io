@@ -252,6 +252,11 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-week-item.is-assignment .tk-week-course{color:#3b6fd4;}
 .tk-week-item.is-assignment .tk-week-title{color:#2a4f9e;}
 [data-theme="dark"] .tk-week-item.is-assignment .tk-week-title{color:#9db8ea;}
+.tk-week-item.is-holiday{background:#e6f7ec;border-color:#2f9e5c;}
+[data-theme="dark"] .tk-week-item.is-holiday{background:rgba(47,158,92,.14);}
+.tk-week-item.is-holiday .tk-week-time{color:#2f9e5c;}
+.tk-week-item.is-holiday .tk-week-title{color:#1f7a45;}
+[data-theme="dark"] .tk-week-item.is-holiday .tk-week-title{color:#8fd6ac;}
 
 /* Calendar tab: .ics import + week nav */
 .tk-import-msg{font-size:.78rem;color:var(--fg-2);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:.7rem 1rem;margin:1rem 0 0;}
@@ -271,6 +276,10 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .wg-allday-course{font-family:var(--font-mono);font-size:.56rem;color:#3b6fd4;flex-shrink:0;}
 .wg-allday-title{min-width:0;flex:1;font-size:.62rem;font-weight:700;color:#2a4f9e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 [data-theme="dark"] .wg-allday-title{color:#9db8ea;}
+.wg-allday-chip.is-holiday{background:#e6f7ec;border-color:#2f9e5c;}
+[data-theme="dark"] .wg-allday-chip.is-holiday{background:rgba(47,158,92,.18);}
+.wg-allday-chip.is-holiday .wg-allday-title{color:#1f7a45;}
+[data-theme="dark"] .wg-allday-chip.is-holiday .wg-allday-title{color:#8fd6ac;}
 .wg-body{display:grid;grid-template-columns:52px repeat(7,1fr);position:relative;overflow-y:auto;}
 .wg-gutter{position:relative;}
 .wg-hour-label{font-family:var(--font-mono);font-size:.58rem;color:var(--fg-muted);text-align:right;padding-right:.5rem;transform:translateY(-.5em);}
