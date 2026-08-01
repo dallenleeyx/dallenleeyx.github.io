@@ -204,7 +204,9 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-doc-edit{min-height:0;}
 .tk-doc-textarea{width:100%;height:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;font-family:var(--font-mono);font-size:.85rem;line-height:1.7;color:var(--fg-1);outline:none;resize:none;}
 .tk-doc-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
-.tk-doc-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.4rem 2rem;overflow-y:auto;height:100%;}
+/* PagedTypstViewer manages its own background/border/padding/scrolling
+   internally now (see .tk-paged-* below), so this is just a sizing box. */
+.tk-doc-preview{height:100%;}
 /* Draggable divider between edit/preview -- lets the split ratio be
    user-chosen (persisted) instead of a fixed 50/50. */
 .tk-resize-handle{flex:0 0 10px;display:flex;align-items:center;justify-content:center;cursor:col-resize;}
@@ -220,19 +222,43 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-typst-error{color:#b91c1c;font-family:var(--font-mono);font-size:.78rem;line-height:1.6;white-space:pre-wrap;margin:0;}
 
 /* Dedicated "view in browser" preview tab (app/typst-preview/[courseId]) --
-   Overleaf-style pop-out with its own zoom/pan, independent of the split
-   editor's inline preview above (which intentionally has no zoom). */
+   Overleaf-style pop-out, wrapping PagedTypstViewer below for the actual
+   paginated/zoomable content; this is just its slim title bar. */
 .tk-typst-viewer{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:1000;}
 .tk-typst-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0;}
 .tk-typst-viewer-title{font-family:var(--font-mono);font-size:.7rem;color:var(--fg-muted);}
-.tk-typst-viewer-controls{display:flex;align-items:center;gap:.5rem;}
 .tk-typst-viewer-zoom{font-family:var(--font-mono);font-size:.68rem;color:var(--fg-2);min-width:3.2em;text-align:center;}
-.tk-typst-viewer-viewport{flex:1;overflow:auto;background:var(--surface);cursor:grab;outline:none;}
-.tk-typst-viewer-viewport.dragging{cursor:grabbing;user-select:none;}
-.tk-typst-viewer-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
-.tk-typst-viewer-content{display:inline-block;transform-origin:top left;padding:2.5rem;}
-.tk-typst-viewer-content svg{display:block;}
 .tk-typst-viewer-status{padding:2.5rem;font-family:var(--font-mono);font-size:.75rem;color:var(--fg-muted);}
+.tk-paged-wrap.tk-typst-viewer-body{flex:1;height:auto;min-height:0;}
+
+/* PagedTypstViewer -- a compiled Typst document rendered as real, separate
+   page cards (see the component's file-level comment for why this needs
+   its own SVG-slicing logic instead of just showing $typst.svg()'s output
+   directly), with zoom/pan into the content itself instead of the page. */
+.tk-paged-wrap{display:flex;flex-direction:column;height:100%;min-height:0;position:relative;}
+.tk-paged-toolbar{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tk-paged-viewport{flex:1;min-height:0;overflow:auto;background:var(--surface-2);position:relative;cursor:grab;outline:none;padding:2rem;}
+.tk-paged-viewport.dragging{cursor:grabbing;user-select:none;}
+.tk-paged-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
+.tk-paged-stack{transform-origin:top left;position:relative;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.2);border-radius:2px;}
+.tk-paged-content svg{display:block;width:100%;height:auto;}
+/* A page break -- Typst's own page margins mean this always lands on real
+   whitespace in the rendered content, not text, so it's safe to draw a
+   divider across it without covering anything. */
+.tk-page-divider{position:absolute;left:0;right:0;height:1px;background:rgba(0,0,0,.15);box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:none;}
+/* Positioned against .tk-paged-wrap (not the scrolling viewport), so it
+   stays put in the corner instead of scrolling away with the content --
+   the only always-visible chrome in the no-toolbar (split-view) mode,
+   doubling as a click-to-reset affordance. */
+.tk-paged-zoom-badge{position:absolute;top:.6rem;right:.6rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.25rem .55rem;border-radius:6px;cursor:pointer;z-index:5;}
+.tk-paged-zoom-badge:hover{border-color:var(--accent);color:var(--accent);}
+/* Page Prev/Next, shown alongside the zoom badge when there's no full
+   toolbar (compact/split-view mode) and the document has more than one
+   page. */
+.tk-paged-nav-badge{position:absolute;top:.6rem;left:.6rem;display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.2rem .5rem;border-radius:6px;z-index:5;}
+.tk-paged-nav-badge .tk-mono-btn{padding:.1rem .4rem;font-size:.7rem;}
+.tk-mono-btn:disabled{opacity:.35;cursor:default;}
+.tk-mono-btn:disabled:hover{border-color:var(--border);color:var(--accent-2);}
 
 /* Note / doc typography -- a serif "math paper" register (STIX Two Text,
    paired well with KaTeX's own Latin-Modern-derived faces) instead of the
@@ -278,7 +304,7 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 /* Notes preview — inline on the course page: contents + rendered doc, no source */
 .tk-doc-preview-layout{display:grid;grid-template-columns:160px 1fr;gap:1.2rem;margin-bottom:3.2rem;transition:grid-template-columns .2s ease;}
 .tk-doc-preview-layout .tk-doc-toc{overflow-y:visible;}
-.tk-doc-preview-layout .tk-doc-preview{height:auto;max-height:65vh;}
+.tk-doc-preview-layout .tk-doc-preview{height:65vh;}
 .tk-doc-preview-layout.toc-collapsed{grid-template-columns:1.6rem 1fr;}
 .tk-doc-preview-layout.toc-collapsed .tk-doc-toc{border-right:none;padding-right:0;}
 
@@ -420,12 +446,13 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
   .tk-sidebar-backdrop{display:none;}
 }
 
-/* Export to PDF: browser print, notes-only */
+/* Manual browser print (Ctrl/Cmd+P) -- the real "Export to PDF" button
+   compiles a genuine Typst PDF instead of going through this, but this
+   still hides UI chrome if someone prints the page directly. */
 @media print{
   .no-print, #particles{display:none!important;}
   .tk-main{margin-left:0!important;padding:0!important;max-width:none!important;}
   .tk-doc-preview-layout{grid-template-columns:1fr!important;}
-  .tk-doc-preview{max-height:none!important;overflow:visible!important;border:none!important;padding:0!important;}
 }
 
 /* Site-wide corner nav (Dashboard / Math / Japanese) — fixed, out of flow,

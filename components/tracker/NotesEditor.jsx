@@ -8,7 +8,7 @@ import {
   blockTemplate, mathTemplate, flagInlineTemplate,
 } from '../../lib/typst/snippets';
 import { typstLiveChannelName } from '../../lib/typst/liveChannel';
-import { TypstPreview } from './TypstPreview';
+import { PagedTypstViewer } from './PagedTypstViewer';
 
 const MIN_EDIT_PCT = 25;
 const MAX_EDIT_PCT = 75;
@@ -196,15 +196,12 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     }
   };
 
-  // The Typst preview is one compiled SVG with no per-heading DOM anchors
-  // (unlike the old renderDoc() JSX tree), so this scrolls to the same
-  // fractional position the heading sits at in the source text instead.
+  // The Typst preview has no per-heading DOM anchors (unlike the old
+  // renderDoc() JSX tree), so this jumps to the page holding roughly the
+  // same fractional position the heading sits at in the source text.
   const scrollToHeadingLine = (line) => {
-    const el = previewRef.current;
-    if (!el) return;
     const totalLines = Math.max(1, (doc || '').split('\n').length - 1);
-    const fraction = Math.min(1, line / totalLines);
-    el.scrollTo({ top: fraction * Math.max(0, el.scrollHeight - el.clientHeight), behavior: 'smooth' });
+    previewRef.current?.scrollToFraction(Math.min(1, line / totalLines));
   };
 
   return (
@@ -258,8 +255,8 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               <div className="tk-resize-handle" onMouseDown={startResize} title="Drag to resize">
                 <span />
               </div>
-              <div className="tk-doc-preview" ref={previewRef}>
-                <TypstPreview source={doc} debounceMs={400} />
+              <div className="tk-doc-preview">
+                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} showToolbar={false} />
               </div>
             </>
           )}
