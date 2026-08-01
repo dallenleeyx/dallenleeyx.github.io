@@ -8,7 +8,7 @@ import { useCoursesSync } from '../../lib/useCoursesSync';
 import { extractTypstToc } from '../../lib/typst/snippets';
 import { migrateDocToTypst } from '../../lib/typst/migrate';
 import { exportTypstNotesToPdf } from '../../lib/typst/exportPdf';
-import { TypstPreview } from './TypstPreview';
+import { PagedTypstViewer } from './PagedTypstViewer';
 import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
@@ -119,11 +119,8 @@ export function TrackerApp() {
     if (!cur || !el) return;
     const totalLines = Math.max(1, (cur.doc || '').split('\n').length - 1);
     const raf = requestAnimationFrame(() => {
-      const fraction = Math.min(1, pendingScrollLine / totalLines);
-      const target = fraction * Math.max(0, el.scrollHeight - el.clientHeight);
-      el.scrollTo({ top: target, behavior: 'smooth' });
-      el.classList.add('tk-note-block-flash');
-      setTimeout(() => el.classList.remove('tk-note-block-flash'), 1600);
+      el.scrollToFraction(Math.min(1, pendingScrollLine / totalLines));
+      el.flash();
       setPendingScrollLine(null);
     });
     return () => cancelAnimationFrame(raf);
@@ -472,8 +469,8 @@ export function TrackerApp() {
                     )) : <div className="tk-doc-toc-empty">Add a heading (=)</div>
                   )}
                 </div>
-                <div className="tk-doc-preview" ref={docPreviewRef}>
-                  <TypstPreview source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' />
+                <div className="tk-doc-preview">
+                  <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' showToolbar={false} />
                 </div>
               </div>
             </div>
