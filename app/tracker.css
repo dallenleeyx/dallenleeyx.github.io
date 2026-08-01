@@ -101,6 +101,8 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-btn-sm{padding:.55rem 1.15rem;font-size:.7rem;}
 .tk-mono-btn{background:transparent;border:1px solid var(--border);color:var(--accent-2);font-family:var(--font-mono);font-size:.66rem;padding:.32rem .75rem;border-radius:6px;cursor:pointer;transition:all var(--transition-fast);}
 .tk-mono-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tk-mono-btn.active{border-color:var(--accent);color:var(--accent);background:var(--glow);}
+.tk-preview-mode-toggle{display:flex;gap:.4rem;align-items:center;}
 .tk-x-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;transition:all var(--transition-fast);}
 .tk-x-btn:hover{border-color:var(--accent);color:var(--accent);}
 .tk-btn-danger{background:#d1453b;color:#fff;}
@@ -216,6 +218,21 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-typst-render svg{width:100%;height:auto;display:block;}
 .tk-typst-render.compiling{opacity:.55;transition:opacity .15s ease;}
 .tk-typst-error{color:#b91c1c;font-family:var(--font-mono);font-size:.78rem;line-height:1.6;white-space:pre-wrap;margin:0;}
+
+/* Dedicated "view in browser" preview tab (app/typst-preview/[courseId]) --
+   Overleaf-style pop-out with its own zoom/pan, independent of the split
+   editor's inline preview above (which intentionally has no zoom). */
+.tk-typst-viewer{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:1000;}
+.tk-typst-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tk-typst-viewer-title{font-family:var(--font-mono);font-size:.7rem;color:var(--fg-muted);}
+.tk-typst-viewer-controls{display:flex;align-items:center;gap:.5rem;}
+.tk-typst-viewer-zoom{font-family:var(--font-mono);font-size:.68rem;color:var(--fg-2);min-width:3.2em;text-align:center;}
+.tk-typst-viewer-viewport{flex:1;overflow:auto;background:var(--surface);cursor:grab;outline:none;}
+.tk-typst-viewer-viewport.dragging{cursor:grabbing;user-select:none;}
+.tk-typst-viewer-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
+.tk-typst-viewer-content{display:inline-block;transform-origin:top left;padding:2.5rem;}
+.tk-typst-viewer-content svg{display:block;}
+.tk-typst-viewer-status{padding:2.5rem;font-family:var(--font-mono);font-size:.75rem;color:var(--fg-muted);}
 
 /* Note / doc typography -- a serif "math paper" register (STIX Two Text,
    paired well with KaTeX's own Latin-Modern-derived faces) instead of the
