@@ -240,7 +240,19 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-paged-viewport{flex:1;min-height:0;overflow:auto;background:var(--surface-2);position:relative;cursor:grab;outline:none;padding:2rem;}
 .tk-paged-viewport.dragging{cursor:grabbing;user-select:none;}
 .tk-paged-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
+/* "flush" mode (read-only course-page preview): no padding, so the page
+   fills the container edge-to-edge with no whitespace margin. */
+.tk-paged-viewport-flush{padding:0;}
+/* Not pannable (flush mode again): plain vertical scroll only, so drop the
+   grab cursor that would otherwise promise a drag that doesn't happen. */
+.tk-paged-viewport-static{cursor:default;}
 .tk-paged-stack{transform-origin:top left;position:relative;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.2);border-radius:2px;}
+/* flush/popout modes: centering (including at rest) is handled entirely
+   by PagedTypstViewer.jsx's centerScroll via scrollLeft, not CSS margin --
+   margin:auto here would center the box at its own unscaled width, which
+   conflicts with centerScroll's math (it assumes the box starts flush at
+   x:0 pre-scroll) and transform-origin:top-left scaling from that
+   already-offset position, leaving it off-center once scaled. */
 .tk-paged-content svg{display:block;width:100%;height:auto;}
 /* A page break -- Typst's own page margins mean this always lands on real
    whitespace in the rendered content, not text, so it's safe to draw a
@@ -248,10 +260,10 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-page-divider{position:absolute;left:0;right:0;height:1px;background:rgba(0,0,0,.15);box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:none;}
 /* Positioned against .tk-paged-wrap (not the scrolling viewport), so it
    stays put in the corner instead of scrolling away with the content --
-   the only always-visible chrome in the no-toolbar (split-view) mode,
-   doubling as a click-to-reset affordance. */
-.tk-paged-zoom-badge{position:absolute;top:.6rem;right:.6rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.25rem .55rem;border-radius:6px;cursor:pointer;z-index:5;}
-.tk-paged-zoom-badge:hover{border-color:var(--accent);color:var(--accent);}
+   the only always-visible chrome in the no-toolbar (split-view) mode.
+   The percentage doubles as a click-to-reset affordance. */
+.tk-paged-zoom-badge{position:absolute;top:.6rem;right:.6rem;display:flex;align-items:center;gap:.3rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.2rem .35rem;border-radius:6px;z-index:5;}
+.tk-paged-zoom-badge .tk-mono-btn{padding:.1rem .4rem;font-size:.68rem;}
 /* Page Prev/Next, shown alongside the zoom badge when there's no full
    toolbar (compact/split-view mode) and the document has more than one
    page. */
