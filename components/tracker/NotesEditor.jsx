@@ -1,10 +1,13 @@
 'use client';
-// components/tracker/NotesEditor.jsx — full-screen, Overleaf-style notes editor
+// components/tracker/NotesEditor.jsx — full-screen, Overleaf-style notes
+// editor. Source is real Typst (see lib/typst/*) compiled to a live SVG
+// preview, not the old markdown-shorthand + KaTeX renderer.
 import { useEffect, useRef, useState } from 'react';
 import {
-  extractToc, renderDoc, MATH_CMDS, ENV_TYPES, ENV_LABELS,
+  extractTypstToc, MATH_CMDS, ENV_TYPES, ENV_LABELS,
   blockTemplate, mathTemplate, flagInlineTemplate,
-} from '../../lib/markdown';
+} from '../../lib/typst/snippets';
+import { TypstPreview } from './TypstPreview';
 
 const MIN_EDIT_PCT = 25;
 const MAX_EDIT_PCT = 75;
@@ -13,7 +16,8 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
   const layoutRef = useRef(null);
   const dragRef = useRef(null);
-  const toc = extractToc(doc, 'nh-');
+  const previewRef = useRef(null);
+  const toc = extractTypstToc(doc);
   // After inserting a titled environment (theorem, definition, …), Tab jumps
   // from the title to the content placeholder on the next line. One-shot:
   // cleared as soon as it's used, or as soon as another snippet/edit happens.
@@ -104,14 +108,15 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     if (!ta) return;
     const mod = e.ctrlKey || e.metaKey;
 
+    // Typst markup: *bold*, _italic_ (not markdown's **bold**/*italic*)
     if (mod && !e.altKey && e.key.toLowerCase() === 'b') {
       e.preventDefault();
-      wrapSelection('**', '**');
+      wrapSelection('*', '*');
       return;
     }
     if (mod && !e.altKey && e.key.toLowerCase() === 'i') {
       e.preventDefault();
-      wrapSelection('*', '*');
+      wrapSelection('_', '_');
       return;
     }
 
@@ -142,8 +147,9 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
           let offset = 0;
           for (let i = 0; i <= stop.titleLine; i++) offset += lines[i].length + 1;
           const contentLine = lines[stop.titleLine + 1] ?? '';
+          const leading = contentLine.match(/^\s*/)[0].length;
           envTabStopRef.current = null;
-          ta.setSelectionRange(offset, offset + contentLine.length);
+          ta.setSelectionRange(offset + leading, offset + contentLine.length);
           return;
         }
       }
@@ -154,9 +160,15 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     }
   };
 
-  const scrollToHeading = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // The Typst preview is one compiled SVG with no per-heading DOM anchors
+  // (unlike the old renderDoc() JSX tree), so this scrolls to the same
+  // fractional position the heading sits at in the source text instead.
+  const scrollToHeadingLine = (line) => {
+    const el = previewRef.current;
+    if (!el) return;
+    const totalLines = Math.max(1, (doc || '').split('\n').length - 1);
+    const fraction = Math.min(1, line / totalLines);
+    el.scrollTo({ top: fraction * Math.max(0, el.scrollHeight - el.clientHeight), behavior: 'smooth' });
   };
 
   return (
@@ -184,9 +196,9 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               {tocCollapsed ? '»' : '« Contents'}
             </button>
             {!tocCollapsed && (
-              toc.length ? toc.map(h => (
-                <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
-              )) : <div className="tk-doc-toc-empty">Add a # heading</div>
+              toc.length ? toc.map((h, i) => (
+                <a key={i} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeadingLine(h.line)}>{h.text || 'Untitled'}</a>
+              )) : <div className="tk-doc-toc-empty">Add a heading (=)</div>
             )}
           </div>
           <div className="tk-doc-edit" style={{ flexBasis: `${editPct}%` }}>
@@ -194,7 +206,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               ref={taRef}
               className="tk-doc-textarea"
               value={doc || ''}
-              placeholder={'# Heading\n\nWrite here — **bold**, *italic*, $x^2$, $$\\int f\\,dx$$ …\nUse the toolbar for \\mathcal, \\mathbb, theorem/definition blocks, or a flag.'}
+              placeholder={'= Heading\n\nWrite here — *bold*, _italic_, $x^2$ …\nUse the toolbar for cal/frak/bb, theorem/definition blocks, or a flag.'}
               onChange={e => onChange(e.target.value)}
               onKeyDown={handleKeyDown}
             />
@@ -202,8 +214,8 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
           <div className="tk-resize-handle" onMouseDown={startResize} title="Drag to resize">
             <span />
           </div>
-          <div className="tk-doc-preview" style={{ flexBasis: `${100 - editPct}%` }}>
-            {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+          <div className="tk-doc-preview" ref={previewRef}>
+            <TypstPreview source={doc} debounceMs={400} />
           </div>
         </div>
       </div>

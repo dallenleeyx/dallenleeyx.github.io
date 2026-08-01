@@ -2,14 +2,16 @@
 // components/tracker/Revision.jsx — cycle through the course's theorem/
 // definition/example blocks as flashcards; tap reveals a nested proof
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { extractFlashcards, renderDoc, ENV_LABELS } from '../../lib/markdown';
+import { ENV_LABELS } from '../../lib/markdown';
+import { extractTypstFlashcards } from '../../lib/typst/blocks';
+import { TypstPreview } from './TypstPreview';
 
 function Empty({ icon, children }) {
   return <div className="tk-empty"><div className="icon">{icon}</div><div className="title">{children}</div></div>;
 }
 
 export function Revision({ course, onClose }) {
-  const pool = useMemo(() => extractFlashcards(course.doc), [course.doc]);
+  const pool = useMemo(() => extractTypstFlashcards(course.doc), [course.doc]);
   const [idx, setIdx] = useState(() => (Math.random() * pool.length) | 0);
   const [revealed, setRevealed] = useState(false);
 
@@ -43,11 +45,11 @@ export function Revision({ course, onClose }) {
                 <span className="tk-type">{ENV_LABELS[current.type] || current.type}</span>
                 <span className="tk-revision-name">{current.name || <span className="tk-note-empty">Untitled</span>}</span>
               </div>
-              <div>{renderDoc(current.statement, `rv${idx}s-`)}</div>
+              <TypstPreview source={current.statement} />
               {revealed && (
                 <div className="tk-revision-proof">
                   <div className="tk-revision-proof-label">Proof</div>
-                  {renderDoc(current.proof, `rv${idx}p-`)}
+                  <TypstPreview source={current.proof} />
                 </div>
               )}
               <div className="tk-revision-foot" onClick={e => e.stopPropagation()}>
