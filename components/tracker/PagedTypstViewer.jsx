@@ -4,6 +4,18 @@
 // navigation, with zoom/pan into the compiled content itself -- not the
 // browser's own page zoom.
 //
+// Three call sites, three `mode`s:
+// - "split": the notes editor's inline preview pane. Padded, pannable
+//   (click-drag + arrow keys), cursor-anchored zoom, compact badges.
+// - "flush": the read-only course-page preview. Not pannable (plain
+//   vertical scroll only -- no click-drag, no arrow-key panning) and no
+//   padding around the page, so it fills its container edge-to-edge with
+//   no whitespace margin. Centered + center-anchored zoom, like "popout"
+//   below, since there's no drag to recenter it if it drifted.
+// - "popout": the dedicated "view in browser" tab. Padded, pannable, full
+//   toolbar, centered + center-anchored zoom (stays centered as you zoom
+//   instead of drifting toward the cursor).
+//
 // Two SVG <use>-based tricks were tried here first (duplicating the full
 // per-page markup, then a single shared <defs> re-viewed via <use> per
 // page, then even just one <use> for only the current page) and every one
@@ -23,15 +35,14 @@
 // literal separate un-scrollable page cards.
 //
 // Ctrl/Cmd+wheel (mouse, or trackpad pinch -- browsers report pinch as a
-// wheel event with ctrlKey set) zooms, anchored at the cursor so the point
-// under it stays put -- the primary, button-free interaction this was
-// built for. Plain wheel/scroll still behaves like a normal page: no
-// interception. Click-drag pans by mouse. Keyboard shortcuts (arrow keys
-// to pan, PageUp/PageDown to jump pages, Ctrl/Cmd +/-/0 to zoom) are a
-// secondary option that only takes over once you've actually clicked into
-// the preview (tabIndex + real DOM focus) -- never on mere hover, so they
-// can't steal keystrokes from a textarea sitting right next to this in the
-// split editor view.
+// wheel event with ctrlKey set) zooms -- the primary, button-free
+// interaction this was built for. Plain wheel/scroll still behaves like a
+// normal page: no interception. Where panning is enabled, click-drag pans
+// by mouse and keyboard shortcuts (arrow keys to pan, PageUp/PageDown to
+// jump pages, Ctrl/Cmd +/-/0 to zoom) are a secondary option that only
+// takes over once you've actually clicked into the preview (tabIndex +
+// real DOM focus) -- never on mere hover, so they can't steal keystrokes
+// from a textarea sitting right next to this in the split editor view.
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useCompiledSvg } from '../../lib/typst/useCompiledSvg';
 import { computePageLayout } from '../../lib/typst/pagedSvg';
@@ -45,9 +56,14 @@ const PAN_STEP_PX = 80;
 // see NotesEditor.jsx/TrackerApp.jsx's scrollToHeadingLine, which jumps to
 // the page holding a given fractional position in the source.
 export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
-  { source, debounceMs = 300, emptyMessage, showToolbar = false, className },
+  { source, debounceMs = 300, emptyMessage, mode = 'split', className },
   forwardedRef
 ) {
+  const showToolbar = mode === 'popout';
+  const centered = mode === 'popout' || mode === 'flush';
+  const pannable = mode !== 'flush';
+  const flush = mode === 'flush';
+
   const { svg, error, compiling } = useCompiledSvg(source, debounceMs);
   const layout = useMemo(() => (svg ? computePageLayout(svg) : null), [svg]);
   const viewportRef = useRef(null);
@@ -55,6 +71,19 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
   const firstFitDoneRef = useRef(false);
   const [scale, setScale] = useState(1);
   const [page, setPage] = useState(0);
+
+  // Reads the viewport's *actual* left/right padding rather than assuming
+  // the usual 1rem==16px -- this site sets the root font-size to 19px, so
+  // 2rem is 38px here, not 32px; a hardcoded guess quietly threw off both
+  // the fit-width scale and centerScroll's centering math.
+  const getHorizontalPadding = () => {
+    const vp = viewportRef.current;
+    if (!vp) return { left: 0, total: 0 };
+    const style = getComputedStyle(vp);
+    const left = parseFloat(style.paddingLeft) || 0;
+    const right = parseFloat(style.paddingRight) || 0;
+    return { left, total: left + right };
+  };
 
   const goToPage = (next) => {
     if (!layout) return;
@@ -77,6 +106,30 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     },
   }), [layout, scale]);
 
+  // Centers the viewport horizontally on the content at the given scale --
+  // used instead of CSS transform-origin:center for "stays centered as you
+  // zoom" (flush/popout modes): a transform-origin:center version of this
+  // was tried first and reproducibly left the left portion of zoomed-in
+  // content permanently unreachable (confirmed via scrollLeft never able
+  // to go low enough to reveal it) -- browsers don't handle the "overflow
+  // grows equally in both directions from a center origin" case the same
+  // way they handle plain end-direction (right/bottom) overflow, which is
+  // reachable fine. Keeping transform-origin at its default (top left, so
+  // all growth is rightward/downward) and instead explicitly computing and
+  // setting scrollLeft here sidesteps that entirely.
+  const centerScroll = (newScale) => {
+    if (!layout || !centered) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const contentWidth = layout.pageWidthPx * newScale;
+    // The stack's un-scrolled resting position starts after the
+    // viewport's own left padding -- omitting that here left centering
+    // off by exactly that amount, most visible at zoom levels away from
+    // the initial fit.
+    const { left: paddingLeft } = getHorizontalPadding();
+    vp.scrollLeft = Math.max(0, paddingLeft + (contentWidth - vp.clientWidth) / 2);
+  };
+
   // Fits the page width to the viewport the first time a compile succeeds
   // -- not on every recompile, which would otherwise undo the reader's own
   // zoom/pan/page position every time they type another keystroke.
@@ -85,7 +138,9 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     firstFitDoneRef.current = true;
     const vp = viewportRef.current;
     if (!vp) return;
-    setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, (vp.clientWidth - 32) / layout.pageWidthPx)));
+    const fitScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, (vp.clientWidth - getHorizontalPadding().total) / layout.pageWidthPx));
+    setScale(fitScale);
+    requestAnimationFrame(() => centerScroll(fitScale));
   }, [layout]);
 
   // Keeps the page-number readout in sync with free scrolling, not just
@@ -98,15 +153,19 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     setPage((prev) => (prev === p ? prev : Math.min(layout.numPages - 1, Math.max(0, p))));
   };
 
-  // Zooms by `factor`; if a viewport-relative cursor position is given,
-  // keeps the content under that point fixed on screen instead of
-  // drifting toward the top-left corner.
+  // Zooms by `factor`. When centered (flush/popout modes), re-centers via
+  // centerScroll() so it stays centered as it scales instead of following
+  // the cursor. Otherwise (split mode) keeps the content under the given
+  // cursor position fixed on screen instead of drifting toward the
+  // top-left corner.
   const zoomAt = (factor, clientX, clientY) => {
     const vp = viewportRef.current;
     if (!vp) return;
     setScale((oldScale) => {
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, oldScale * factor));
-      if (clientX != null && clientY != null) {
+      if (centered) {
+        requestAnimationFrame(() => centerScroll(newScale));
+      } else if (clientX != null && clientY != null) {
         const rect = vp.getBoundingClientRect();
         const contentX = (clientX - rect.left + vp.scrollLeft) / oldScale;
         const contentY = (clientY - rect.top + vp.scrollTop) / oldScale;
@@ -121,14 +180,19 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
 
   const resetView = () => {
     setScale(1);
-    viewportRef.current?.scrollTo({ top: 0, left: 0 });
+    const vp = viewportRef.current;
+    if (!vp) return;
+    vp.scrollTop = 0;
+    requestAnimationFrame(() => centered ? centerScroll(1) : (vp.scrollLeft = 0));
   };
 
   const fitWidth = () => {
     const vp = viewportRef.current;
     if (!vp || !layout) return;
-    setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, (vp.clientWidth - 32) / layout.pageWidthPx)));
-    vp.scrollTo({ top: 0, left: 0 });
+    const fitScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, (vp.clientWidth - getHorizontalPadding().total) / layout.pageWidthPx));
+    setScale(fitScale);
+    vp.scrollTop = 0;
+    requestAnimationFrame(() => centered ? centerScroll(fitScale) : (vp.scrollLeft = 0));
   };
 
   // React's onWheel prop isn't reliably attached as a non-passive listener
@@ -150,7 +214,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
   }, []);
 
   const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
+    if (!pannable || e.button !== 0) return;
     const vp = viewportRef.current;
     if (!vp) return;
     dragRef.current = { startX: e.clientX, startY: e.clientY, scrollLeft: vp.scrollLeft, scrollTop: vp.scrollTop };
@@ -182,6 +246,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     else if (mod && e.key === '0') { e.preventDefault(); resetView(); }
     else if (e.key === 'PageUp') { e.preventDefault(); goToPage(page - 1); }
     else if (e.key === 'PageDown') { e.preventDefault(); goToPage(page + 1); }
+    else if (!pannable) return;
     else if (e.key === 'ArrowLeft') { e.preventDefault(); vp.scrollLeft -= PAN_STEP_PX; }
     else if (e.key === 'ArrowRight') { e.preventDefault(); vp.scrollLeft += PAN_STEP_PX; }
     else if (e.key === 'ArrowUp') { e.preventDefault(); vp.scrollTop -= PAN_STEP_PX; }
@@ -212,7 +277,10 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
       )}
       {!showToolbar && (
         <>
-          <button className="tk-paged-zoom-badge" onClick={resetView} title="Reset zoom">{Math.round(scale * 100)}%</button>
+          <div className="tk-paged-zoom-badge">
+            <button className="tk-mono-btn" onClick={fitWidth}>Fit width</button>
+            <button className="tk-mono-btn" onClick={resetView} title="Reset zoom">{Math.round(scale * 100)}%</button>
+          </div>
           {layout && layout.numPages > 1 && (
             <div className="tk-paged-nav-badge">
               <button className="tk-mono-btn" onClick={() => goToPage(page - 1)} disabled={page <= 0}>‹</button>
@@ -223,7 +291,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
         </>
       )}
       <div
-        className="tk-paged-viewport"
+        className={`tk-paged-viewport${flush ? ' tk-paged-viewport-flush' : ''}${pannable ? '' : ' tk-paged-viewport-static'}`}
         ref={viewportRef}
         onMouseDown={handleMouseDown}
         onKeyDown={handleKeyDown}
@@ -233,7 +301,10 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
         {!layout || compiling ? (
           <div className="tk-typst-viewer-status">{compiling ? 'Compiling…' : 'Loading…'}</div>
         ) : (
-          <div className="tk-paged-stack" style={{ width: layout.pageWidthPx, transform: `scale(${scale})` }}>
+          <div
+            className={`tk-paged-stack${centered ? ' tk-paged-stack-centered' : ''}`}
+            style={{ width: layout.pageWidthPx, transform: `scale(${scale})` }}
+          >
             <div className="tk-paged-content" dangerouslySetInnerHTML={{ __html: svg }} />
             {Array.from({ length: layout.numPages - 1 }).map((_, i) => (
               <div key={i} className="tk-page-divider" style={{ top: (i + 1) * layout.pageHeightPx }} />

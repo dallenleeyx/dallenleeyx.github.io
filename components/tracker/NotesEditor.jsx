@@ -26,7 +26,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   // from the title to the content placeholder on the next line. One-shot:
   // cleared as soon as it's used, or as soon as another snippet/edit happens.
   const envTabStopRef = useRef(null);
-  const [editPct, setEditPct] = useState(() => { try { return Number(localStorage.getItem('proofLabEditorSplit')) || 50; } catch (e) { return 50; } });
+  const [editPct, setEditPct] = useState(() => { try { return Number(localStorage.getItem('proofLabEditorSplit')) || 35; } catch (e) { return 35; } });
   const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
   // "split" = preview inline, next to the textarea (default). "browser" =
   // preview lives in a separate tab (see app/typst-preview/[courseId]),
@@ -256,7 +256,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
                 <span />
               </div>
               <div className="tk-doc-preview">
-                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} showToolbar={false} />
+                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} mode="split" />
               </div>
             </>
           )}

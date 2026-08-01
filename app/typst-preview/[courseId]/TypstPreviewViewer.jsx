@@ -47,7 +47,7 @@ export function TypstPreviewViewer({ courseId }) {
       {source == null ? (
         <div className="tk-typst-viewer-status">Loading…</div>
       ) : (
-        <PagedTypstViewer source={source} debounceMs={250} showToolbar className="tk-typst-viewer-body" />
+        <PagedTypstViewer source={source} debounceMs={250} mode="popout" className="tk-typst-viewer-body" />
       )}
     </div>
   );

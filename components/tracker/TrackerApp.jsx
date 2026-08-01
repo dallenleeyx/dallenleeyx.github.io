@@ -470,7 +470,7 @@ export function TrackerApp() {
                   )}
                 </div>
                 <div className="tk-doc-preview">
-                  <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' showToolbar={false} />
+                  <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' mode="flush" />
                 </div>
               </div>
             </div>
