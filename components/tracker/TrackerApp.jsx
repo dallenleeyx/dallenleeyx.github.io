@@ -11,6 +11,7 @@ import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, i
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
+import { ZoomableNotes } from './ZoomableNotes';
 import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
@@ -84,6 +85,7 @@ export function TrackerApp() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [pendingScrollId, setPendingScrollId] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
   const docPreviewRef = useRef(null);
 
   useEffect(() => {
@@ -125,6 +127,13 @@ export function TrackerApp() {
   const applySidebar = (open) => {
     setSidebarOpen(open);
     try { localStorage.setItem('proofLabSidebar', open ? 'open' : 'closed'); } catch (e) {}
+  };
+  const toggleToc = () => {
+    setTocCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('proofLabTocCollapsed', next ? '1' : '0'); } catch (e) {}
+      return next;
+    });
   };
   // on a phone the sidebar is a slide-in drawer -- picking a destination
   // should close it so the content underneath is actually visible; on a
@@ -422,15 +431,21 @@ export function TrackerApp() {
                   </button>
                 </div>
               }>Notes</SectionLabel>
-              <div className="tk-doc-preview-layout">
+              <div className={`tk-doc-preview-layout${tocCollapsed ? ' toc-collapsed' : ''}`}>
                 <div className="tk-doc-toc no-print">
-                  <div className="tk-doc-toc-label">Contents</div>
-                  {courseToc.length ? courseToc.map(h => (
-                    <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
-                  )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
+                  <button className="tk-toc-toggle" onClick={toggleToc} title={tocCollapsed ? 'Show contents' : 'Hide contents'}>
+                    {tocCollapsed ? '»' : '« Contents'}
+                  </button>
+                  {!tocCollapsed && (
+                    courseToc.length ? courseToc.map(h => (
+                      <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
+                    )) : <div className="tk-doc-toc-empty">Add a # heading</div>
+                  )}
                 </div>
                 <div className="tk-doc-preview" ref={docPreviewRef}>
-                  {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
+                  <ZoomableNotes>
+                    {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
+                  </ZoomableNotes>
                 </div>
               </div>
             </div>
