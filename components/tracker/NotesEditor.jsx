@@ -7,16 +7,20 @@ import {
   extractTypstToc, MATH_CMDS, ENV_TYPES, ENV_LABELS,
   blockTemplate, mathTemplate, flagInlineTemplate,
 } from '../../lib/typst/snippets';
+import { typstLiveChannelName } from '../../lib/typst/liveChannel';
 import { TypstPreview } from './TypstPreview';
 
 const MIN_EDIT_PCT = 25;
 const MAX_EDIT_PCT = 75;
+const BROADCAST_DEBOUNCE_MS = 250;
 
 export function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
   const layoutRef = useRef(null);
   const dragRef = useRef(null);
   const previewRef = useRef(null);
+  const channelRef = useRef(null);
+  const previewWindowRef = useRef(null);
   const toc = extractTypstToc(doc);
   // After inserting a titled environment (theorem, definition, …), Tab jumps
   // from the title to the content placeholder on the next line. One-shot:
@@ -24,12 +28,44 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   const envTabStopRef = useRef(null);
   const [editPct, setEditPct] = useState(() => { try { return Number(localStorage.getItem('proofLabEditorSplit')) || 50; } catch (e) { return 50; } });
   const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
+  // "split" = preview inline, next to the textarea (default). "browser" =
+  // preview lives in a separate tab (see app/typst-preview/[courseId]),
+  // Overleaf-style, so the editor pane gets the full width instead.
+  const [previewMode, setPreviewMode] = useState(() => { try { return localStorage.getItem('proofLabPreviewMode') || 'split'; } catch (e) { return 'split'; } });
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // Mirrors this course's live source to a BroadcastChannel so a popped-out
+  // "view in browser" preview tab (which has no textarea of its own) stays
+  // in sync as you type here, debounced the same way the inline preview is.
+  useEffect(() => {
+    const channel = new BroadcastChannel(typstLiveChannelName(course.id));
+    channelRef.current = channel;
+    return () => channel.close();
+  }, [course.id]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      channelRef.current?.postMessage({ source: doc || '' });
+    }, BROADCAST_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [doc]);
+
+  const setMode = (mode) => {
+    setPreviewMode(mode);
+    try { localStorage.setItem('proofLabPreviewMode', mode); } catch (e) {}
+  };
+
+  // Reuses the same named window on repeat clicks (instead of piling up
+  // duplicate tabs) and re-focuses it if it's still open.
+  const openPreviewTab = () => {
+    const win = window.open(`/typst-preview/${encodeURIComponent(course.id)}`, `typst-preview-${course.id}`);
+    if (win) { previewWindowRef.current = win; win.focus(); }
+  };
 
   const toggleToc = () => {
     setTocCollapsed((c) => {
@@ -176,7 +212,13 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
       <div className="tk-editor-topbar">
         <button className="tk-mono-btn" onClick={onClose}>← Back</button>
         <div className="tk-editor-course">{course.glyph} · {course.name} — Notes</div>
-        <div style={{ width: 64 }} />
+        <div className="tk-preview-mode-toggle">
+          <button className={`tk-mono-btn${previewMode === 'split' ? ' active' : ''}`} onClick={() => setMode('split')}>Split</button>
+          <button className={`tk-mono-btn${previewMode === 'browser' ? ' active' : ''}`} onClick={() => setMode('browser')}>Browser tab</button>
+          {previewMode === 'browser' && (
+            <button className="tk-mono-btn" onClick={openPreviewTab}>Open preview ↗</button>
+          )}
+        </div>
       </div>
       <div className="tk-doc-toolbar">
         {MATH_CMDS.map(m => (
@@ -201,7 +243,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               )) : <div className="tk-doc-toc-empty">Add a heading (=)</div>
             )}
           </div>
-          <div className="tk-doc-edit" style={{ flexBasis: `${editPct}%` }}>
+          <div className="tk-doc-edit" style={{ flexBasis: previewMode === 'split' ? `${editPct}%` : '100%' }}>
             <textarea
               ref={taRef}
               className="tk-doc-textarea"
@@ -211,12 +253,16 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               onKeyDown={handleKeyDown}
             />
           </div>
-          <div className="tk-resize-handle" onMouseDown={startResize} title="Drag to resize">
-            <span />
-          </div>
-          <div className="tk-doc-preview" ref={previewRef}>
-            <TypstPreview source={doc} debounceMs={400} />
-          </div>
+          {previewMode === 'split' && (
+            <>
+              <div className="tk-resize-handle" onMouseDown={startResize} title="Drag to resize">
+                <span />
+              </div>
+              <div className="tk-doc-preview" ref={previewRef}>
+                <TypstPreview source={doc} debounceMs={400} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
