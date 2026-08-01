@@ -8,8 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
-    "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.1",
+    "@myriaddreamin/typst-ts-renderer": "^0.7.0",
+    "@myriaddreamin/typst-ts-web-compiler": "^0.7.0",
+    "@myriaddreamin/typst.ts": "^0.7.0",
     "katex": "^0.18.1",
     "next": "^16.2.12",
     "next-auth": "5.0.0-beta.32",

@@ -4,14 +4,15 @@
 // and sidebar-collapsed state stay local-only.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { extractToc, renderDoc } from '../../lib/markdown';
 import { useCoursesSync } from '../../lib/useCoursesSync';
-import { exportNotesToPdf } from '../../lib/exportNotesPdf';
+import { extractTypstToc } from '../../lib/typst/snippets';
+import { migrateDocToTypst } from '../../lib/typst/migrate';
+import { exportTypstNotesToPdf } from '../../lib/typst/exportPdf';
+import { TypstPreview } from './TypstPreview';
 import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
-import { ZoomableNotes } from './ZoomableNotes';
 import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
@@ -83,7 +84,7 @@ export function TrackerApp() {
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
   const [searchOpen, setSearchOpen] = useState(false);
-  const [pendingScrollId, setPendingScrollId] = useState(null);
+  const [pendingScrollLine, setPendingScrollLine] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
   const docPreviewRef = useRef(null);
@@ -105,19 +106,42 @@ export function TrackerApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // scrolls to a specific theorem/definition block after a search result
-  // switches the view to its course -- runs again once that course's
-  // section has actually mounted.
+  // Scrolls to (approximately) a specific theorem/definition block after a
+  // search result switches the view to its course. The old renderDoc()
+  // preview gave every block its own DOM id to scroll straight to; the
+  // Typst preview is one compiled SVG with no per-block anchors, so this
+  // instead scrolls the preview to the same fractional position the block
+  // sits at in the source text -- close enough to bring it into view.
   useEffect(() => {
-    if (!pendingScrollId) return;
-    const el = document.getElementById(pendingScrollId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (pendingScrollLine == null) return;
+    const cur = (courses || []).find((c) => c.id === view);
+    const el = docPreviewRef.current;
+    if (!cur || !el) return;
+    const totalLines = Math.max(1, (cur.doc || '').split('\n').length - 1);
+    const raf = requestAnimationFrame(() => {
+      const fraction = Math.min(1, pendingScrollLine / totalLines);
+      const target = fraction * Math.max(0, el.scrollHeight - el.clientHeight);
+      el.scrollTo({ top: target, behavior: 'smooth' });
       el.classList.add('tk-note-block-flash');
       setTimeout(() => el.classList.remove('tk-note-block-flash'), 1600);
-      setPendingScrollId(null);
-    }
-  }, [pendingScrollId, view]);
+      setPendingScrollLine(null);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [pendingScrollLine, view, courses]);
+
+  // One-time, non-destructive migration of every course's notes from the
+  // old markdown-shorthand format to Typst source, the moment courses load.
+  // Done for all courses together (not lazily per-opened course) so
+  // cross-course features (global search, per-course revision flashcards)
+  // never see a mix of old and new formats. The original is kept in
+  // legacyDoc so nothing is lost if the conversion missed something.
+  useEffect(() => {
+    if (!courses) return;
+    if (!courses.some((c) => c.docFormat !== 'typst')) return;
+    setCourses((cs) => cs.map((c) => (c.docFormat === 'typst' ? c : ({
+      ...c, legacyDoc: c.doc, doc: migrateDocToTypst(c.doc), docFormat: 'typst',
+    }))));
+  }, [courses, setCourses]);
 
   const applyTheme = (next) => {
     setTheme(next);
@@ -145,7 +169,7 @@ export function TrackerApp() {
   const goToSearchResult = (courseId, startLine) => {
     setSearchOpen(false);
     navigateTo(courseId);
-    setPendingScrollId('ih-' + startLine);
+    setPendingScrollLine(startLine);
   };
 
   const mutate = useCallback((courseId, fn) => {
@@ -229,20 +253,26 @@ export function TrackerApp() {
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
-  const courseToc = current ? extractToc(current.doc, 'ih-') : [];
+  const courseToc = current ? extractTypstToc(current.doc) : [];
   const weekSchedule = getWeekSchedule(courses, now);
   const weekDue = getWeekDueAssignments(courses, now);
   const weekHolidays = getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' }));
   const weekByDate = groupByDate([...weekHolidays, ...weekDue, ...weekSchedule]);
-  const scrollToHeading = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // The Typst preview is one compiled SVG with no per-heading DOM anchors
+  // (unlike the old renderDoc() JSX tree), so this scrolls to the same
+  // fractional position the heading sits at in the source text instead.
+  const scrollToHeadingLine = (line) => {
+    const el = docPreviewRef.current;
+    if (!el || !current) return;
+    const totalLines = Math.max(1, (current.doc || '').split('\n').length - 1);
+    const fraction = Math.min(1, line / totalLines);
+    el.scrollTo({ top: fraction * Math.max(0, el.scrollHeight - el.clientHeight), behavior: 'smooth' });
   };
   const handleExportPdf = async () => {
-    if (!docPreviewRef.current || exportingPdf) return;
+    if (!current || exportingPdf) return;
     setExportingPdf(true);
     try {
-      await exportNotesToPdf(docPreviewRef.current, current.nickname || current.name);
+      await exportTypstNotesToPdf(current.doc, current.nickname || current.name);
     } catch (e) {
       window.alert('Could not export notes to PDF. Please try again.');
     } finally {
@@ -423,7 +453,7 @@ export function TrackerApp() {
             </div>
 
             <div className="fade-up d2">
-              <SectionLabel sub="hover a red tab to read a flag" actions={
+              <SectionLabel sub="red [FLAG] marks note what you're unsure about" actions={
                 <div className="tk-notes-actions no-print" style={{ display: 'flex', gap: '.5rem' }}>
                   <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setNotesOpenFor(current.id)}>Edit</button>
                   <button className="tk-btn tk-btn-outline tk-btn-sm" disabled={exportingPdf} onClick={handleExportPdf}>
@@ -437,15 +467,13 @@ export function TrackerApp() {
                     {tocCollapsed ? '»' : '« Contents'}
                   </button>
                   {!tocCollapsed && (
-                    courseToc.length ? courseToc.map(h => (
-                      <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
-                    )) : <div className="tk-doc-toc-empty">Add a # heading</div>
+                    courseToc.length ? courseToc.map((h, i) => (
+                      <a key={i} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeadingLine(h.line)}>{h.text || 'Untitled'}</a>
+                    )) : <div className="tk-doc-toc-empty">Add a heading (=)</div>
                   )}
                 </div>
                 <div className="tk-doc-preview" ref={docPreviewRef}>
-                  <ZoomableNotes>
-                    {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
-                  </ZoomableNotes>
+                  <TypstPreview source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' />
                 </div>
               </div>
             </div>
