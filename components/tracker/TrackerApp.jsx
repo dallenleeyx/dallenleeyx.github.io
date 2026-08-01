@@ -11,7 +11,6 @@ import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, i
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
-import { ZoomableNotes } from './ZoomableNotes';
 import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
@@ -443,9 +442,7 @@ export function TrackerApp() {
                   )}
                 </div>
                 <div className="tk-doc-preview" ref={docPreviewRef}>
-                  <ZoomableNotes>
-                    {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
-                  </ZoomableNotes>
+                  {(current.doc || '').trim() ? renderDoc(current.doc, 'ih-') : <div className="tk-note-p tk-note-empty">Nothing written yet. Click "Edit" to start.</div>}
                 </div>
               </div>
             </div>

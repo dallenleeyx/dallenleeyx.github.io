@@ -5,7 +5,6 @@ import {
   extractToc, renderDoc, MATH_CMDS, ENV_TYPES, ENV_LABELS,
   blockTemplate, mathTemplate, flagInlineTemplate,
 } from '../../lib/markdown';
-import { ZoomableNotes } from './ZoomableNotes';
 
 const MIN_EDIT_PCT = 25;
 const MAX_EDIT_PCT = 75;
@@ -204,9 +203,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
             <span />
           </div>
           <div className="tk-doc-preview" style={{ flexBasis: `${100 - editPct}%` }}>
-            <ZoomableNotes>
-              {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
-            </ZoomableNotes>
+            {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
           </div>
         </div>
       </div>
