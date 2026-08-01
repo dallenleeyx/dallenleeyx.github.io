@@ -131,11 +131,23 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     vp.scrollTo({ top: 0, left: 0 });
   };
 
-  const handleWheel = (e) => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    zoomAt(e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP, e.clientX, e.clientY);
-  };
+  // React's onWheel prop isn't reliably attached as a non-passive listener
+  // across browsers/versions -- when it isn't, preventDefault() is
+  // silently ignored (Chrome logs a console warning for exactly this) and
+  // Ctrl+wheel falls through to the browser's own page zoom instead of
+  // being caught here. Attaching the listener manually with an explicit
+  // {passive:false} guarantees preventDefault actually takes effect.
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const onWheel = (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      zoomAt(e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP, e.clientX, e.clientY);
+    };
+    vp.addEventListener('wheel', onWheel, { passive: false });
+    return () => vp.removeEventListener('wheel', onWheel);
+  }, []);
 
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -213,7 +225,6 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
       <div
         className="tk-paged-viewport"
         ref={viewportRef}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onKeyDown={handleKeyDown}
         onScroll={handleScroll}
