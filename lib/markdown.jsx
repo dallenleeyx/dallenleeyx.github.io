@@ -63,6 +63,13 @@ export function extractToc(doc, idPrefix) {
 // corollary | example | remark | proof  Name?  …body…  :::
 export const ENV_LABELS = { theorem: 'Theorem', proposition: 'Proposition', definition: 'Definition', lemma: 'Lemma', corollary: 'Corollary', example: 'Example', remark: 'Remark', proof: 'Proof' };
 export const ENV_TYPES = Object.keys(ENV_LABELS);
+// Mirrors amsthm's two standard theorem styles: "plain" (theorem/lemma/
+// proposition/corollary) sets the body in italics, "definition" style
+// (definition/example/remark) keeps it upright -- both share one running
+// number, like a textbook's "Theorem 2.4, Definition 2.5, ...". `proof`
+// is unnumbered and styled separately (see renderDoc).
+const NUMBERED_TYPES = new Set(['theorem', 'proposition', 'definition', 'lemma', 'corollary', 'example', 'remark']);
+const ITALIC_BODY_TYPES = new Set(['theorem', 'proposition', 'lemma', 'corollary']);
 export const MATH_CMDS = [
   { cmd: 'mathcal', glyph: '𝒜' },
   { cmd: 'mathfrak', glyph: '𝔄' },
@@ -171,6 +178,9 @@ export function renderDoc(text, idPrefix) {
   const lines = String(text || '').split('\n');
   const out = [];
   let para = [], list = [], quote = [];
+  // shared running number for every numbered env block encountered in this
+  // pass, textbook-style ("Theorem 1", "Definition 2", "Lemma 3", ...).
+  let blockCounter = 0;
   const flushPara = () => { if (para.length) { out.push(<p key={'p' + out.length} className="tk-note-p">{renderInline(para.join(' '), 'p' + out.length)}</p>); para = []; } };
   const flushList = () => { if (list.length) { out.push(<ul key={'ul' + out.length} className="tk-note-ul">{list.map((it, li) => <li key={li}>{renderInline(it, 'li' + out.length + '-' + li)}</li>)}</ul>); list = []; } };
   const flushQuote = () => { if (quote.length) { out.push(<blockquote key={'bq' + out.length} className="tk-note-bq">{renderInline(quote.join(' '), 'bq' + out.length)}</blockquote>); quote = []; } };
@@ -200,13 +210,21 @@ export function renderDoc(text, idPrefix) {
         continue;
       }
       const label = ENV_LABELS[type] || type;
+      const isProof = type === 'proof';
+      const numbered = NUMBERED_TYPES.has(type);
+      if (numbered) blockCounter += 1;
+      const bodyClass = isProof || !ITALIC_BODY_TYPES.has(type) ? 'tk-block-body-upright' : 'tk-block-body-italic';
       out.push(
-        <div key={'blk' + out.length} id={px + blockStartLine} className="tk-note-block">
+        <div key={'blk' + out.length} id={px + blockStartLine} className={`tk-note-block tk-block-${type}`}>
           <div className="tk-note-block-head">
-            <span className="tk-type">{label}</span>
-            {name && <span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>}
+            <span className={isProof ? 'tk-block-label tk-block-label-proof' : 'tk-block-label'}>
+              {label}{numbered ? ` ${blockCounter}` : ''}
+              {name && <> (<span className="tk-note-block-name">{renderInline(name, 'bn' + out.length)}</span>)</>}
+              {'.'}
+            </span>
           </div>
-          <div className="tk-note-block-body">{renderDoc(bodyLines.join('\n'), px)}</div>
+          <div className={`tk-note-block-body ${bodyClass}`}>{renderDoc(bodyLines.join('\n'), px)}</div>
+          {isProof && <div className="tk-qed-row"><span className="tk-qed" aria-hidden="true">∎</span></div>}
         </div>
       );
       continue;

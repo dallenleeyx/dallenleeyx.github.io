@@ -1,24 +1,64 @@
 'use client';
 // components/tracker/NotesEditor.jsx — full-screen, Overleaf-style notes editor
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   extractToc, renderDoc, MATH_CMDS, ENV_TYPES, ENV_LABELS,
   blockTemplate, mathTemplate, flagInlineTemplate,
 } from '../../lib/markdown';
+import { ZoomableNotes } from './ZoomableNotes';
+
+const MIN_EDIT_PCT = 25;
+const MAX_EDIT_PCT = 75;
 
 export function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
+  const layoutRef = useRef(null);
+  const dragRef = useRef(null);
   const toc = extractToc(doc, 'nh-');
   // After inserting a titled environment (theorem, definition, …), Tab jumps
   // from the title to the content placeholder on the next line. One-shot:
   // cleared as soon as it's used, or as soon as another snippet/edit happens.
   const envTabStopRef = useRef(null);
+  const [editPct, setEditPct] = useState(() => { try { return Number(localStorage.getItem('proofLabEditorSplit')) || 50; } catch (e) { return 50; } });
+  const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const toggleToc = () => {
+    setTocCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('proofLabTocCollapsed', next ? '1' : '0'); } catch (e) {}
+      return next;
+    });
+  };
+
+  // Draggable divider between the edit and preview panes -- lets you weight
+  // the split toward whichever you're using, instead of a fixed 50/50.
+  const startResize = (e) => {
+    e.preventDefault();
+    const rect = layoutRef.current.getBoundingClientRect();
+    dragRef.current = { rect };
+    const onMove = (ev) => {
+      const { rect: r } = dragRef.current;
+      const pct = ((ev.clientX - r.left) / r.width) * 100;
+      setEditPct(Math.min(MAX_EDIT_PCT, Math.max(MIN_EDIT_PCT, pct)));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      dragRef.current = null;
+      setEditPct((pct) => {
+        try { localStorage.setItem('proofLabEditorSplit', String(pct)); } catch (err) {}
+        return pct;
+      });
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   const insertSnippet = ({ text, selStart, selEnd, hasName }, blockLevel) => {
     const ta = taRef.current;
@@ -139,14 +179,18 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
         <button className="tk-mono-btn tk-flag-toolbar-btn" onClick={() => insertSnippet(flagInlineTemplate(), false)}>🚩 Flag</button>
       </div>
       <div className="tk-editor-body">
-        <div className="tk-doc-layout">
+        <div className={`tk-doc-layout${tocCollapsed ? ' toc-collapsed' : ''}`} ref={layoutRef}>
           <div className="tk-doc-toc">
-            <div className="tk-doc-toc-label">Contents</div>
-            {toc.length ? toc.map(h => (
-              <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
-            )) : <div className="tk-doc-toc-empty">Add a # heading</div>}
+            <button className="tk-toc-toggle" onClick={toggleToc} title={tocCollapsed ? 'Show contents' : 'Hide contents'}>
+              {tocCollapsed ? '»' : '« Contents'}
+            </button>
+            {!tocCollapsed && (
+              toc.length ? toc.map(h => (
+                <a key={h.id} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeading(h.id)}>{h.text || 'Untitled'}</a>
+              )) : <div className="tk-doc-toc-empty">Add a # heading</div>
+            )}
           </div>
-          <div className="tk-doc-edit">
+          <div className="tk-doc-edit" style={{ flexBasis: `${editPct}%` }}>
             <textarea
               ref={taRef}
               className="tk-doc-textarea"
@@ -156,8 +200,13 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
               onKeyDown={handleKeyDown}
             />
           </div>
-          <div className="tk-doc-preview">
-            {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+          <div className="tk-resize-handle" onMouseDown={startResize} title="Drag to resize">
+            <span />
+          </div>
+          <div className="tk-doc-preview" style={{ flexBasis: `${100 - editPct}%` }}>
+            <ZoomableNotes>
+              {(doc || '').trim() ? renderDoc(doc, 'nh-') : <div className="tk-note-p tk-note-empty">Nothing written yet.</div>}
+            </ZoomableNotes>
           </div>
         </div>
       </div>
