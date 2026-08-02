@@ -22,7 +22,6 @@ import { ArchiveTab } from './ArchiveTab';
 import { GradeComponents } from './GradeComponents';
 import { VisualizerPost } from './visualizers/VisualizerPost';
 import { AddVisualizerModal } from './visualizers/AddVisualizerModal';
-import { VISUALIZER_TYPES } from './visualizers/registry';
 import { SearchModal } from './SearchModal';
 import { ImportBanner } from './ImportBanner';
 
@@ -269,18 +268,14 @@ export function TrackerApp() {
     setEditCourseFor(null);
   };
   const setArchived = (cid, archived) => updateCourseMeta(cid, { archived });
-  const addVisualizer = (cid, { type, title, caption }) => {
-    const entry = VISUALIZER_TYPES[type];
-    if (!entry) return;
+  const addVisualizer = (cid, { title, caption, code }) => {
     mutate(cid, c => ({
       ...c,
-      visualizers: [...(c.visualizers || []), {
-        id: 'vz' + newId(), type, title, caption, params: { ...entry.defaultParams }, createdAt: Date.now(),
-      }],
+      visualizers: [...(c.visualizers || []), { id: 'vz' + newId(), title, caption, code, createdAt: Date.now() }],
     }));
   };
-  const updateVisualizerParams = (cid, vid, params) =>
-    mutate(cid, c => ({ ...c, visualizers: (c.visualizers || []).map(v => v.id === vid ? { ...v, params } : v) }));
+  const updateVisualizerCode = (cid, vid, code) =>
+    mutate(cid, c => ({ ...c, visualizers: (c.visualizers || []).map(v => v.id === vid ? { ...v, code } : v) }));
   const removeVisualizer = (cid, vid) =>
     mutate(cid, c => ({ ...c, visualizers: (c.visualizers || []).filter(v => v.id !== vid) }));
 
@@ -629,7 +624,7 @@ export function TrackerApp() {
                     <VisualizerPost
                       key={post.id}
                       post={post}
-                      onChangeParams={(params) => updateVisualizerParams(current.id, post.id, params)}
+                      onSaveCode={(code) => updateVisualizerCode(current.id, post.id, code)}
                       onRemove={() => removeVisualizer(current.id, post.id)}
                     />
                   ))}
