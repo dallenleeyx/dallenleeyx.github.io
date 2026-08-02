@@ -17,6 +17,8 @@ import { Revision } from './Revision';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
 import { CalendarTab } from './CalendarTab';
+import { ArchiveTab } from './ArchiveTab';
+import { GradeComponents } from './GradeComponents';
 import { SearchModal } from './SearchModal';
 import { ImportBanner } from './ImportBanner';
 
@@ -81,6 +83,7 @@ export function TrackerApp() {
   const [sidebarOpen, setSidebarOpen] = useState(() => { try { return localStorage.getItem('proofLabSidebar') !== 'closed'; } catch (e) { return true; } });
   const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
   const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
+  const [gradesOpenFor, setGradesOpenFor] = useState(null); // course id | null
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
   const [searchOpen, setSearchOpen] = useState(false);
@@ -201,8 +204,10 @@ export function TrackerApp() {
     if (view === cid) setView('dashboard');
     if (notesOpenFor === cid) setNotesOpenFor(null);
     if (revisionOpenFor === cid) setRevisionOpenFor(null);
+    if (gradesOpenFor === cid) setGradesOpenFor(null);
     setEditCourseFor(null);
   };
+  const setArchived = (cid, archived) => updateCourseMeta(cid, { archived });
 
   // an entry "matches" an existing one if title/venue/time and either the
   // same weekday (recurring) or the same date (one-off) agree -- used to
@@ -241,18 +246,25 @@ export function TrackerApp() {
   }
 
   const current = courses.find(c => c.id === view);
+  // Archived courses (marked done-with, via the course page's Archive
+  // button) stay in the data forever -- notes/assignments are still
+  // reachable by opening them from the Archive tab -- but drop out of
+  // every "active" list below so a finished course doesn't keep cluttering
+  // the sidebar, dashboard stats, and upcoming/schedule widgets.
+  const activeCourses = courses.filter(c => !c.archived);
+  const archivedCourses = courses.filter(c => c.archived);
   const totals = {
-    all: courses.reduce((s, c) => s + c.assignments.length, 0),
-    done: courses.reduce((s, c) => s + c.assignments.filter(a => a.status === 'done').length, 0),
+    all: activeCourses.reduce((s, c) => s + c.assignments.length, 0),
+    done: activeCourses.reduce((s, c) => s + c.assignments.filter(a => a.status === 'done').length, 0),
   };
-  const upcoming = courses
+  const upcoming = activeCourses
     .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
   const courseToc = current ? extractTypstToc(current.doc) : [];
-  const weekSchedule = getWeekSchedule(courses, now);
-  const weekDue = getWeekDueAssignments(courses, now);
+  const weekSchedule = getWeekSchedule(activeCourses, now);
+  const weekDue = getWeekDueAssignments(activeCourses, now);
   const weekHolidays = getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' }));
   const weekByDate = groupByDate([...weekHolidays, ...weekDue, ...weekSchedule]);
   // The Typst preview is one compiled SVG with no per-heading DOM anchors
@@ -306,7 +318,7 @@ export function TrackerApp() {
         </button>
         <ul className="tk-nav">
           <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => navigateTo('dashboard')}><span className="dot" />Dashboard</a></li>
-          {courses.map(c => (
+          {activeCourses.map(c => (
             <li key={c.id}>
               <a className={view === c.id ? 'active' : ''} onClick={() => navigateTo(c.id)}>
                 <span className="dot" />{c.nickname}
@@ -315,6 +327,7 @@ export function TrackerApp() {
             </li>
           ))}
           <li><a className="tk-nav-add" onClick={() => setAddCourseOpen(true)}><span className="dot" />+ Add course</a></li>
+          <li><a className={view === 'archive' ? 'active' : ''} onClick={() => navigateTo('archive')}><span className="dot" />🗄 Archive{archivedCourses.length > 0 && <span className="count">{archivedCourses.length}</span>}</a></li>
         </ul>
         <Calendar courses={courses} cursor={calCursor} selected={selectedDate} onSelect={setSelectedDate}
           onShift={(d) => { setSelectedDate(null); setCalCursor(({ y, m }) => { let nm = m + d, ny = y; if (nm < 0) { nm = 11; ny--; } if (nm > 11) { nm = 0; ny++; } return { y: ny, m: nm }; }); }} />
@@ -392,7 +405,7 @@ export function TrackerApp() {
             <div className="fade-up d3">
               <SectionLabel>Courses</SectionLabel>
               <div className="tk-jump-grid">
-                {courses.map(c => {
+                {activeCourses.map(c => {
                   const done = c.assignments.filter(a => a.status === 'done').length;
                   const pct = c.assignments.length ? Math.round(done / c.assignments.length * 100) : 0;
                   return (
@@ -427,6 +440,10 @@ export function TrackerApp() {
                 </div>
                 <div style={{ display: 'flex', gap: '.6rem' }}>
                   <button className="tk-btn tk-btn-outline" onClick={() => setRevisionOpenFor(current.id)}>Revision</button>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setGradesOpenFor(current.id)}>Grades</button>
+                  <button className="tk-btn tk-btn-outline" onClick={() => setArchived(current.id, !current.archived)}>
+                    {current.archived ? 'Unarchive' : 'Archive'}
+                  </button>
                   <button className="tk-btn tk-btn-outline" onClick={() => setEditCourseFor(current.id)}>Edit</button>
                 </div>
               </div>
@@ -478,7 +495,11 @@ export function TrackerApp() {
         )}
 
         {view === 'calendar' && (
-          <CalendarTab courses={courses} onAddEntry={addSchedule} onRemoveEntry={removeSchedule} onImport={importSchedules} />
+          <CalendarTab courses={activeCourses} onAddEntry={addSchedule} onRemoveEntry={removeSchedule} onImport={importSchedules} />
+        )}
+
+        {view === 'archive' && (
+          <ArchiveTab courses={archivedCourses} onOpen={setView} onUnarchive={(cid) => setArchived(cid, false)} />
         )}
       </main>
 
@@ -492,6 +513,18 @@ export function TrackerApp() {
         const c = courses.find(x => x.id === revisionOpenFor);
         if (!c) return null;
         return <Revision course={c} onClose={() => setRevisionOpenFor(null)} />;
+      })()}
+
+      {gradesOpenFor && (() => {
+        const c = courses.find(x => x.id === gradesOpenFor);
+        if (!c) return null;
+        return (
+          <GradeComponents
+            course={c}
+            onClose={() => setGradesOpenFor(null)}
+            onChange={(gradeComponents) => updateCourseMeta(c.id, { gradeComponents })}
+          />
+        );
       })()}
 
       {addCourseOpen && <AddCourseModal onClose={() => setAddCourseOpen(false)} onCreate={addCourse} />}

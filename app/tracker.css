@@ -165,6 +165,8 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-jump-add{display:flex;flex-direction:column;align-items:center;justify-content:center;border-style:dashed;color:var(--fg-muted);text-align:center;}
 .tk-jump-add:hover{color:var(--accent);}
 .tk-jump-add-plus{font-size:1.4rem;font-weight:800;margin-bottom:.3rem;}
+.tk-jump-archived{display:flex;flex-direction:column;align-items:flex-start;}
+.tk-jump-archived .tk-jump-meta{margin-bottom:.5rem;}
 
 /* Empty states */
 .tk-empty{text-align:center;padding:2.5rem 2rem;border:1px dashed var(--border);border-radius:var(--radius-lg);color:var(--fg-muted);}
@@ -362,6 +364,25 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-revision-proof{margin-top:.9rem;padding:.9rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);animation:fadeIn .25s ease both;}
 .tk-revision-proof-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
 .tk-revision-foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:.6rem;flex-wrap:wrap;}
+
+/* Grade components -- same card chrome as Revision, wider since each row
+   packs name + weight + score + remove into one line. */
+.tk-grades-card{pointer-events:auto;width:min(720px,94vw);max-height:85vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
+.tk-grade-stats{display:flex;gap:1.4rem;margin-bottom:1.4rem;}
+.tk-grade-list{margin-bottom:1.2rem;}
+.tk-grade-row{gap:.7rem;flex-wrap:nowrap;}
+.tk-grade-name{flex:1;min-width:0;}
+.tk-grade-weight{display:flex;align-items:center;gap:.35rem;flex-shrink:0;color:var(--fg-muted);font-size:.75rem;}
+.tk-grade-weight-input{width:4.2rem;text-align:right;flex-shrink:0;}
+.tk-grade-score{display:flex;align-items:center;gap:.35rem;flex-shrink:0;color:var(--fg-muted);}
+.tk-grade-score-input{width:4.2rem;text-align:right;flex-shrink:0;}
+.tk-grade-add-row{margin-bottom:1.2rem;align-items:center;}
+.tk-grade-goal-toggle-row{margin-bottom:.9rem;}
+.tk-grade-goal-toggle-row .tk-mono-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.tk-grade-goal-panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem 1.1rem;animation:fadeIn .2s ease both;}
+.tk-grade-goal-result{font-size:.85rem;color:var(--fg-2);line-height:1.5;margin:0;}
+.tk-grade-goal-result.good{color:#1a9c5c;}
+.tk-grade-goal-result.bad{color:#d1453b;}
 
 /* Dashboard: this week's schedule, combined across all courses */
 .tk-week-schedule{display:flex;flex-direction:column;gap:1rem;}
