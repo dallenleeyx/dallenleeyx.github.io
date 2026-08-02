@@ -7,14 +7,14 @@
 // Three call sites, three `mode`s -- all three are centered and
 // center-anchored on zoom (stays centered as you scale instead of
 // drifting toward wherever the cursor happens to be):
-// - "split": the notes editor's inline preview pane. No padding (matches
-//   the read-only course-page preview's sizing, which is the reference
-//   look) and pannable (click-drag + arrow keys), compact badges.
+// - "split": the notes editor's inline preview pane. Padded (matches
+//   "popout" -- flush/edge-to-edge made the zoom badges sit right on top
+//   of the page content with no breathing room) and pannable (click-drag
+//   + arrow keys), compact badges.
 // - "flush": the read-only course-page preview. No padding, and NOT
 //   pannable (plain vertical scroll only -- no click-drag, no arrow-key
 //   panning), compact badges.
-// - "popout": the dedicated "view in browser" tab. Padded (it's a whole
-//   dedicated tab, so the breathing room reads fine there), pannable,
+// - "popout": the dedicated "view in browser" tab. Padded, pannable,
 //   full toolbar.
 //
 // Two SVG <use>-based tricks were tried here first (duplicating the full
@@ -62,7 +62,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
 ) {
   const showToolbar = mode === 'popout';
   const pannable = mode !== 'flush';
-  const padded = mode === 'popout';
+  const padded = mode !== 'flush';
 
   const { svg, error, compiling } = useCompiledSvg(source, debounceMs);
   const layout = useMemo(() => (svg ? computePageLayout(svg) : null), [svg]);
