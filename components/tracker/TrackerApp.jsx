@@ -20,6 +20,9 @@ import { EditCourseModal } from './EditCourseModal';
 import { CalendarTab } from './CalendarTab';
 import { ArchiveTab } from './ArchiveTab';
 import { GradeComponents } from './GradeComponents';
+import { VisualizerPost } from './visualizers/VisualizerPost';
+import { AddVisualizerModal } from './visualizers/AddVisualizerModal';
+import { VISUALIZER_TYPES } from './visualizers/registry';
 import { SearchModal } from './SearchModal';
 import { ImportBanner } from './ImportBanner';
 
@@ -131,6 +134,7 @@ export function TrackerApp() {
   const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
   const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
   const [gradesOpenFor, setGradesOpenFor] = useState(null); // course id | null
+  const [addVisualizerOpen, setAddVisualizerOpen] = useState(false);
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
   const [searchOpen, setSearchOpen] = useState(false);
@@ -261,9 +265,24 @@ export function TrackerApp() {
     if (notesOpenFor === cid) setNotesOpenFor(null);
     if (revisionOpenFor === cid) setRevisionOpenFor(null);
     if (gradesOpenFor === cid) setGradesOpenFor(null);
+    setAddVisualizerOpen(false);
     setEditCourseFor(null);
   };
   const setArchived = (cid, archived) => updateCourseMeta(cid, { archived });
+  const addVisualizer = (cid, { type, title, caption }) => {
+    const entry = VISUALIZER_TYPES[type];
+    if (!entry) return;
+    mutate(cid, c => ({
+      ...c,
+      visualizers: [...(c.visualizers || []), {
+        id: 'vz' + newId(), type, title, caption, params: { ...entry.defaultParams }, createdAt: Date.now(),
+      }],
+    }));
+  };
+  const updateVisualizerParams = (cid, vid, params) =>
+    mutate(cid, c => ({ ...c, visualizers: (c.visualizers || []).map(v => v.id === vid ? { ...v, params } : v) }));
+  const removeVisualizer = (cid, vid) =>
+    mutate(cid, c => ({ ...c, visualizers: (c.visualizers || []).filter(v => v.id !== vid) }));
 
   // an entry "matches" an existing one if title/venue/time and either the
   // same weekday (recurring) or the same date (one-off) agree -- used to
@@ -599,6 +618,24 @@ export function TrackerApp() {
                 </div>
               </div>
             </div>
+
+            <div className="fade-up d2 no-print">
+              <SectionLabel actions={
+                <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setAddVisualizerOpen(true)}>+ New visualizer</button>
+              }>Visualizers</SectionLabel>
+              {current.visualizers && current.visualizers.length ? (
+                <div className="tk-viz-feed">
+                  {[...current.visualizers].sort((a, b) => b.createdAt - a.createdAt).map(post => (
+                    <VisualizerPost
+                      key={post.id}
+                      post={post}
+                      onChangeParams={(params) => updateVisualizerParams(current.id, post.id, params)}
+                      onRemove={() => removeVisualizer(current.id, post.id)}
+                    />
+                  ))}
+                </div>
+              ) : <Empty icon="📈">No visualizers yet — add one to explore a concept interactively.</Empty>}
+            </div>
           </section>
         )}
 
@@ -634,6 +671,13 @@ export function TrackerApp() {
           />
         );
       })()}
+
+      {addVisualizerOpen && current && (
+        <AddVisualizerModal
+          onClose={() => setAddVisualizerOpen(false)}
+          onCreate={(fields) => { addVisualizer(current.id, fields); setAddVisualizerOpen(false); }}
+        />
+      )}
 
       {addCourseOpen && <AddCourseModal onClose={() => setAddCourseOpen(false)} onCreate={addCourse} />}
       {courseToEdit && (
