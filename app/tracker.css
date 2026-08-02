@@ -166,6 +166,14 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-grade-bar-track{flex:1;height:6px;border-radius:3px;background:var(--border);overflow:hidden;}
 .tk-grade-bar-fill{height:100%;border-radius:3px;transition:width .9s cubic-bezier(.16,1,.3,1);}
 .tk-grade-bar-pct{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-muted);min-width:2.6rem;text-align:right;flex-shrink:0;}
+/* The overall weighted grade sits above the per-component bars -- already
+   visually set apart by being thick, --accent-colored (black in light
+   mode, white in dark -- this app's monochrome accent), and glowing via
+   an accent-colored box-shadow, so no divider line is needed too. */
+.tk-grade-total-row{display:flex;align-items:center;gap:.9rem;margin-bottom:.5rem;}
+.tk-grade-total-track{flex:1;height:16px;border-radius:8px;background:var(--border);overflow:hidden;}
+.tk-grade-total-fill{height:100%;border-radius:8px;background:var(--accent);box-shadow:0 0 16px var(--accent),0 0 5px var(--accent);transition:width .9s cubic-bezier(.16,1,.3,1);}
+.tk-grade-total-pct{font-family:var(--font-mono);font-size:1.05rem;font-weight:800;color:var(--fg-1);min-width:3.8rem;text-align:right;flex-shrink:0;}
 
 /* Jump-in grid */
 .tk-jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;}

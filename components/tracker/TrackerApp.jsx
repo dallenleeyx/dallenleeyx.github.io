@@ -97,6 +97,28 @@ function GradeBarRow({ name, pct, color }) {
   );
 }
 
+// The overall weighted grade, set apart from the per-component bars below
+// it (thicker, --accent-colored so it's black in light mode / white in
+// dark mode, glowing) since it's a different kind of number -- not one
+// component's score, but all of them combined by weight.
+function GradeTotalBar({ pct }) {
+  const target = Math.max(0, Math.min(100, pct));
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setWidth(target));
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return (
+    <div className="tk-grade-total-row">
+      <div className="tk-grade-bar-label">Overall</div>
+      <div className="tk-grade-total-track">
+        <div className="tk-grade-total-fill" style={{ width: `${width}%` }} />
+      </div>
+      <div className="tk-grade-total-pct">{target.toFixed(1)}%</div>
+    </div>
+  );
+}
+
 export function TrackerApp() {
   const { courses, setCourses, loading, offline, seeded, importData } = useCoursesSync();
   const [importDismissed, setImportDismissed] = useState(false);
@@ -525,6 +547,7 @@ export function TrackerApp() {
               <div className="fade-up d1 no-print">
                 <SectionLabel sub={`${currentGradeSummary.gradedWeight}% of ${currentGradeSummary.totalWeight}% graded`}>Grade progress</SectionLabel>
                 <div className="tk-grade-bars">
+                  <GradeTotalBar pct={currentGradeSummary.currentGrade} />
                   {current.gradeComponents.filter(hasScore).map((gc, i) => (
                     <GradeBarRow
                       key={gc.id}
