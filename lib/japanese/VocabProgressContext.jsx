@@ -37,9 +37,18 @@ function lessonKey(level, lesson) {
 // Shared shape for all three per-word progress stores (flashcards' correct/
 // wrong bookkeeping isn't used, but the mastered/weak flag semantics are
 // identical: "mastered"/"weak" reflect only the LAST sitting with this word).
+//
+// Starts empty (SSR-safe) and restores the real saved value only after
+// mount -- see ThemeProvider.jsx's file-level comment for why reading
+// localStorage inside useState()'s initializer itself causes a hydration
+// mismatch. The `hydrated` gate stops the save-effect from firing with the
+// not-yet-restored empty store and overwriting the real saved data before
+// it's even been read.
 function useProgressStore(storageKey, syncKey) {
-  const [store, setStore] = useState(() => loadJSON(storageKey, {}));
-  useEffect(() => { saveJSON(storageKey, store); }, [store]);
+  const [store, setStore] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setStore(loadJSON(storageKey, {})); setHydrated(true); }, []);
+  useEffect(() => { if (hydrated) saveJSON(storageKey, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection(syncKey, {
     get: () => store,
@@ -76,12 +85,19 @@ function useProgressStore(storageKey, syncKey) {
 // instead, since Vocab and Grammar are independently-mounted sections, not
 // sequential owners of one shared store).
 function useVocabMasteryStores() {
-  const [fc, setFc] = useState(() => loadJSON(FC_MASTERY_KEY, {}));
-  const [kw, setKw] = useState(() => loadJSON(KW_MASTERY_KEY, {}));
-  const [fg, setFg] = useState(() => loadJSON(FG_MASTERY_KEY, {}));
-  useEffect(() => { saveJSON(FC_MASTERY_KEY, fc); }, [fc]);
-  useEffect(() => { saveJSON(KW_MASTERY_KEY, kw); }, [kw]);
-  useEffect(() => { saveJSON(FG_MASTERY_KEY, fg); }, [fg]);
+  const [fc, setFc] = useState({});
+  const [kw, setKw] = useState({});
+  const [fg, setFg] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setFc(loadJSON(FC_MASTERY_KEY, {}));
+    setKw(loadJSON(KW_MASTERY_KEY, {}));
+    setFg(loadJSON(FG_MASTERY_KEY, {}));
+    setHydrated(true);
+  }, []);
+  useEffect(() => { if (hydrated) saveJSON(FC_MASTERY_KEY, fc); }, [fc, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(KW_MASTERY_KEY, kw); }, [kw, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(FG_MASTERY_KEY, fg); }, [fg, hydrated]);
 
   const schedulePush = useSyncSection('vocabMastery', {
     get: () => ({ fc, kw, fg }),

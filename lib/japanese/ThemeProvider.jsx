@@ -12,13 +12,30 @@ const THEME_KEY = 'jpstudy_theme_v1';
 const JapaneseThemeContext = createContext(null);
 
 export function JapaneseThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem(THEME_KEY) || 'light'; } catch (e) { return 'light'; }
-  });
+  // Starts at the SSR-safe default and restores the real saved value only
+  // after mount -- localStorage doesn't exist server-side, so reading it
+  // inside useState()'s initializer would make the server always render
+  // 'light' while the client's very first paint could already show
+  // 'dark' (whatever was previously saved), a hydration mismatch on the
+  // data-jp-theme attribute JapaneseAppShell sets from this value. The
+  // `hydrated` gate stops the save-effect from firing with the
+  // not-yet-restored default and overwriting the real saved value before
+  // it's even been read.
+  const [theme, setTheme] = useState('light');
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved) setTheme(saved);
+    } catch (e) {}
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
-  }, [theme]);
+  }, [theme, hydrated]);
 
   return (
     <JapaneseThemeContext.Provider value={{ theme, setTheme }}>

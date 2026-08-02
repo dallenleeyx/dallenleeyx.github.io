@@ -30,9 +30,17 @@ function lessonKey(level, lesson) {
   return `${level}::${lesson}`;
 }
 
+// Both stores below start empty (SSR-safe) and restore the real saved
+// value only after mount -- see ThemeProvider.jsx's file-level comment for
+// why reading localStorage inside useState()'s initializer itself causes a
+// hydration mismatch. The `hydrated` gate stops the save-effect from
+// firing with the not-yet-restored empty store and overwriting the real
+// saved data before it's even been read.
 function useSrsStore() {
-  const [store, setStore] = useState(() => loadJSON(GP_SRS_KEY, {}));
-  useEffect(() => { saveJSON(GP_SRS_KEY, store); }, [store]);
+  const [store, setStore] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setStore(loadJSON(GP_SRS_KEY, {})); setHydrated(true); }, []);
+  useEffect(() => { if (hydrated) saveJSON(GP_SRS_KEY, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection('srs', {
     get: () => store,
@@ -60,8 +68,10 @@ function useSrsStore() {
 }
 
 function useMasteryStore() {
-  const [store, setStore] = useState(() => loadJSON(GP_MASTERY_KEY, {}));
-  useEffect(() => { saveJSON(GP_MASTERY_KEY, store); }, [store]);
+  const [store, setStore] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setStore(loadJSON(GP_MASTERY_KEY, {})); setHydrated(true); }, []);
+  useEffect(() => { if (hydrated) saveJSON(GP_MASTERY_KEY, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection('grammarMastery', {
     get: () => store,

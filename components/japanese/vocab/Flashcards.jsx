@@ -1,8 +1,8 @@
 'use client';
 // components/japanese/vocab/Flashcards.jsx — quizzable word<->meaning with a
 // mastery queue (see lib/japanese/masteryQueue.js) and a "practice weak
-// words" mode. Flipping a card speaks its reading aloud via the browser's
-// built-in text-to-speech.
+// words" mode. Flipping a card speaks its reading aloud via Google Cloud
+// TTS (see lib/japanese/speak.js).
 import { useEffect, useState } from 'react';
 import { VOCAB_DATA } from '../../../lib/japanese/data/vocab';
 import { useJapaneseI18n } from '../../../lib/japanese/I18nProvider';

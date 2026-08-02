@@ -29,18 +29,32 @@ function saveJSON(key, value) {
 const PlanContext = createContext(null);
 
 export function PlanProvider({ children }) {
-  const [plan, setPlanState] = useState(() => ({ ...defaultPlan(), ...loadJSON(PLAN_KEY, {}) }));
-  const [planDone, setPlanDone] = useState(() => loadJSON(PLAN_DONE_KEY, {}));
-  const [planDaily, setPlanDaily] = useState(() => loadJSON(PLAN_DAILY_KEY, {}));
-  const [planEdits, setPlanEdits] = useState(() => {
-    const saved = loadJSON(PLAN_EDITS_KEY, null);
-    return { done: (saved && saved.done) || {}, daily: (saved && saved.daily) || {} };
-  });
+  // Starts at the SSR-safe defaults (no saved overrides applied yet) and
+  // restores the real saved values only after mount -- see
+  // ThemeProvider.jsx's file-level comment for why reading localStorage
+  // inside useState()'s initializer itself causes a hydration mismatch.
+  // The `hydrated` gate stops the save-effects from firing with these
+  // not-yet-restored defaults and overwriting the real saved data before
+  // it's even been read.
+  const [plan, setPlanState] = useState(() => defaultPlan());
+  const [planDone, setPlanDone] = useState({});
+  const [planDaily, setPlanDaily] = useState({});
+  const [planEdits, setPlanEdits] = useState({ done: {}, daily: {} });
+  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => { saveJSON(PLAN_KEY, plan); }, [plan]);
-  useEffect(() => { saveJSON(PLAN_DONE_KEY, planDone); }, [planDone]);
-  useEffect(() => { saveJSON(PLAN_DAILY_KEY, planDaily); }, [planDaily]);
-  useEffect(() => { saveJSON(PLAN_EDITS_KEY, planEdits); }, [planEdits]);
+  useEffect(() => {
+    setPlanState((prev) => ({ ...prev, ...loadJSON(PLAN_KEY, {}) }));
+    setPlanDone(loadJSON(PLAN_DONE_KEY, {}));
+    setPlanDaily(loadJSON(PLAN_DAILY_KEY, {}));
+    const saved = loadJSON(PLAN_EDITS_KEY, null);
+    setPlanEdits({ done: (saved && saved.done) || {}, daily: (saved && saved.daily) || {} });
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => { if (hydrated) saveJSON(PLAN_KEY, plan); }, [plan, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(PLAN_DONE_KEY, planDone); }, [planDone, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(PLAN_DAILY_KEY, planDaily); }, [planDaily, hydrated]);
+  useEffect(() => { if (hydrated) saveJSON(PLAN_EDITS_KEY, planEdits); }, [planEdits, hydrated]);
 
   const schedulePush = useSyncSection('planBundle', {
     get: () => ({ plan, planDone, planDaily, planEdits }),
