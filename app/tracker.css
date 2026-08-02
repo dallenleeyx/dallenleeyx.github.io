@@ -176,23 +176,25 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-grade-total-pct{font-family:var(--font-mono);font-size:1.05rem;font-weight:800;color:var(--fg-1);min-width:3.8rem;text-align:right;flex-shrink:0;}
 
 /* Visualizers -- a blog-style feed of interactive posts on a course page.
-   Each post is its own card; the actual widget (e.g. BandMatrixViz) is
-   swapped in by registry.js based on post.type, so this chrome never
-   needs to change when a new visualizer type is added. */
+   Each post's widget is arbitrary pasted HTML/CSS/JS run in a sandboxed
+   iframe (see CodeVisualizer.jsx) -- there's no per-type chrome here since
+   every post is the same "kind" (code), just different code. */
 .tk-viz-feed{display:flex;flex-direction:column;gap:1.4rem;margin-bottom:3.2rem;}
 .tk-viz-post{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.3rem 1.5rem;}
 .tk-viz-post-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
 .tk-viz-post-title{font-size:1rem;font-weight:700;color:var(--fg-1);}
 .tk-viz-post-meta{font-family:var(--font-mono);font-size:.66rem;color:var(--fg-muted);margin-top:.2rem;}
 .tk-viz-post-caption{font-size:.85rem;color:var(--fg-2);line-height:1.55;margin:.6rem 0 1.1rem;}
-/* Band matrix -- a plain CSS grid of on/off cells (see BandMatrixViz's
-   file comment for why this doesn't need Canvas). */
-.tk-viz-controls{display:flex;gap:1.6rem;flex-wrap:wrap;margin-bottom:1.1rem;}
-.tk-viz-controls label{display:flex;flex-direction:column;gap:.35rem;font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--fg-muted);}
-.tk-viz-control-val{font-family:var(--font-mono);color:var(--fg-1);text-transform:none;letter-spacing:normal;font-weight:400;}
-.tk-viz-grid{display:grid;gap:2px;width:100%;max-width:360px;aspect-ratio:1;margin:0 auto;}
-.tk-viz-cell{background:var(--surface-2);border-radius:2px;transition:background-color .3s ease;}
-.tk-viz-cell.on{background:var(--accent);}
+.tk-viz-post-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.tk-viz-iframe{width:100%;height:440px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;}
+.tk-viz-code-textarea{font-family:var(--font-mono);font-size:.78rem;line-height:1.5;min-height:260px;resize:vertical;}
+.tk-viz-code-edit-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:.7rem;}
+.tk-viz-add-modal{width:min(640px,94vw);}
+/* Specificity bumped to beat .tk-modal-field label's display:block --
+   equal specificity would otherwise lose on source order since the
+   generic modal rules are defined later in this file. */
+.tk-viz-add-modal .tk-modal-field label{display:flex;align-items:center;justify-content:space-between;gap:.6rem;}
+.tk-viz-example-btn{font-size:.62rem;padding:.3rem .6rem;text-transform:none;letter-spacing:normal;}
 
 /* Jump-in grid */
 .tk-jump-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;}
