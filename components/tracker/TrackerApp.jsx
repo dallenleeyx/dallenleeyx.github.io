@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useCoursesSync } from '../../lib/useCoursesSync';
-import { computeGradeSummary } from '../../lib/gradeMath';
+import { computeGradeSummary, hasScore } from '../../lib/gradeMath';
 import { extractTypstToc } from '../../lib/typst/snippets';
 import { migrateDocToTypst } from '../../lib/typst/migrate';
 import { exportTypstNotesToPdf } from '../../lib/typst/exportPdf';
@@ -73,25 +73,26 @@ function AssignmentRow({ a, showCourse, onCycle, onRemove }) {
   );
 }
 
-// The track is a fixed red→amber→blue gradient spanning the full width;
-// the "mask" covers whatever the grade hasn't reached yet, so a low grade
-// only reveals the red end and a high grade reveals almost the whole
-// spectrum -- the color read is a byproduct of one gradient, not a
-// separate threshold lookup. Starts fully masked and animates open to the
-// real value on mount for the "fill in" effect.
-function GradeProgressBar({ grade }) {
-  const target = Math.max(0, Math.min(100, grade));
-  const [pct, setPct] = useState(0);
+// One color per component (cycled if there are more components than
+// colors), so "Homework" and "Midterm" read as distinct bars at a glance
+// instead of all sharing the same accent.
+const GRADE_BAR_COLORS = ['#e0483f', '#f2b134', '#3fa9f5', '#4caf7d', '#9b6bd6', '#f2789f'];
+
+// Starts at 0 width and animates open to the real score on mount.
+function GradeBarRow({ name, pct, color }) {
+  const target = Math.max(0, Math.min(100, pct));
+  const [width, setWidth] = useState(0);
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setPct(target));
+    const raf = requestAnimationFrame(() => setWidth(target));
     return () => cancelAnimationFrame(raf);
   }, [target]);
   return (
-    <div className="tk-grade-progress-wrap">
-      <div className="tk-grade-progress-track">
-        <div className="tk-grade-progress-mask" style={{ left: `${pct}%` }} />
+    <div className="tk-grade-bar-row">
+      <div className="tk-grade-bar-label">{name}</div>
+      <div className="tk-grade-bar-track">
+        <div className="tk-grade-bar-fill" style={{ width: `${width}%`, background: color }} />
       </div>
-      <div className="tk-grade-progress-label">{target.toFixed(1)}%</div>
+      <div className="tk-grade-bar-pct">{target.toFixed(0)}%</div>
     </div>
   );
 }
@@ -523,7 +524,16 @@ export function TrackerApp() {
             {currentGradeSummary && currentGradeSummary.currentGrade != null && (
               <div className="fade-up d1 no-print">
                 <SectionLabel sub={`${currentGradeSummary.gradedWeight}% of ${currentGradeSummary.totalWeight}% graded`}>Grade progress</SectionLabel>
-                <GradeProgressBar grade={currentGradeSummary.currentGrade} />
+                <div className="tk-grade-bars">
+                  {current.gradeComponents.filter(hasScore).map((gc, i) => (
+                    <GradeBarRow
+                      key={gc.id}
+                      name={gc.name}
+                      pct={(gc.earned / gc.possible) * 100}
+                      color={GRADE_BAR_COLORS[i % GRADE_BAR_COLORS.length]}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
