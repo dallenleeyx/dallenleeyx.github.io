@@ -1,12 +1,13 @@
 'use client';
-// components/tracker/visualizers/AddVisualizerModal.jsx — a blank code box
-// (self-contained HTML/CSS/JS, run in a sandboxed iframe -- see
-// CodeVisualizer) rather than a form for picking a fixed visualizer type.
-// "Use band matrix example" fills in a working starter so there's
-// something to look at and tweak immediately, since writing one from a
-// blank textarea isn't the point here -- pasting and adjusting is.
+// components/tracker/visualizers/AddVisualizerModal.jsx — a blank box for
+// GeoGebra commands (math notation -- Slider(...), Sequence(...), etc,
+// not HTML/CSS/JS -- see GeoGebraVisualizer) rather than a form for
+// picking a fixed visualizer type. "Use band matrix example" fills in a
+// working starter so there's something to look at and tweak immediately,
+// since writing one from a blank textarea isn't the point -- pasting and
+// adjusting is.
 import { Fragment, useState } from 'react';
-import { BAND_MATRIX_EXAMPLE_HTML } from './starterExample';
+import { BAND_MATRIX_EXAMPLE_GGB } from './starterExample';
 
 export function AddVisualizerModal({ onClose, onCreate }) {
   const [title, setTitle] = useState('');
@@ -34,16 +35,17 @@ export function AddVisualizerModal({ onClose, onCreate }) {
           </div>
           <div className="tk-modal-field">
             <label>
-              Code (self-contained HTML — CSS and &lt;script&gt; included)
-              <button type="button" className="tk-mono-btn tk-viz-example-btn" onClick={() => setCode(BAND_MATRIX_EXAMPLE_HTML)}>Use band matrix example</button>
+              GeoGebra commands (one per line)
+              <button type="button" className="tk-mono-btn tk-viz-example-btn" onClick={() => setCode(BAND_MATRIX_EXAMPLE_GGB)}>Use band matrix example</button>
             </label>
             <textarea
               className="tk-textarea tk-viz-code-textarea"
               value={code}
               onChange={e => setCode(e.target.value)}
-              placeholder="Paste a full HTML page here — <style>/<script> included. It runs in a sandboxed iframe, so it's isolated from the rest of the site."
+              placeholder={'n = Slider(2, 24, 1)\nf(x) = sin(n x)\n…'}
               spellCheck={false}
             />
+            <p className="tk-modal-field-hint">Each line runs as a GeoGebra command in an embedded GeoGebra Classic applet — no HTML/JS needed. Runs in a sandboxed iframe, isolated from the rest of the site.</p>
           </div>
           <div className="tk-modal-foot">
             <button className="tk-mono-btn" onClick={onClose}>Cancel</button>

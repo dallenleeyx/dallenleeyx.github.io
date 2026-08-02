@@ -1,11 +1,11 @@
 'use client';
 // components/tracker/visualizers/VisualizerPost.jsx — one "post" card in a
 // course's Visualizers feed: title, optional caption, then the rendered
-// widget (post.code run in a sandboxed iframe -- see CodeVisualizer). An
-// "Edit" button swaps the rendered iframe for a textarea of the same code
-// so it can be tweaked and re-run, without needing a separate modal.
+// widget (post.code -- GeoGebra commands -- run via GeoGebraVisualizer).
+// An "Edit" button swaps the rendered applet for a textarea of the same
+// commands so they can be tweaked and re-run, without a separate modal.
 import { useState } from 'react';
-import { CodeVisualizer } from './CodeVisualizer';
+import { GeoGebraVisualizer } from './GeoGebraVisualizer';
 
 function formatDate(ts) {
   return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -51,7 +51,7 @@ export function VisualizerPost({ post, onSaveCode, onRemove }) {
           </div>
         </div>
       ) : (
-        <CodeVisualizer code={post.code} />
+        <GeoGebraVisualizer code={post.code} />
       )}
     </div>
   );
