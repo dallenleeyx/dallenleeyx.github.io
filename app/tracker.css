@@ -176,9 +176,9 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-grade-total-pct{font-family:var(--font-mono);font-size:1.05rem;font-weight:800;color:var(--fg-1);min-width:3.8rem;text-align:right;flex-shrink:0;}
 
 /* Visualizers -- a blog-style feed of interactive posts on a course page.
-   Each post's widget is arbitrary pasted HTML/CSS/JS run in a sandboxed
-   iframe (see CodeVisualizer.jsx) -- there's no per-type chrome here since
-   every post is the same "kind" (code), just different code. */
+   Each post's widget is pasted GeoGebra commands run in a sandboxed
+   iframe (see GeoGebraVisualizer.jsx) -- there's no per-type chrome here
+   since every post is the same "kind" (code), just different commands. */
 .tk-viz-feed{display:flex;flex-direction:column;gap:1.4rem;margin-bottom:3.2rem;}
 .tk-viz-post{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.3rem 1.5rem;}
 .tk-viz-post-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
@@ -187,9 +187,13 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-viz-post-caption{font-size:.85rem;color:var(--fg-2);line-height:1.55;margin:.6rem 0 1.1rem;}
 .tk-viz-post-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
 .tk-viz-iframe{width:100%;height:440px;border:1px solid var(--border);border-radius:var(--radius-md);background:#fff;}
-.tk-viz-code-textarea{font-family:var(--font-mono);font-size:.78rem;line-height:1.5;min-height:260px;resize:vertical;}
+.tk-viz-code-textarea{font-family:var(--font-mono);font-size:.78rem;line-height:1.5;min-height:320px;resize:vertical;}
 .tk-viz-code-edit-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:.7rem;}
-.tk-viz-add-modal{width:min(640px,94vw);}
+/* Both classes combined for specificity: .tk-modal's own width rule is
+   defined later in this file, so an equal-specificity single-class
+   override here would silently lose on source order (bit us once
+   already on the label rule below -- same trap, same fix). */
+.tk-modal.tk-viz-add-modal{width:min(880px,94vw);}
 /* Specificity bumped to beat .tk-modal-field label's display:block --
    equal specificity would otherwise lose on source order since the
    generic modal rules are defined later in this file. */
