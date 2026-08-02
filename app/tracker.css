@@ -240,16 +240,18 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-paged-viewport{flex:1;min-height:0;overflow:auto;background:var(--surface-2);position:relative;cursor:grab;outline:none;padding:2rem;}
 .tk-paged-viewport.dragging{cursor:grabbing;user-select:none;}
 .tk-paged-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
-/* "flush" mode (read-only course-page preview): no padding, so the page
-   fills the container edge-to-edge with no whitespace margin. */
+/* "split" and "flush" modes: no padding, so the page fills the container
+   edge-to-edge with no whitespace margin -- matches the read-only
+   course-page preview's sizing, the reference look. Only "popout" (its
+   own dedicated tab, where the breathing room reads fine) keeps padding. */
 .tk-paged-viewport-flush{padding:0;}
-/* Not pannable (flush mode again): plain vertical scroll only, so drop the
+/* Not pannable ("flush" mode only): plain vertical scroll, so drop the
    grab cursor that would otherwise promise a drag that doesn't happen. */
 .tk-paged-viewport-static{cursor:default;}
 .tk-paged-stack{transform-origin:top left;position:relative;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.2);border-radius:2px;}
-/* flush/popout modes: centering (including at rest) is handled entirely
-   by PagedTypstViewer.jsx's centerScroll via scrollLeft, not CSS margin --
-   margin:auto here would center the box at its own unscaled width, which
+/* Centering (including at rest) is handled entirely by
+   PagedTypstViewer.jsx's centerScroll via scrollLeft, not CSS margin --
+   margin:auto would center the box at its own unscaled width, which
    conflicts with centerScroll's math (it assumes the box starts flush at
    x:0 pre-scroll) and transform-origin:top-left scaling from that
    already-offset position, leaving it off-center once scaled. */

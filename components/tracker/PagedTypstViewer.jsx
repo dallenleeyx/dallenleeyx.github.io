@@ -4,17 +4,18 @@
 // navigation, with zoom/pan into the compiled content itself -- not the
 // browser's own page zoom.
 //
-// Three call sites, three `mode`s:
-// - "split": the notes editor's inline preview pane. Padded, pannable
-//   (click-drag + arrow keys), cursor-anchored zoom, compact badges.
-// - "flush": the read-only course-page preview. Not pannable (plain
-//   vertical scroll only -- no click-drag, no arrow-key panning) and no
-//   padding around the page, so it fills its container edge-to-edge with
-//   no whitespace margin. Centered + center-anchored zoom, like "popout"
-//   below, since there's no drag to recenter it if it drifted.
-// - "popout": the dedicated "view in browser" tab. Padded, pannable, full
-//   toolbar, centered + center-anchored zoom (stays centered as you zoom
-//   instead of drifting toward the cursor).
+// Three call sites, three `mode`s -- all three are centered and
+// center-anchored on zoom (stays centered as you scale instead of
+// drifting toward wherever the cursor happens to be):
+// - "split": the notes editor's inline preview pane. No padding (matches
+//   the read-only course-page preview's sizing, which is the reference
+//   look) and pannable (click-drag + arrow keys), compact badges.
+// - "flush": the read-only course-page preview. No padding, and NOT
+//   pannable (plain vertical scroll only -- no click-drag, no arrow-key
+//   panning), compact badges.
+// - "popout": the dedicated "view in browser" tab. Padded (it's a whole
+//   dedicated tab, so the breathing room reads fine there), pannable,
+//   full toolbar.
 //
 // Two SVG <use>-based tricks were tried here first (duplicating the full
 // per-page markup, then a single shared <defs> re-viewed via <use> per
@@ -60,9 +61,8 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
   forwardedRef
 ) {
   const showToolbar = mode === 'popout';
-  const centered = mode === 'popout' || mode === 'flush';
   const pannable = mode !== 'flush';
-  const flush = mode === 'flush';
+  const padded = mode === 'popout';
 
   const { svg, error, compiling } = useCompiledSvg(source, debounceMs);
   const layout = useMemo(() => (svg ? computePageLayout(svg) : null), [svg]);
@@ -108,17 +108,17 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
 
   // Centers the viewport horizontally on the content at the given scale --
   // used instead of CSS transform-origin:center for "stays centered as you
-  // zoom" (flush/popout modes): a transform-origin:center version of this
-  // was tried first and reproducibly left the left portion of zoomed-in
-  // content permanently unreachable (confirmed via scrollLeft never able
-  // to go low enough to reveal it) -- browsers don't handle the "overflow
-  // grows equally in both directions from a center origin" case the same
-  // way they handle plain end-direction (right/bottom) overflow, which is
-  // reachable fine. Keeping transform-origin at its default (top left, so
-  // all growth is rightward/downward) and instead explicitly computing and
-  // setting scrollLeft here sidesteps that entirely.
+  // zoom": a transform-origin:center version of this was tried first and
+  // reproducibly left the left portion of zoomed-in content permanently
+  // unreachable (confirmed via scrollLeft never able to go low enough to
+  // reveal it) -- browsers don't handle the "overflow grows equally in
+  // both directions from a center origin" case the same way they handle
+  // plain end-direction (right/bottom) overflow, which is reachable fine.
+  // Keeping transform-origin at its default (top left, so all growth is
+  // rightward/downward) and instead explicitly computing and setting
+  // scrollLeft here sidesteps that entirely.
   const centerScroll = (newScale) => {
-    if (!layout || !centered) return;
+    if (!layout) return;
     const vp = viewportRef.current;
     if (!vp) return;
     const contentWidth = layout.pageWidthPx * newScale;
@@ -153,27 +153,15 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     setPage((prev) => (prev === p ? prev : Math.min(layout.numPages - 1, Math.max(0, p))));
   };
 
-  // Zooms by `factor`. When centered (flush/popout modes), re-centers via
-  // centerScroll() so it stays centered as it scales instead of following
-  // the cursor. Otherwise (split mode) keeps the content under the given
-  // cursor position fixed on screen instead of drifting toward the
-  // top-left corner.
-  const zoomAt = (factor, clientX, clientY) => {
+  // Zooms by `factor`, re-centering via centerScroll() so the page stays
+  // centered as it scales instead of drifting toward whichever corner it
+  // started at.
+  const zoomAt = (factor) => {
     const vp = viewportRef.current;
     if (!vp) return;
     setScale((oldScale) => {
       const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, oldScale * factor));
-      if (centered) {
-        requestAnimationFrame(() => centerScroll(newScale));
-      } else if (clientX != null && clientY != null) {
-        const rect = vp.getBoundingClientRect();
-        const contentX = (clientX - rect.left + vp.scrollLeft) / oldScale;
-        const contentY = (clientY - rect.top + vp.scrollTop) / oldScale;
-        requestAnimationFrame(() => {
-          vp.scrollLeft = contentX * newScale - (clientX - rect.left);
-          vp.scrollTop = contentY * newScale - (clientY - rect.top);
-        });
-      }
+      requestAnimationFrame(() => centerScroll(newScale));
       return newScale;
     });
   };
@@ -183,7 +171,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     const vp = viewportRef.current;
     if (!vp) return;
     vp.scrollTop = 0;
-    requestAnimationFrame(() => centered ? centerScroll(1) : (vp.scrollLeft = 0));
+    requestAnimationFrame(() => centerScroll(1));
   };
 
   const fitWidth = () => {
@@ -192,7 +180,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
     const fitScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, (vp.clientWidth - getHorizontalPadding().total) / layout.pageWidthPx));
     setScale(fitScale);
     vp.scrollTop = 0;
-    requestAnimationFrame(() => centered ? centerScroll(fitScale) : (vp.scrollLeft = 0));
+    requestAnimationFrame(() => centerScroll(fitScale));
   };
 
   // React's onWheel prop isn't reliably attached as a non-passive listener
@@ -201,13 +189,24 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
   // Ctrl+wheel falls through to the browser's own page zoom instead of
   // being caught here. Attaching the listener manually with an explicit
   // {passive:false} guarantees preventDefault actually takes effect.
+  //
+  // The listener itself is attached once (empty deps -- re-attaching on
+  // every render would be wasteful), so it can't close over zoomAt
+  // directly: that would permanently pin it to the very first render's
+  // zoomAt/centerScroll, whose `layout` was still null (compile hadn't
+  // finished yet) -- centerScroll would then silently no-op on every
+  // wheel zoom forever. Routing through a ref that's updated every render
+  // keeps the listener stable while always calling the current zoomAt.
+  const zoomAtRef = useRef(zoomAt);
+  zoomAtRef.current = zoomAt;
+
   useEffect(() => {
     const vp = viewportRef.current;
     if (!vp) return;
     const onWheel = (e) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
-      zoomAt(e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP, e.clientX, e.clientY);
+      zoomAtRef.current(e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP);
     };
     vp.addEventListener('wheel', onWheel, { passive: false });
     return () => vp.removeEventListener('wheel', onWheel);
@@ -291,7 +290,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
         </>
       )}
       <div
-        className={`tk-paged-viewport${flush ? ' tk-paged-viewport-flush' : ''}${pannable ? '' : ' tk-paged-viewport-static'}`}
+        className={`tk-paged-viewport${padded ? '' : ' tk-paged-viewport-flush'}${pannable ? '' : ' tk-paged-viewport-static'}`}
         ref={viewportRef}
         onMouseDown={handleMouseDown}
         onKeyDown={handleKeyDown}
@@ -302,7 +301,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
           <div className="tk-typst-viewer-status">{compiling ? 'Compiling…' : 'Loading…'}</div>
         ) : (
           <div
-            className={`tk-paged-stack${centered ? ' tk-paged-stack-centered' : ''}`}
+            className="tk-paged-stack"
             style={{ width: layout.pageWidthPx, transform: `scale(${scale})` }}
           >
             <div className="tk-paged-content" dangerouslySetInnerHTML={{ __html: svg }} />
