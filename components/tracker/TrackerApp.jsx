@@ -5,11 +5,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useCoursesSync } from '../../lib/useCoursesSync';
+import { computeGradeSummary } from '../../lib/gradeMath';
 import { extractTypstToc } from '../../lib/typst/snippets';
 import { migrateDocToTypst } from '../../lib/typst/migrate';
 import { exportTypstNotesToPdf } from '../../lib/typst/exportPdf';
 import { PagedTypstViewer } from './PagedTypstViewer';
-import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
+import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, getUpcomingSchedule, getUpcomingDueAssignments, getUpcomingHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesEditor } from './NotesEditor';
@@ -72,6 +73,29 @@ function AssignmentRow({ a, showCourse, onCycle, onRemove }) {
   );
 }
 
+// The track is a fixed red→amber→blue gradient spanning the full width;
+// the "mask" covers whatever the grade hasn't reached yet, so a low grade
+// only reveals the red end and a high grade reveals almost the whole
+// spectrum -- the color read is a byproduct of one gradient, not a
+// separate threshold lookup. Starts fully masked and animates open to the
+// real value on mount for the "fill in" effect.
+function GradeProgressBar({ grade }) {
+  const target = Math.max(0, Math.min(100, grade));
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setPct(target));
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return (
+    <div className="tk-grade-progress-wrap">
+      <div className="tk-grade-progress-track">
+        <div className="tk-grade-progress-mask" style={{ left: `${pct}%` }} />
+      </div>
+      <div className="tk-grade-progress-label">{target.toFixed(1)}%</div>
+    </div>
+  );
+}
+
 export function TrackerApp() {
   const { courses, setCourses, loading, offline, seeded, importData } = useCoursesSync();
   const [importDismissed, setImportDismissed] = useState(false);
@@ -90,6 +114,11 @@ export function TrackerApp() {
   const [pendingScrollLine, setPendingScrollLine] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
+  // "week" = only the current calendar week (the original behavior).
+  // "upcoming" = a long forward-looking window -- useful once a whole
+  // semester's timetable is imported and "this week" happens to fall
+  // before/between terms, when it'd otherwise show nothing at all.
+  const [scheduleView, setScheduleView] = useState(() => { try { return localStorage.getItem('proofLabScheduleView') || 'week'; } catch (e) { return 'week'; } });
   const docPreviewRef = useRef(null);
 
   useEffect(() => {
@@ -151,6 +180,10 @@ export function TrackerApp() {
   const applySidebar = (open) => {
     setSidebarOpen(open);
     try { localStorage.setItem('proofLabSidebar', open ? 'open' : 'closed'); } catch (e) {}
+  };
+  const applyScheduleView = (next) => {
+    setScheduleView(next);
+    try { localStorage.setItem('proofLabScheduleView', next); } catch (e) {}
   };
   const toggleToc = () => {
     setTocCollapsed((c) => {
@@ -263,10 +296,25 @@ export function TrackerApp() {
   const now = new Date();
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
   const courseToc = current ? extractTypstToc(current.doc) : [];
-  const weekSchedule = getWeekSchedule(activeCourses, now);
-  const weekDue = getWeekDueAssignments(activeCourses, now);
-  const weekHolidays = getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' }));
-  const weekByDate = groupByDate([...weekHolidays, ...weekDue, ...weekSchedule]);
+  const currentGradeSummary = current ? computeGradeSummary(current.gradeComponents || []) : null;
+  // "week" mirrors the original behavior; "upcoming" is a long
+  // forward-looking window -- useful once a whole semester's timetable is
+  // imported and "this week" happens to fall before/between terms, when
+  // it'd otherwise show nothing at all (its entries carry real
+  // seriesStart/seriesEnd dates, unlike hand-added ones). Both are cheap
+  // to compute, so just compute both and pick based on the toggle.
+  const scheduleSource = scheduleView === 'upcoming'
+    ? {
+        schedule: getUpcomingSchedule(activeCourses, now),
+        due: getUpcomingDueAssignments(activeCourses, now),
+        holidays: getUpcomingHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' })),
+      }
+    : {
+        schedule: getWeekSchedule(activeCourses, now),
+        due: getWeekDueAssignments(activeCourses, now),
+        holidays: getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' })),
+      };
+  const scheduleByDate = groupByDate([...scheduleSource.holidays, ...scheduleSource.due, ...scheduleSource.schedule]);
   // The Typst preview is one compiled SVG with no per-heading DOM anchors
   // (unlike the old renderDoc() JSX tree), so this scrolls to the same
   // fractional position the heading sits at in the source text instead.
@@ -370,10 +418,22 @@ export function TrackerApp() {
               ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending.</Empty></div>}
             </div>
             <div className="fade-up d2">
-              <SectionLabel sub="this week, all courses combined — due assignments in blue, holidays in green">Schedule</SectionLabel>
-              {(weekSchedule.length || weekDue.length || weekHolidays.length) ? (
-                <div className="tk-week-schedule" style={{ marginBottom: '3.2rem' }}>
-                  {[...weekByDate.entries()].map(([date, items]) => (
+              <SectionLabel
+                sub={`${scheduleView === 'upcoming' ? 'upcoming' : 'this week'}, all courses combined — due assignments in blue, holidays in green`}
+                actions={
+                  <select
+                    className="tk-input tk-schedule-view-select no-print"
+                    value={scheduleView}
+                    onChange={e => applyScheduleView(e.target.value)}
+                  >
+                    <option value="week">This week</option>
+                    <option value="upcoming">Upcoming</option>
+                  </select>
+                }
+              >Schedule</SectionLabel>
+              {(scheduleSource.schedule.length || scheduleSource.due.length || scheduleSource.holidays.length) ? (
+                <div className={`tk-week-schedule${scheduleView === 'upcoming' ? ' tk-upcoming-schedule' : ''}`} style={{ marginBottom: '3.2rem' }}>
+                  {[...scheduleByDate.entries()].map(([date, items]) => (
                     <div key={date} className="tk-week-day">
                       <div className="tk-week-day-label">{DAY_NAMES[isoWeekday(date)]} · {date.slice(8, 10)} {MONTHS[Number(date.slice(5, 7)) - 1]}</div>
                       {items.map((it, i) => (
@@ -400,7 +460,15 @@ export function TrackerApp() {
                     </div>
                   ))}
                 </div>
-              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="🗓️">No classes scheduled — add one from the Calendar tab.</Empty></div>}
+              ) : (
+                <div style={{ marginBottom: '3.2rem' }}>
+                  <Empty icon="🗓️">
+                    {scheduleView === 'upcoming'
+                      ? 'No classes scheduled — add one from the Calendar tab.'
+                      : <>Nothing this week — try <a onClick={() => applyScheduleView('upcoming')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Upcoming</a> if you've imported a schedule that hasn't started yet.</>}
+                  </Empty>
+                </div>
+              )}
             </div>
             <div className="fade-up d3">
               <SectionLabel>Courses</SectionLabel>
@@ -451,6 +519,13 @@ export function TrackerApp() {
                 <div className="tk-progress-fill" style={{ width: (current.assignments.length ? Math.round(current.assignments.filter(a => a.status === 'done').length / current.assignments.length * 100) : 0) + '%' }} />
               </div>
             </div>
+
+            {currentGradeSummary && currentGradeSummary.currentGrade != null && (
+              <div className="fade-up d1 no-print">
+                <SectionLabel sub={`${currentGradeSummary.gradedWeight}% of ${currentGradeSummary.totalWeight}% graded`}>Grade progress</SectionLabel>
+                <GradeProgressBar grade={currentGradeSummary.currentGrade} />
+              </div>
+            )}
 
             <div className="fade-up d1 no-print">
               <SectionLabel>Assignments</SectionLabel>
