@@ -5,18 +5,12 @@
 // Entirely optional -- a course with no components just shows the empty
 // state; nothing here is required for the rest of the app to work.
 import { Fragment, useEffect, useState } from 'react';
+import { computeGradeSummary } from '../../lib/gradeMath';
 
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 function Empty({ icon, children }) {
   return <div className="tk-empty"><div className="icon">{icon}</div><div className="title">{children}</div></div>;
-}
-
-// A component "counts" toward the current grade once both a possible total
-// and an earned score are entered -- a possible of 0 would divide by zero,
-// so that's treated the same as "not scored yet".
-function hasScore(gc) {
-  return typeof gc.earned === 'number' && typeof gc.possible === 'number' && gc.possible > 0;
 }
 
 function GradeComponentRow({ gc, onUpdate, onRemove }) {
@@ -83,14 +77,7 @@ export function GradeComponents({ course, onClose, onChange }) {
     setNewWeight('');
   };
 
-  const totalWeight = components.reduce((s, gc) => s + (gc.weight || 0), 0);
-  const graded = components.filter(hasScore);
-  const gradedWeight = graded.reduce((s, gc) => s + (gc.weight || 0), 0);
-  const ungradedWeight = totalWeight - gradedWeight;
-  // "Points" secured out of the total weight -- e.g. scoring 36/40 on a
-  // 30%-weighted component secures 27 of those 30 points.
-  const securedPoints = graded.reduce((s, gc) => s + (gc.earned / gc.possible) * gc.weight, 0);
-  const currentGrade = gradedWeight > 0 ? (securedPoints / gradedWeight) * 100 : null;
+  const { totalWeight, ungradedWeight, securedPoints, currentGrade } = computeGradeSummary(components);
 
   let goal = null;
   if (goalOpen && totalWeight > 0) {
