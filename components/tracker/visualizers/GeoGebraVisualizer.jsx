@@ -1,15 +1,28 @@
 'use client';
 // components/tracker/visualizers/GeoGebraVisualizer.jsx — runs a post's
 // pasted GeoGebra commands (one per line) inside an embedded GeoGebra
-// Classic applet. GeoGebra's own embed API (deployggb.js) injects
-// directly into the host page with no sandboxing of its own, but there's
-// no reason to give that up just because the input changed from raw HTML
-// to math commands: a small fixed wrapper (GeoGebra's script tag, the
-// applet container, and the user's commands run via evalCommand) is
-// generated and run inside the same sandboxed iframe
-// (sandbox="allow-scripts", no allow-same-origin) the previous
-// HTML-paste version used, so pasted commands still can't reach this
-// site's cookies/session/DOM.
+// Classic applet, via a small fixed wrapper (GeoGebra's own script tag,
+// the applet container, and the user's commands run via evalCommand) run
+// inside an iframe.
+//
+// sandbox="allow-scripts allow-same-origin" -- NOT the allow-scripts-only
+// sandbox the earlier raw-HTML-paste version used. GeoGebra's own bundle
+// creates internal nested iframes as part of its own UI, and without
+// allow-same-origin every sandboxed frame gets its own distinct opaque
+// origin -- GeoGebra's internal frames then can't access each other's
+// `document` at all, which throws "Blocked a frame at 'null' from
+// accessing a frame at 'null': ... lack the allow-same-origin flag" and
+// the applet never renders (confirmed: this is exactly the error a real
+// deploy hit). allow-same-origin on srcdoc content resolves to this
+// site's own origin (srcdoc has no independent URL of its own to be
+// opaque about), so this iframe's content -- this wrapper script and
+// GeoGebra's bundle -- does now run with the same DOM/cookie/session
+// access the rest of the app has. Accepted deliberately: the only
+// "untrusted" input here is GeoGebra command strings, a closed math-
+// expression DSL with no way to execute arbitrary JS through
+// evalCommand, and this is a single-user site where only the owner can
+// ever paste anything into this box -- there's no other visitor for a
+// malicious post to target.
 function buildSrcDoc(commands) {
   // A literal "</script" inside the JSON-encoded commands string would
   // prematurely close the inline <script> block when the browser's HTML
@@ -52,7 +65,7 @@ export function GeoGebraVisualizer({ code }) {
   return (
     <iframe
       className="tk-viz-iframe"
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-same-origin"
       srcDoc={buildSrcDoc(code)}
       title="Visualizer"
     />
