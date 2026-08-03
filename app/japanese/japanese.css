@@ -1459,3 +1459,143 @@ main {
   margin: var(--jp-space-3) 0 0;
   text-align: center;
 }
+
+/* ---------- journal (lesson notes) ---------- */
+.notes-controls-right { display: flex; align-items: center; gap: var(--jp-space-3); }
+.notes-empty { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; margin: var(--jp-space-4) 0; }
+
+.notes-list { display: flex; flex-direction: column; gap: var(--jp-space-3); margin-top: var(--jp-space-5); }
+.notes-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  padding: var(--jp-space-4);
+  cursor: pointer;
+  transition: border-color .15s, transform .12s, box-shadow .15s;
+}
+.notes-card:hover { border-color: var(--jp-indigo); transform: translateY(-1px); box-shadow: var(--jp-shadow-sm); }
+.notes-card-header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--jp-space-3); }
+.notes-card-title { font-family: var(--jp-font-jp); font-size: 1.1rem; color: var(--jp-ink); }
+.notes-card-date { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); white-space: nowrap; }
+.notes-card-snippet {
+  font-family: var(--jp-font-jp);
+  font-size: 0.95rem;
+  color: var(--jp-ink-soft);
+  margin: var(--jp-space-2) 0 0;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notes-form { display: flex; flex-direction: column; gap: var(--jp-space-4); margin-top: var(--jp-space-5); }
+.notes-form-row { display: flex; flex-wrap: wrap; gap: var(--jp-space-3); }
+.notes-title-input {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--jp-font-jp);
+  font-size: 1.05rem;
+  padding: var(--jp-space-3) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+}
+.notes-title-input::placeholder { font-family: var(--jp-font-ui); color: var(--jp-ink-soft); }
+.notes-date-input {
+  font-family: var(--jp-font-ui);
+  font-size: 0.95rem;
+  padding: var(--jp-space-3) var(--jp-space-4);
+  border: 1.5px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+}
+.notes-title-input:focus, .notes-date-input:focus, .notes-textarea:focus { border-color: var(--jp-indigo); outline: none; }
+
+.notes-editor { border: 1px solid var(--jp-line); border-radius: var(--jp-radius-md); overflow: hidden; }
+.notes-editor-toolbar {
+  display: flex;
+  gap: var(--jp-space-2);
+  padding: var(--jp-space-2) var(--jp-space-3);
+  background: var(--jp-paper-deep);
+  border-bottom: 1px solid var(--jp-line);
+}
+.notes-fmt-btn { min-width: 34px; padding: var(--jp-space-1) var(--jp-space-2); font-family: var(--jp-font-ui); }
+.notes-fmt-highlight { background: var(--jp-learning-bg); }
+.notes-textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  border: none;
+  padding: var(--jp-space-4);
+  font-family: var(--jp-font-jp);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  background: var(--jp-paper);
+  color: var(--jp-ink);
+  resize: vertical;
+}
+.notes-textarea::placeholder { font-family: var(--jp-font-ui); font-size: 0.9rem; color: var(--jp-ink-soft); }
+
+.notes-preview { border-top: 1px dashed var(--jp-line); padding: var(--jp-space-4); background: var(--jp-paper-alt); }
+.notes-preview-label {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--jp-ink-soft);
+  margin: 0 0 var(--jp-space-2);
+}
+.notes-preview-body { font-family: var(--jp-font-jp); font-size: 1.05rem; line-height: 1.9; color: var(--jp-ink); }
+.notes-preview-body mark { background: var(--jp-learning-bg); color: var(--jp-ink); border-radius: 2px; padding: 0 2px; }
+
+.notes-form-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--jp-space-3); }
+.notes-form-actions-right { display: flex; gap: var(--jp-space-3); margin-left: auto; }
+.notes-delete-btn { color: var(--jp-seal); border-color: var(--jp-seal); }
+.notes-delete-btn:hover { background: var(--jp-seal-bg); border-color: var(--jp-seal); color: var(--jp-seal); }
+
+/* ---------- dictionary ---------- */
+.dict-search-row { flex-wrap: nowrap; }
+.dict-search-input { flex: 1; min-width: 0; }
+.dict-status-note {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  color: var(--jp-ink-soft);
+  font-style: italic;
+  margin: var(--jp-space-5) 0;
+}
+.dict-status-note.dict-error { color: var(--jp-seal); font-style: normal; }
+
+.dict-results { display: flex; flex-direction: column; gap: var(--jp-space-3); margin-top: var(--jp-space-5); }
+.dict-card {
+  background: var(--jp-paper-alt);
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  padding: var(--jp-space-4);
+}
+.dict-card-header { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--jp-space-2); margin-bottom: var(--jp-space-2); }
+.dict-word { font-family: var(--jp-font-jp); font-size: 1.3rem; color: var(--jp-indigo-deep); }
+.dict-reading { font-family: var(--jp-font-ui); font-size: 0.9rem; color: var(--jp-ink-soft); }
+.dict-jlpt-badge {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  font-weight: 700;
+  color: #fff;
+  background: var(--jp-indigo);
+  padding: 1px var(--jp-space-2);
+  border-radius: var(--jp-radius-pill);
+}
+.dict-jlpt-badge.n5 { background: var(--jp-n5); }
+.dict-jlpt-badge.n4 { background: var(--jp-n4); }
+.dict-jlpt-badge.n3 { background: var(--jp-n3); }
+.dict-jlpt-badge.n2 { background: var(--jp-n2); }
+.dict-jlpt-badge.n1 { background: var(--jp-n1); }
+
+.dict-senses { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: var(--jp-space-1); }
+.dict-sense { font-family: var(--jp-font-ui); font-size: 0.92rem; color: var(--jp-ink); line-height: 1.6; }
+.dict-pos { display: block; font-size: var(--jp-fs-2xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--jp-ink-soft); }
+.dict-definitions { color: var(--jp-ink); }
