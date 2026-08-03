@@ -1569,6 +1569,7 @@ main {
   margin: var(--jp-space-5) 0;
 }
 .dict-status-note.dict-error { color: var(--jp-seal); font-style: normal; }
+.dict-searching-note { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; white-space: nowrap; }
 
 .dict-results { display: flex; flex-direction: column; gap: var(--jp-space-3); margin-top: var(--jp-space-5); }
 .dict-card {
@@ -1599,3 +1600,39 @@ main {
 .dict-sense { font-family: var(--jp-font-ui); font-size: 0.92rem; color: var(--jp-ink); line-height: 1.6; }
 .dict-pos { display: block; font-size: var(--jp-fs-2xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--jp-ink-soft); }
 .dict-definitions { color: var(--jp-ink); }
+
+.dict-common-badge {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  color: var(--jp-mastered);
+  background: var(--jp-mastered-bg);
+  padding: 1px var(--jp-space-2);
+  border-radius: var(--jp-radius-pill);
+}
+
+.dict-speak-btn {
+  min-width: 30px;
+  padding: 2px var(--jp-space-2);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.dict-examples {
+  margin-top: var(--jp-space-3);
+  padding-top: var(--jp-space-3);
+  border-top: 1px dashed var(--jp-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--jp-space-2);
+}
+.dict-examples-heading {
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--jp-ink-soft);
+}
+.dict-example { display: flex; flex-direction: column; gap: 2px; }
+.dict-example-jp-row { display: flex; align-items: center; gap: var(--jp-space-2); }
+.dict-example-jp { font-family: var(--jp-font-jp); font-size: 1rem; color: var(--jp-ink); }
+.dict-example-en { font-family: var(--jp-font-ui); font-size: 0.85rem; color: var(--jp-ink-soft); }
