@@ -1,9 +1,9 @@
 // app/api/japanese/tts/route.js — thin server-side proxy to Google Cloud
-// Text-to-Speech, so GOOGLE_TTS_API_KEY stays server-only (mirrors
-// app/api/bible/passage/route.js's pattern for api.bible). Returns raw
-// MP3 bytes directly (not JSON-wrapped base64) so the client can just
-// point an <audio> element/Audio() object at this route's response with
-// no extra decoding step.
+// Text-to-Speech, so GOOGLE_TTS_API_KEY stays server-only (the same
+// keep-the-key-server-only shape as app/api/japanese/dictionary/route.js
+// for Jisho). Returns raw MP3 bytes directly (not JSON-wrapped base64) so
+// the client can just point an <audio> element/Audio() object at this
+// route's response with no extra decoding step.
 import { NextResponse } from 'next/server';
 import { auth } from '../../../../lib/auth';
 

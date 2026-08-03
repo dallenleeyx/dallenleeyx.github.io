@@ -11,7 +11,7 @@ import { usePathname } from 'next/navigation';
 const LINKS = [
   { href: '/math', label: 'Math' },
   { href: '/japanese', label: 'Japanese' },
-  { href: '/bible', label: 'Bible' },
+  { href: '/music', label: 'Music' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
