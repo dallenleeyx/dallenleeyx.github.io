@@ -17,11 +17,15 @@ import { useJapaneseI18n } from '../../lib/japanese/I18nProvider';
 import { VocabSection } from './vocab/VocabSection';
 import { GrammarSection } from './grammar/GrammarSection';
 import { Home } from './home/Home';
+import { NotesSection } from './notes/NotesSection';
+import { DictionarySection } from './dictionary/DictionarySection';
 
 const VIEWS = [
   { id: 'home', labelKey: 'tabHome' },
   { id: 'vocab', labelKey: 'tabVocab' },
   { id: 'grammar', labelKey: 'tabGrammar' },
+  { id: 'notes', labelKey: 'tabNotes' },
+  { id: 'dictionary', labelKey: 'tabDictionary' },
 ];
 
 const JapaneseViewContext = createContext(null);
@@ -75,6 +79,12 @@ export function JapaneseViewContent() {
       </section>
       <section id="grammar-view" className={`view${activeView === 'grammar' ? ' active' : ''}`}>
         <GrammarSection active={activeView === 'grammar'} />
+      </section>
+      <section id="notes-view" className={`view${activeView === 'notes' ? ' active' : ''}`}>
+        <NotesSection />
+      </section>
+      <section id="dictionary-view" className={`view${activeView === 'dictionary' ? ' active' : ''}`}>
+        <DictionarySection />
       </section>
     </main>
   );
