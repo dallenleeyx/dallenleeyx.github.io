@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
+    "predev": "node scripts/copy-typst-wasm.js",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-typst-wasm.js",
     "build": "next build",
     "start": "next start"
   },
