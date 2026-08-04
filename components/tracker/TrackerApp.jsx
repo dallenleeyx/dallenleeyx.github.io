@@ -609,7 +609,17 @@ export function TrackerApp() {
                   )}
                 </div>
                 <div className="tk-doc-preview">
-                  <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' mode="flush" />
+                  {notesOpenFor === current.id ? (
+                    // The full-screen editor overlay covers this entirely while
+                    // open, but it stays mounted underneath -- so without this,
+                    // it would keep recompiling on every keystroke via its own
+                    // debounce, silently defeating the editor's own auto-compile
+                    // toggle (see NotesEditor.jsx) since the expensive work would
+                    // still be happening right behind it.
+                    <div className="tk-note-p tk-note-empty">Editing…</div>
+                  ) : (
+                    <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' mode="flush" />
+                  )}
                 </div>
               </div>
             </div>

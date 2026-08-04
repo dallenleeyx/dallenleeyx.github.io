@@ -32,6 +32,11 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   // preview lives in a separate tab (see app/typst-preview/[courseId]),
   // Overleaf-style, so the editor pane gets the full width instead.
   const [previewMode, setPreviewMode] = useState(() => { try { return localStorage.getItem('proofLabPreviewMode') || 'split'; } catch (e) { return 'split'; } });
+  // Recompiling the whole document (a real WASM Typst run + a full SVG DOM
+  // replace, see PagedTypstViewer.jsx) after every debounced keystroke is
+  // where the lag on a several-page doc actually comes from -- turning
+  // this off stops that and leaves compiling to an explicit click instead.
+  const [autoCompile, setAutoCompile] = useState(() => { try { return localStorage.getItem('proofLabAutoCompile') !== '0'; } catch (e) { return true; } });
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -59,6 +64,16 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     setPreviewMode(mode);
     try { localStorage.setItem('proofLabPreviewMode', mode); } catch (e) {}
   };
+
+  const toggleAutoCompile = () => {
+    setAutoCompile((v) => {
+      const next = !v;
+      try { localStorage.setItem('proofLabAutoCompile', next ? '1' : '0'); } catch (e) {}
+      return next;
+    });
+  };
+
+  const compileNow = () => previewRef.current?.compileNow();
 
   // Reuses the same named window on repeat clicks (instead of piling up
   // duplicate tabs) and re-focuses it if it's still open.
@@ -144,6 +159,12 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
     if (!ta) return;
     const mod = e.ctrlKey || e.metaKey;
 
+    if (mod && !e.altKey && e.key === 'Enter') {
+      e.preventDefault();
+      compileNow();
+      return;
+    }
+
     // Typst markup: *bold*, _italic_ (not markdown's **bold**/*italic*)
     if (mod && !e.altKey && e.key.toLowerCase() === 'b') {
       e.preventDefault();
@@ -210,6 +231,17 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
         <button className="tk-mono-btn" onClick={onClose}>← Back</button>
         <div className="tk-editor-course">{course.glyph} · {course.name} — Notes</div>
         <div className="tk-preview-mode-toggle">
+          <button
+            className={`tk-mono-btn${autoCompile ? ' active' : ''}`}
+            onClick={toggleAutoCompile}
+            title="When off, the preview only recompiles when you click Compile -- faster typing on long documents"
+          >
+            {autoCompile ? 'Auto-compile: On' : 'Auto-compile: Off'}
+          </button>
+          {!autoCompile && (
+            <button className="tk-mono-btn tk-compile-now-btn" onClick={compileNow} title="Ctrl/Cmd+Enter">Compile ▶</button>
+          )}
+          <span className="tk-toolbar-sep" />
           <button className={`tk-mono-btn${previewMode === 'split' ? ' active' : ''}`} onClick={() => setMode('split')}>Split</button>
           <button className={`tk-mono-btn${previewMode === 'browser' ? ' active' : ''}`} onClick={() => setMode('browser')}>Browser tab</button>
           {previewMode === 'browser' && (
@@ -256,7 +288,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
                 <span />
               </div>
               <div className="tk-doc-preview">
-                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} mode="split" />
+                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} mode="split" autoCompile={autoCompile} />
               </div>
             </>
           )}
