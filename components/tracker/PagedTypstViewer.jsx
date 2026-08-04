@@ -57,14 +57,14 @@ const PAN_STEP_PX = 80;
 // see NotesEditor.jsx/TrackerApp.jsx's scrollToHeadingLine, which jumps to
 // the page holding a given fractional position in the source.
 export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
-  { source, debounceMs = 300, emptyMessage, mode = 'split', className },
+  { source, debounceMs = 300, emptyMessage, mode = 'split', className, autoCompile = true },
   forwardedRef
 ) {
   const showToolbar = mode === 'popout';
   const pannable = mode !== 'flush';
   const padded = mode !== 'flush';
 
-  const { svg, error, compiling } = useCompiledSvg(source, debounceMs);
+  const { svg, error, compiling, compileNow, stale } = useCompiledSvg(source, debounceMs, { auto: autoCompile });
   const layout = useMemo(() => (svg ? computePageLayout(svg) : null), [svg]);
   const viewportRef = useRef(null);
   const dragRef = useRef(null);
@@ -104,7 +104,8 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
       el.classList.add('tk-note-block-flash');
       setTimeout(() => el.classList.remove('tk-note-block-flash'), 1600);
     },
-  }), [layout, scale]);
+    compileNow,
+  }), [layout, scale, compileNow]);
 
   // Centers the viewport horizontally on the content at the given scale --
   // used instead of CSS transform-origin:center for "stays centered as you
@@ -276,6 +277,7 @@ export const PagedTypstViewer = forwardRef(function PagedTypstViewer(
       )}
       {!showToolbar && (
         <>
+          {stale && <div className="tk-paged-stale-badge" title="Edits since the last compile aren't shown yet">● not compiled</div>}
           <div className="tk-paged-zoom-badge">
             <button className="tk-mono-btn" onClick={fitWidth}>Fit width</button>
             <button className="tk-mono-btn" onClick={resetView} title="Reset zoom">{Math.round(scale * 100)}%</button>
