@@ -13,6 +13,18 @@ import { PagedTypstViewer } from './PagedTypstViewer';
 const MIN_EDIT_PCT = 25;
 const MAX_EDIT_PCT = 75;
 const BROADCAST_DEBOUNCE_MS = 250;
+// `doc` lives in the top-level courses state (TrackerApp), and pushing an
+// edit up via onChange there is what's actually expensive: it re-renders
+// the WHOLE app tree (sidebar course list, calendar grid, grade bars,
+// every visualizer's GeoGebra iframe, ...), not just this editor -- doing
+// that synchronously on every keystroke is where typing lag on a long
+// document actually comes from, independent of the Typst compiler and
+// independent of the (already-debounced) localStorage/network writes one
+// level up. localDoc below decouples the two: typing updates this
+// component's own local state immediately (cheap -- only NotesEditor
+// re-renders), and the expensive push to the parent is debounced instead
+// of firing on every character.
+const DOC_PUSH_DEBOUNCE_MS = 200;
 
 export function NotesEditor({ course, doc, onClose, onChange }) {
   const taRef = useRef(null);
@@ -21,7 +33,14 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   const previewRef = useRef(null);
   const channelRef = useRef(null);
   const previewWindowRef = useRef(null);
-  const toc = extractTypstToc(doc);
+  const pushTimerRef = useRef(null);
+  const pendingPushRef = useRef(null);
+  // Seeded once from the prop at mount -- this editor instance is created
+  // fresh each time it's opened (TrackerApp conditionally renders it), so
+  // there's no need to resync from `doc` after that; see the file-level
+  // comment for why it isn't just `doc` directly.
+  const [localDoc, setLocalDoc] = useState(doc || '');
+  const toc = extractTypstToc(localDoc);
   // After inserting a titled environment (theorem, definition, …), Tab jumps
   // from the title to the content placeholder on the next line. One-shot:
   // cleared as soon as it's used, or as soon as another snippet/edit happens.
@@ -38,11 +57,41 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   // this off stops that and leaves compiling to an explicit click instead.
   const [autoCompile, setAutoCompile] = useState(() => { try { return localStorage.getItem('proofLabAutoCompile') !== '0'; } catch (e) { return true; } });
 
+  // Fires any still-debounced push to the parent immediately -- called
+  // before closing (Back/Escape) so the last few keystrokes before closing
+  // are never silently dropped, and on unmount as a backstop.
+  const flushDocPush = () => {
+    if (pushTimerRef.current) { clearTimeout(pushTimerRef.current); pushTimerRef.current = null; }
+    if (pendingPushRef.current !== null) {
+      onChange(pendingPushRef.current);
+      pendingPushRef.current = null;
+    }
+  };
+
+  // The single path everything in this file uses to change the document:
+  // updates the locally-rendered value immediately, and schedules the
+  // (expensive, see file comment) push to the parent instead of firing it
+  // straight away.
+  const updateLocalDoc = (text) => {
+    setLocalDoc(text);
+    pendingPushRef.current = text;
+    if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = setTimeout(flushDocPush, DOC_PUSH_DEBOUNCE_MS);
+  };
+
+  const handleClose = () => {
+    flushDocPush();
+    onClose();
+  };
+
+  useEffect(() => flushDocPush, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => { if (e.key === 'Escape') handleClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mirrors this course's live source to a BroadcastChannel so a popped-out
   // "view in browser" preview tab (which has no textarea of its own) stays
@@ -55,10 +104,10 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      channelRef.current?.postMessage({ source: doc || '' });
+      channelRef.current?.postMessage({ source: localDoc || '' });
     }, BROADCAST_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [doc]);
+  }, [localDoc]);
 
   const setMode = (mode) => {
     setPreviewMode(mode);
@@ -116,13 +165,13 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
 
   const insertSnippet = ({ text, selStart, selEnd, hasName }, blockLevel) => {
     const ta = taRef.current;
-    const value = doc || '';
+    const value = localDoc || '';
     const start = ta ? ta.selectionStart : value.length;
     const end = ta ? ta.selectionEnd : value.length;
     const before = value.slice(0, start);
     const after = value.slice(end);
     const pad = blockLevel && before.length && !before.endsWith('\n') ? '\n' : '';
-    onChange(before + pad + text + after);
+    updateLocalDoc(before + pad + text + after);
     const base = before.length + pad.length;
     envTabStopRef.current = hasName
       ? { titleLine: (before + pad).split('\n').length - 1 }
@@ -140,11 +189,11 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   const wrapSelection = (open, close) => {
     const ta = taRef.current;
     if (!ta) return;
-    const value = doc || '';
+    const value = localDoc || '';
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
     const selected = value.slice(start, end);
-    onChange(value.slice(0, start) + open + selected + close + value.slice(end));
+    updateLocalDoc(value.slice(0, start) + open + selected + close + value.slice(end));
     const newStart = start + open.length;
     const newEnd = newStart + selected.length;
     envTabStopRef.current = null;
@@ -179,7 +228,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
 
     if (e.key === '$' && !mod && !e.altKey) {
       const { selectionStart: start, selectionEnd: end } = ta;
-      const value = doc || '';
+      const value = localDoc || '';
       envTabStopRef.current = null;
       if (start === end && value[start] === '$') {
         // typing over an already-present $ -- skip past it instead of
@@ -195,7 +244,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
 
     if (e.key === 'Tab') {
       const stop = envTabStopRef.current;
-      const value = doc || '';
+      const value = localDoc || '';
       if (stop) {
         const cursorLine = value.slice(0, ta.selectionStart).split('\n').length - 1;
         if (cursorLine === stop.titleLine) {
@@ -221,14 +270,14 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
   // renderDoc() JSX tree), so this jumps to the page holding roughly the
   // same fractional position the heading sits at in the source text.
   const scrollToHeadingLine = (line) => {
-    const totalLines = Math.max(1, (doc || '').split('\n').length - 1);
+    const totalLines = Math.max(1, (localDoc || '').split('\n').length - 1);
     previewRef.current?.scrollToFraction(Math.min(1, line / totalLines));
   };
 
   return (
     <div className="tk-editor-overlay">
       <div className="tk-editor-topbar">
-        <button className="tk-mono-btn" onClick={onClose}>← Back</button>
+        <button className="tk-mono-btn" onClick={handleClose}>← Back</button>
         <div className="tk-editor-course">{course.glyph} · {course.name} — Notes</div>
         <div className="tk-preview-mode-toggle">
           <button
@@ -276,9 +325,9 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
             <textarea
               ref={taRef}
               className="tk-doc-textarea"
-              value={doc || ''}
+              value={localDoc || ''}
               placeholder={'= Heading\n\nWrite here — *bold*, _italic_, $x^2$ …\nUse the toolbar for cal/frak/bb, theorem/definition blocks, or a flag.'}
-              onChange={e => onChange(e.target.value)}
+              onChange={e => updateLocalDoc(e.target.value)}
               onKeyDown={handleKeyDown}
             />
           </div>
@@ -288,7 +337,7 @@ export function NotesEditor({ course, doc, onClose, onChange }) {
                 <span />
               </div>
               <div className="tk-doc-preview">
-                <PagedTypstViewer ref={previewRef} source={doc} debounceMs={400} mode="split" autoCompile={autoCompile} />
+                <PagedTypstViewer ref={previewRef} source={localDoc} debounceMs={400} mode="split" autoCompile={autoCompile} />
               </div>
             </>
           )}
