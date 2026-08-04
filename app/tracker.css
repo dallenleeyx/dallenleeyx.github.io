@@ -103,6 +103,11 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-mono-btn{background:transparent;border:1px solid var(--border);color:var(--accent-2);font-family:var(--font-mono);font-size:.66rem;padding:.32rem .75rem;border-radius:6px;cursor:pointer;transition:all var(--transition-fast);}
 .tk-mono-btn:hover{border-color:var(--accent);color:var(--accent);}
 .tk-mono-btn.active{border-color:var(--accent);color:var(--accent);background:var(--glow);}
+/* The one action that actually matters once auto-compile is off -- filled
+   like tk-btn-primary instead of the rest of this toolbar's outline style,
+   so it doesn't read as just another mode toggle. */
+.tk-compile-now-btn{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.tk-compile-now-btn:hover{color:var(--bg);box-shadow:0 4px 18px var(--glow-strong);}
 .tk-preview-mode-toggle{display:flex;gap:.4rem;align-items:center;}
 .tk-x-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;transition:all var(--transition-fast);}
 .tk-x-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -327,6 +332,12 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-paged-nav-badge .tk-mono-btn{padding:.1rem .4rem;font-size:.7rem;}
 .tk-mono-btn:disabled{opacity:.35;cursor:default;}
 .tk-mono-btn:disabled:hover{border-color:var(--border);color:var(--accent-2);}
+/* Auto-compile off + edits since the last compile -- reuses the same red
+   as the flag tab (#d1453b) since both mean "something needs your
+   attention", not a hard error (that's tk-typst-error, shown instead of
+   the preview entirely). Centered so it never collides with the zoom
+   badge (top-right) or the page-nav badge (top-left, only when >1 page). */
+.tk-paged-stale-badge{position:absolute;top:.6rem;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid #d1453b;color:#d1453b;font-family:var(--font-mono);font-size:.66rem;padding:.2rem .55rem;border-radius:6px;z-index:5;}
 
 /* Note / doc typography -- a serif "math paper" register (STIX Two Text,
    paired well with KaTeX's own Latin-Modern-derived faces) instead of the
