@@ -2,19 +2,14 @@
 // components/tracker/TrackerApp.jsx — course + assignment tracking, calendar,
 // and per-course notes. Courses sync cross-device via useCoursesSync; theme
 // and sidebar-collapsed state stay local-only.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { useCoursesSync } from '../../lib/useCoursesSync';
 import { computeGradeSummary, hasScore } from '../../lib/gradeMath';
-import { extractTypstToc } from '../../lib/typst/snippets';
-import { migrateDocToTypst } from '../../lib/typst/migrate';
-import { exportTypstNotesToPdf } from '../../lib/typst/exportPdf';
-import { PagedTypstViewer } from './PagedTypstViewer';
 import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, getUpcomingSchedule, getUpcomingDueAssignments, getUpcomingHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
-import { NotesEditor } from './NotesEditor';
-import { Revision } from './Revision';
+import { NotesPdfViewer } from './NotesPdfViewer';
 import { AddCourseModal } from './AddCourseModal';
 import { EditCourseModal } from './EditCourseModal';
 import { CalendarTab } from './CalendarTab';
@@ -22,7 +17,6 @@ import { ArchiveTab } from './ArchiveTab';
 import { GradeComponents } from './GradeComponents';
 import { VisualizerPost } from './visualizers/VisualizerPost';
 import { AddVisualizerModal } from './visualizers/AddVisualizerModal';
-import { SearchModal } from './SearchModal';
 import { ImportBanner } from './ImportBanner';
 
 const STATUS_ORDER = ['todo', 'doing', 'done'];
@@ -130,22 +124,15 @@ export function TrackerApp() {
   const [drafts, setDrafts] = useState({});
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('proofLabTheme') || 'light'; } catch (e) { return 'light'; } });
   const [sidebarOpen, setSidebarOpen] = useState(() => { try { return localStorage.getItem('proofLabSidebar') !== 'closed'; } catch (e) { return true; } });
-  const [notesOpenFor, setNotesOpenFor] = useState(null); // course id | null
-  const [revisionOpenFor, setRevisionOpenFor] = useState(null); // course id | null
   const [gradesOpenFor, setGradesOpenFor] = useState(null); // course id | null
   const [addVisualizerOpen, setAddVisualizerOpen] = useState(false);
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [pendingScrollLine, setPendingScrollLine] = useState(null);
-  const [exportingPdf, setExportingPdf] = useState(false);
-  const [tocCollapsed, setTocCollapsed] = useState(() => { try { return localStorage.getItem('proofLabTocCollapsed') === '1'; } catch (e) { return false; } });
   // "week" = only the current calendar week (the original behavior).
   // "upcoming" = a long forward-looking window -- useful once a whole
   // semester's timetable is imported and "this week" happens to fall
   // before/between terms, when it'd otherwise show nothing at all.
   const [scheduleView, setScheduleView] = useState(() => { try { return localStorage.getItem('proofLabScheduleView') || 'week'; } catch (e) { return 'week'; } });
-  const docPreviewRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -164,40 +151,6 @@ export function TrackerApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Scrolls to (approximately) a specific theorem/definition block after a
-  // search result switches the view to its course. The old renderDoc()
-  // preview gave every block its own DOM id to scroll straight to; the
-  // Typst preview is one compiled SVG with no per-block anchors, so this
-  // instead scrolls the preview to the same fractional position the block
-  // sits at in the source text -- close enough to bring it into view.
-  useEffect(() => {
-    if (pendingScrollLine == null) return;
-    const cur = (courses || []).find((c) => c.id === view);
-    const el = docPreviewRef.current;
-    if (!cur || !el) return;
-    const totalLines = Math.max(1, (cur.doc || '').split('\n').length - 1);
-    const raf = requestAnimationFrame(() => {
-      el.scrollToFraction(Math.min(1, pendingScrollLine / totalLines));
-      el.flash();
-      setPendingScrollLine(null);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [pendingScrollLine, view, courses]);
-
-  // One-time, non-destructive migration of every course's notes from the
-  // old markdown-shorthand format to Typst source, the moment courses load.
-  // Done for all courses together (not lazily per-opened course) so
-  // cross-course features (global search, per-course revision flashcards)
-  // never see a mix of old and new formats. The original is kept in
-  // legacyDoc so nothing is lost if the conversion missed something.
-  useEffect(() => {
-    if (!courses) return;
-    if (!courses.some((c) => c.docFormat !== 'typst')) return;
-    setCourses((cs) => cs.map((c) => (c.docFormat === 'typst' ? c : ({
-      ...c, legacyDoc: c.doc, doc: migrateDocToTypst(c.doc), docFormat: 'typst',
-    }))));
-  }, [courses, setCourses]);
-
   const applyTheme = (next) => {
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
@@ -211,13 +164,6 @@ export function TrackerApp() {
     setScheduleView(next);
     try { localStorage.setItem('proofLabScheduleView', next); } catch (e) {}
   };
-  const toggleToc = () => {
-    setTocCollapsed((c) => {
-      const next = !c;
-      try { localStorage.setItem('proofLabTocCollapsed', next ? '1' : '0'); } catch (e) {}
-      return next;
-    });
-  };
   // on a phone the sidebar is a slide-in drawer -- picking a destination
   // should close it so the content underneath is actually visible; on a
   // wide screen it's a permanent panel, so leave it open there.
@@ -225,18 +171,12 @@ export function TrackerApp() {
     setView(dest);
     try { if (window.innerWidth <= 900) applySidebar(false); } catch (e) {}
   };
-  const goToSearchResult = (courseId, startLine) => {
-    setSearchOpen(false);
-    navigateTo(courseId);
-    setPendingScrollLine(startLine);
-  };
 
   const mutate = useCallback((courseId, fn) => {
     setCourses(cs => cs.map(c => c.id === courseId ? fn(c) : c));
   }, [setCourses]);
   const cycle = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.map(a => a.id !== id ? a : { ...a, status: STATUS_ORDER[(STATUS_ORDER.indexOf(a.status) + 1) % 3] }) }));
   const removeA = (cid, id) => mutate(cid, c => ({ ...c, assignments: c.assignments.filter(a => a.id !== id) }));
-  const updateDoc = (cid, text) => mutate(cid, c => ({ ...c, doc: text }));
   const draft = (k) => drafts[k] || '';
   const setDraft = (k, v) => setDrafts(d => ({ ...d, [k]: v }));
   const addAssignment = (cid) => {
@@ -253,7 +193,7 @@ export function TrackerApp() {
     // this course) separately from glyph/nickname (purely cosmetic display),
     // so renaming the sidebar label later can never silently break import
     // matching, and vice versa.
-    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, code: trimmedCode, description: desc, assignments: [], doc: '', schedule: [] }]);
+    setCourses(cs => [...cs, { id, name: title, glyph: label, nickname: label, code: trimmedCode, description: desc, assignments: [], schedule: [] }]);
     setAddCourseOpen(false);
     setView(id);
   };
@@ -261,8 +201,6 @@ export function TrackerApp() {
   const removeCourse = (cid) => {
     setCourses(cs => cs.filter(c => c.id !== cid));
     if (view === cid) setView('dashboard');
-    if (notesOpenFor === cid) setNotesOpenFor(null);
-    if (revisionOpenFor === cid) setRevisionOpenFor(null);
     if (gradesOpenFor === cid) setGradesOpenFor(null);
     setAddVisualizerOpen(false);
     setEditCourseFor(null);
@@ -332,7 +270,6 @@ export function TrackerApp() {
     .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
   const now = new Date();
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
-  const courseToc = current ? extractTypstToc(current.doc) : [];
   const currentGradeSummary = current ? computeGradeSummary(current.gradeComponents || []) : null;
   // "week" mirrors the original behavior; "upcoming" is a long
   // forward-looking window -- useful once a whole semester's timetable is
@@ -352,27 +289,6 @@ export function TrackerApp() {
         holidays: getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' })),
       };
   const scheduleByDate = groupByDate([...scheduleSource.holidays, ...scheduleSource.due, ...scheduleSource.schedule]);
-  // The Typst preview is one compiled SVG with no per-heading DOM anchors
-  // (unlike the old renderDoc() JSX tree), so this scrolls to the same
-  // fractional position the heading sits at in the source text instead.
-  const scrollToHeadingLine = (line) => {
-    const el = docPreviewRef.current;
-    if (!el || !current) return;
-    const totalLines = Math.max(1, (current.doc || '').split('\n').length - 1);
-    const fraction = Math.min(1, line / totalLines);
-    el.scrollTo({ top: fraction * Math.max(0, el.scrollHeight - el.clientHeight), behavior: 'smooth' });
-  };
-  const handleExportPdf = async () => {
-    if (!current || exportingPdf) return;
-    setExportingPdf(true);
-    try {
-      await exportTypstNotesToPdf(current.doc, current.nickname || current.name);
-    } catch (e) {
-      window.alert('Could not export notes to PDF. Please try again.');
-    } finally {
-      setExportingPdf(false);
-    }
-  };
 
   return (
     <div className={`tk-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
@@ -397,9 +313,6 @@ export function TrackerApp() {
         </div>
         <button className="tk-theme-toggle" onClick={() => applyTheme(theme === 'dark' ? 'light' : 'dark')}>
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-        </button>
-        <button className="tk-search-trigger" onClick={() => setSearchOpen(true)}>
-          🔍 Search theorems…
         </button>
         <ul className="tk-nav">
           <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => navigateTo('dashboard')}><span className="dot" />Dashboard</a></li>
@@ -544,7 +457,6 @@ export function TrackerApp() {
                   <div className="tk-hero-meta">{current.assignments.filter(a => a.status !== 'done').length} open</div>
                 </div>
                 <div style={{ display: 'flex', gap: '.6rem' }}>
-                  <button className="tk-btn tk-btn-outline" onClick={() => setRevisionOpenFor(current.id)}>Revision</button>
                   <button className="tk-btn tk-btn-outline" onClick={() => setGradesOpenFor(current.id)}>Grades</button>
                   <button className="tk-btn tk-btn-outline" onClick={() => setArchived(current.id, !current.archived)}>
                     {current.archived ? 'Unarchive' : 'Archive'}
@@ -589,39 +501,8 @@ export function TrackerApp() {
             </div>
 
             <div className="fade-up d2">
-              <SectionLabel sub="red [FLAG] marks note what you're unsure about" actions={
-                <div className="tk-notes-actions no-print" style={{ display: 'flex', gap: '.5rem' }}>
-                  <button className="tk-btn tk-btn-primary tk-btn-sm" onClick={() => setNotesOpenFor(current.id)}>Edit</button>
-                  <button className="tk-btn tk-btn-outline tk-btn-sm" disabled={exportingPdf} onClick={handleExportPdf}>
-                    {exportingPdf ? 'Exporting…' : 'Export to PDF'}
-                  </button>
-                </div>
-              }>Notes</SectionLabel>
-              <div className={`tk-doc-preview-layout${tocCollapsed ? ' toc-collapsed' : ''}`}>
-                <div className="tk-doc-toc no-print">
-                  <button className="tk-toc-toggle" onClick={toggleToc} title={tocCollapsed ? 'Show contents' : 'Hide contents'}>
-                    {tocCollapsed ? '»' : '« Contents'}
-                  </button>
-                  {!tocCollapsed && (
-                    courseToc.length ? courseToc.map((h, i) => (
-                      <a key={i} className={`tk-doc-toc-item lvl${h.level}`} onClick={() => scrollToHeadingLine(h.line)}>{h.text || 'Untitled'}</a>
-                    )) : <div className="tk-doc-toc-empty">Add a heading (=)</div>
-                  )}
-                </div>
-                <div className="tk-doc-preview">
-                  {notesOpenFor === current.id ? (
-                    // The full-screen editor overlay covers this entirely while
-                    // open, but it stays mounted underneath -- so without this,
-                    // it would keep recompiling on every keystroke via its own
-                    // debounce, silently defeating the editor's own auto-compile
-                    // toggle (see NotesEditor.jsx) since the expensive work would
-                    // still be happening right behind it.
-                    <div className="tk-note-p tk-note-empty">Editing…</div>
-                  ) : (
-                    <PagedTypstViewer ref={docPreviewRef} source={current.doc} debounceMs={300} emptyMessage='Nothing written yet. Click "Edit" to start.' mode="flush" />
-                  )}
-                </div>
-              </div>
+              <SectionLabel sub="Edited in Overleaf — syncs here automatically after each push">Notes</SectionLabel>
+              <NotesPdfViewer course={current} />
             </div>
 
             <div className="fade-up d2 no-print">
@@ -653,18 +534,6 @@ export function TrackerApp() {
         )}
       </main>
 
-      {notesOpenFor && (() => {
-        const c = courses.find(x => x.id === notesOpenFor);
-        if (!c) return null;
-        return <NotesEditor course={c} doc={c.doc} onClose={() => setNotesOpenFor(null)} onChange={(text) => updateDoc(c.id, text)} />;
-      })()}
-
-      {revisionOpenFor && (() => {
-        const c = courses.find(x => x.id === revisionOpenFor);
-        if (!c) return null;
-        return <Revision course={c} onClose={() => setRevisionOpenFor(null)} />;
-      })()}
-
       {gradesOpenFor && (() => {
         const c = courses.find(x => x.id === gradesOpenFor);
         if (!c) return null;
@@ -692,9 +561,6 @@ export function TrackerApp() {
           onSave={(fields) => { updateCourseMeta(courseToEdit.id, fields); setEditCourseFor(null); }}
           onDelete={() => removeCourse(courseToEdit.id)}
         />
-      )}
-      {searchOpen && (
-        <SearchModal courses={courses} onClose={() => setSearchOpen(false)} onSelect={goToSearchResult} />
       )}
     </div>
   );

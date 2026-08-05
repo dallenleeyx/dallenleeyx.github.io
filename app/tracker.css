@@ -6,7 +6,6 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 ::-webkit-scrollbar{width:10px;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-.katex{font-size:1.02em;}
 #particles{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.45;}
 @keyframes spinRing{to{transform:rotate(360deg);}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
@@ -37,8 +36,6 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-brand-sub{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);margin-top:.2rem;letter-spacing:.05em;}
 .tk-theme-toggle{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-sans);font-size:.68rem;font-weight:700;letter-spacing:.04em;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:1.2rem;transition:all var(--transition-fast);}
 .tk-theme-toggle:hover{border-color:var(--accent);color:var(--fg-1);}
-.tk-search-trigger{width:100%;text-align:left;background:transparent;border:1px solid var(--border);color:var(--fg-muted);font-family:var(--font-sans);font-size:.72rem;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:1.2rem;transition:all var(--transition-fast);}
-.tk-search-trigger:hover{border-color:var(--accent);color:var(--fg-1);}
 .tk-nav{list-style:none;margin:0 0 .4rem;}
 .tk-nav li{margin-bottom:2px;}
 .tk-nav a{display:flex;align-items:center;gap:.55rem;padding:.42rem .65rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);}
@@ -103,12 +100,8 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-mono-btn{background:transparent;border:1px solid var(--border);color:var(--accent-2);font-family:var(--font-mono);font-size:.66rem;padding:.32rem .75rem;border-radius:6px;cursor:pointer;transition:all var(--transition-fast);}
 .tk-mono-btn:hover{border-color:var(--accent);color:var(--accent);}
 .tk-mono-btn.active{border-color:var(--accent);color:var(--accent);background:var(--glow);}
-/* The one action that actually matters once auto-compile is off -- filled
-   like tk-btn-primary instead of the rest of this toolbar's outline style,
-   so it doesn't read as just another mode toggle. */
-.tk-compile-now-btn{background:var(--accent);color:var(--bg);border-color:var(--accent);}
-.tk-compile-now-btn:hover{color:var(--bg);box-shadow:0 4px 18px var(--glow-strong);}
-.tk-preview-mode-toggle{display:flex;gap:.4rem;align-items:center;}
+.tk-mono-btn:disabled{opacity:.35;cursor:default;}
+.tk-mono-btn:disabled:hover{border-color:var(--border);color:var(--accent-2);}
 .tk-x-btn{background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;transition:all var(--transition-fast);}
 .tk-x-btn:hover{border-color:var(--accent);color:var(--accent);}
 .tk-btn-danger{background:#d1453b;color:#fff;}
@@ -223,169 +216,13 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-empty .icon{font-size:1.6rem;margin-bottom:.5rem;}
 .tk-empty .title{font-weight:700;color:var(--fg-2);}
 
-/* Notes editor — full-screen overlay, Overleaf-style: ToC, source, live preview */
-.tk-editor-overlay{position:fixed;inset:0;z-index:400;background:var(--bg);display:flex;flex-direction:column;animation:fadeIn .18s ease both;}
-.tk-editor-topbar{display:flex;align-items:center;gap:1rem;padding:.9rem 1.6rem;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tk-editor-course{font-family:var(--font-mono);font-size:.68rem;color:var(--fg-muted);flex:1;text-align:center;}
-/* min-height:0 is required here: a flex item's default min-height is auto,
-   which lets its content (the edit/preview panes below) push this taller
-   than the fixed overlay instead of respecting its own overflow-y:auto --
-   without it the whole page scrolls instead of just this region, and the
-   edit/preview panes never get a properly bounded height to fill. */
-.tk-editor-body{flex:1;min-height:0;overflow-y:auto;padding:1.4rem 1.6rem 2.5rem;}
-
-.tk-doc-toolbar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;padding:.7rem 1.6rem;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tk-toolbar-sep{width:1px;align-self:stretch;background:var(--border);margin:0 .3rem;}
-.tk-flag-toolbar-btn{color:var(--fg-2);}
-
-/* flex (not grid) so the edit/preview split can be a user-dragged ratio
-   instead of a fixed 1fr 1fr -- see the resize handle below. */
-.tk-doc-layout{display:flex;gap:1.2rem;height:100%;}
-.tk-doc-layout>.tk-doc-toc{flex:0 0 160px;}
-.tk-doc-layout.toc-collapsed>.tk-doc-toc{flex:0 0 1.6rem;}
-.tk-doc-toc{border-right:1px solid var(--border);padding-right:1rem;overflow-y:auto;transition:flex-basis .2s ease,padding .2s ease;}
-.tk-doc-layout.toc-collapsed>.tk-doc-toc{border-right:none;padding-right:0;}
-.tk-doc-toc-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.6rem;}
-.tk-toc-toggle{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.6rem;padding:0;}
-.tk-toc-toggle:hover{color:var(--accent);}
-.tk-doc-toc-item{display:block;font-size:.75rem;color:var(--fg-2);text-decoration:none;padding:.25rem 0;cursor:pointer;border-radius:4px;}
-.tk-doc-toc-item:hover{color:var(--accent);}
-.tk-doc-toc-item.lvl2{padding-left:.7rem;font-size:.7rem;color:var(--fg-muted);}
-.tk-doc-toc-empty{font-size:.68rem;color:var(--fg-muted);font-style:italic;}
-/* .tk-doc-edit is a fixed percentage of the row (set inline via editPct,
-   the user-dragged split), so it doesn't grow/shrink on its own. Preview
-   used to match that (flex-grow:0/flex-shrink:0, no basis) which left it
-   sized to its own shrink-to-fit content width instead of actually
-   filling the rest of the row -- flex:1 here is what makes it claim all
-   the space the edit pane/toc/handle don't. */
-.tk-doc-layout>.tk-doc-edit{min-height:0;min-width:0;flex-grow:0;flex-shrink:0;}
-.tk-doc-layout>.tk-doc-preview{min-height:0;min-width:0;flex:1;}
-.tk-doc-edit{min-height:0;}
-.tk-doc-textarea{width:100%;height:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;font-family:var(--font-mono);font-size:.85rem;line-height:1.7;color:var(--fg-1);outline:none;resize:none;}
-.tk-doc-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
-/* PagedTypstViewer manages its own background/border/padding/scrolling
-   internally now (see .tk-paged-* below), so this is just a sizing box. */
-.tk-doc-preview{height:100%;}
-/* Draggable divider between edit/preview -- lets the split ratio be
-   user-chosen (persisted) instead of a fixed 50/50. */
-.tk-resize-handle{flex:0 0 10px;display:flex;align-items:center;justify-content:center;cursor:col-resize;}
-.tk-resize-handle span{width:3px;height:2.4rem;border-radius:2px;background:var(--border);transition:background .15s ease;}
-.tk-resize-handle:hover span{background:var(--accent);}
-
-/* Real Typst-compiled output (see components/tracker/TypstPreview.jsx) --
-   an <svg> straight from the compiler, not a JSX tree, so it's styled as a
-   single scalable image rather than per-element note/block classes. */
-.tk-typst-render{width:100%;}
-.tk-typst-render svg{width:100%;height:auto;display:block;}
-.tk-typst-render.compiling{opacity:.55;transition:opacity .15s ease;}
-.tk-typst-error{color:#b91c1c;font-family:var(--font-mono);font-size:.78rem;line-height:1.6;white-space:pre-wrap;margin:0;}
-
-/* Dedicated "view in browser" preview tab (app/typst-preview/[courseId]) --
-   Overleaf-style pop-out, wrapping PagedTypstViewer below for the actual
-   paginated/zoomable content; this is just its slim title bar. */
-.tk-typst-viewer{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:1000;}
-.tk-typst-viewer-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tk-typst-viewer-title{font-family:var(--font-mono);font-size:.7rem;color:var(--fg-muted);}
-.tk-typst-viewer-zoom{font-family:var(--font-mono);font-size:.68rem;color:var(--fg-2);min-width:3.2em;text-align:center;}
-.tk-typst-viewer-status{padding:2.5rem;font-family:var(--font-mono);font-size:.75rem;color:var(--fg-muted);}
-.tk-paged-wrap.tk-typst-viewer-body{flex:1;height:auto;min-height:0;}
-
-/* PagedTypstViewer -- a compiled Typst document rendered as real, separate
-   page cards (see the component's file-level comment for why this needs
-   its own SVG-slicing logic instead of just showing $typst.svg()'s output
-   directly), with zoom/pan into the content itself instead of the page. */
-.tk-paged-wrap{display:flex;flex-direction:column;height:100%;min-height:0;position:relative;}
-.tk-paged-toolbar{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tk-paged-viewport{flex:1;min-height:0;overflow:auto;background:var(--surface-2);position:relative;cursor:grab;outline:none;padding:2rem;}
-.tk-paged-viewport.dragging{cursor:grabbing;user-select:none;}
-.tk-paged-viewport:focus-visible{box-shadow:inset 0 0 0 2px var(--accent);}
-/* "flush" mode only (the read-only course-page preview): no padding, so
-   the page fills the container edge-to-edge with no whitespace margin.
-   "split" and "popout" both keep padding -- edge-to-edge made the zoom/nav
-   badges sit right on top of the page content with no breathing room. */
-.tk-paged-viewport-flush{padding:0;}
-/* Not pannable ("flush" mode only): plain vertical scroll, so drop the
-   grab cursor that would otherwise promise a drag that doesn't happen. */
-.tk-paged-viewport-static{cursor:default;}
-.tk-paged-stack{transform-origin:top left;position:relative;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.2);border-radius:2px;}
-/* Centering (including at rest) is handled entirely by
-   PagedTypstViewer.jsx's centerScroll via scrollLeft, not CSS margin --
-   margin:auto would center the box at its own unscaled width, which
-   conflicts with centerScroll's math (it assumes the box starts flush at
-   x:0 pre-scroll) and transform-origin:top-left scaling from that
-   already-offset position, leaving it off-center once scaled. */
-.tk-paged-content svg{display:block;width:100%;height:auto;}
-/* A page break -- Typst's own page margins mean this always lands on real
-   whitespace in the rendered content, not text, so it's safe to draw a
-   divider across it without covering anything. */
-.tk-page-divider{position:absolute;left:0;right:0;height:1px;background:rgba(0,0,0,.15);box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:none;}
-/* Positioned against .tk-paged-wrap (not the scrolling viewport), so it
-   stays put in the corner instead of scrolling away with the content --
-   the only always-visible chrome in the no-toolbar (split-view) mode.
-   The percentage doubles as a click-to-reset affordance. */
-.tk-paged-zoom-badge{position:absolute;top:.6rem;right:.6rem;display:flex;align-items:center;gap:.3rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.2rem .35rem;border-radius:6px;z-index:5;}
-.tk-paged-zoom-badge .tk-mono-btn{padding:.1rem .4rem;font-size:.68rem;}
-/* Page Prev/Next, shown alongside the zoom badge when there's no full
-   toolbar (compact/split-view mode) and the document has more than one
-   page. */
-.tk-paged-nav-badge{position:absolute;top:.6rem;left:.6rem;display:flex;align-items:center;gap:.4rem;background:var(--surface);border:1px solid var(--border);color:var(--fg-2);font-family:var(--font-mono);font-size:.66rem;padding:.2rem .5rem;border-radius:6px;z-index:5;}
-.tk-paged-nav-badge .tk-mono-btn{padding:.1rem .4rem;font-size:.7rem;}
-.tk-mono-btn:disabled{opacity:.35;cursor:default;}
-.tk-mono-btn:disabled:hover{border-color:var(--border);color:var(--accent-2);}
-/* Auto-compile off + edits since the last compile -- reuses the same red
-   as the flag tab (#d1453b) since both mean "something needs your
-   attention", not a hard error (that's tk-typst-error, shown instead of
-   the preview entirely). Centered so it never collides with the zoom
-   badge (top-right) or the page-nav badge (top-left, only when >1 page). */
-.tk-paged-stale-badge{position:absolute;top:.6rem;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid #d1453b;color:#d1453b;font-family:var(--font-mono);font-size:.66rem;padding:.2rem .55rem;border-radius:6px;z-index:5;}
-
-/* Note / doc typography -- a serif "math paper" register (STIX Two Text,
-   paired well with KaTeX's own Latin-Modern-derived faces) instead of the
-   rest of the site's rounded display/UI sans. Scoped to note content only. */
-.tk-doc-preview,.tk-doc-toc{font-family:'STIX Two Text',Georgia,'Times New Roman',serif;}
-.tk-note-p{font-size:1rem;color:var(--fg-2);line-height:1.75;margin-bottom:1rem;}
-.tk-note-empty{color:var(--fg-muted);font-style:italic;}
-.tk-note-h1,.tk-note-h2,.tk-note-h3{color:var(--fg-1);font-weight:700;font-family:inherit;margin:1.6rem 0 .7rem;}
-.tk-note-h1{font-size:1.3rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);}
-.tk-note-h2{font-size:1.12rem;}
-.tk-note-h3{font-size:1rem;font-style:italic;font-weight:600;}
-.tk-note-ul{margin:0 0 1rem 1.3rem;}
-.tk-note-ul li{font-size:1rem;color:var(--fg-2);line-height:1.7;margin-bottom:.35rem;}
-.tk-note-bq{border-left:2px solid var(--border);padding-left:.9rem;margin:0 0 1rem;color:var(--fg-muted);font-style:italic;font-size:1rem;}
-.tk-note-display-math{margin:.7rem 0 1.2rem;text-align:center;font-size:1.05em;overflow-x:auto;}
-
-/* Theorem/definition/proof blocks -- no card, no accent bar, no pill badge:
-   just a bold running-numbered label inline with the body, like amsthm's
-   "plain" (italic body) and "definition" (upright body) styles, closest to
-   how an actual paper or textbook sets these environments. */
-.tk-note-block{margin:0 0 1.1rem;scroll-margin-top:2rem;padding:.15rem 0;transition:background-color .3s ease;}
-.tk-note-block::after{content:'';display:table;clear:both;}
-@keyframes noteBlockFlash{0%,100%{background-color:transparent;}30%{background-color:var(--glow-strong);}}
-.tk-note-block-flash{animation:noteBlockFlash 1.6s ease;}
-/* Floating the label lets the block's first paragraph flow right after it
-   on the same line ("Theorem 1. If X then Y...") -- later paragraphs, if
-   any, clear the float's short height naturally and sit at full width. */
-.tk-note-block-head{float:left;margin:0 .4em 0 0;}
-.tk-block-label{font-weight:700;color:var(--fg-1);}
-.tk-block-label-proof{font-weight:400;font-style:italic;color:var(--fg-1);}
-.tk-note-block-name{font-weight:400;font-style:italic;}
-.tk-note-block-body{font-size:1rem;color:var(--fg-2);}
-.tk-note-block-body .tk-note-p:last-child{margin-bottom:0;}
-.tk-block-body-italic,.tk-block-body-italic .tk-note-p{font-style:italic;}
-.tk-qed-row{text-align:right;}
-.tk-qed{font-size:.85em;color:var(--fg-1);}
-
-/* Inline flag/comment — a small red tab; hover or focus reveals the note */
-.tk-flag-tab{position:relative;display:inline-block;width:.55em;height:.95em;background:#d1453b;border-radius:2px;margin:0 .2em;vertical-align:middle;cursor:help;}
-.tk-flag-tab:hover .tk-flag-tooltip,.tk-flag-tab:focus .tk-flag-tooltip{display:block;}
-.tk-flag-tooltip{display:none;position:absolute;bottom:130%;left:0;background:var(--surface);border:1px solid #d1453b;color:var(--fg-1);padding:.5rem .7rem;border-radius:6px;font-size:.8rem;font-style:normal;font-weight:400;line-height:1.5;white-space:normal;width:max-content;max-width:240px;box-shadow:var(--shadow-lg);z-index:20;text-align:left;}
-
-/* Notes preview — inline on the course page: contents + rendered doc, no source */
-.tk-doc-preview-layout{display:grid;grid-template-columns:160px 1fr;gap:1.2rem;margin-bottom:3.2rem;transition:grid-template-columns .2s ease;}
-.tk-doc-preview-layout .tk-doc-toc{overflow-y:visible;}
-.tk-doc-preview-layout .tk-doc-preview{height:65vh;}
-.tk-doc-preview-layout.toc-collapsed{grid-template-columns:1.6rem 1fr;}
-.tk-doc-preview-layout.toc-collapsed .tk-doc-toc{border-right:none;padding-right:0;}
+/* Notes — an Overleaf-compiled PDF synced from the dallen_notes repo, not
+   edited in-app (a previous in-browser Typst WASM editor lived here; it
+   made typing lag scale with document size since compiling ran on the
+   main thread no matter how it was debounced -- see dallen_notes/README.md
+   for the replacement pipeline). */
+.tk-notes-pdf-wrap{height:75vh;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface-2);margin-bottom:3.2rem;}
+.tk-notes-pdf-embed{width:100%;height:100%;border:none;display:block;}
 
 /* Generic modal (add/delete course, etc.) */
 .tk-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:300;animation:fadeIn .2s ease both;}
@@ -397,29 +234,6 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-field-hint{font-size:.66rem;color:var(--fg-muted);margin-top:.35rem;line-height:1.4;}
 .tk-modal-foot{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;}
 .tk-modal-danger-zone{margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
-
-/* Global theorem search */
-.tk-search-modal{width:min(560px,92vw);padding:1.2rem;}
-.tk-search-results{max-height:60vh;overflow-y:auto;margin-top:.9rem;}
-.tk-search-empty{font-size:.8rem;color:var(--fg-muted);padding:1rem 0;text-align:center;}
-.tk-search-result{padding:.7rem .6rem;border-radius:var(--radius-md);cursor:pointer;border-bottom:1px solid var(--border);transition:background var(--transition-fast);}
-.tk-search-result:last-child{border-bottom:none;}
-.tk-search-result:hover{background:var(--surface-2);}
-.tk-search-result-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.3rem;}
-.tk-search-result-course{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tk-search-result-name{font-size:.9rem;font-weight:700;color:var(--fg-1);margin-bottom:.2rem;}
-.tk-search-result-snippet{font-size:.78rem;color:var(--fg-2);line-height:1.5;}
-
-/* Revision — flashcard modal cycling theorem/definition/example blocks */
-.tk-revision-card{pointer-events:auto;width:min(640px,92vw);max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.8rem 2rem;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:fadeUp .3s ease both;}
-.tk-revision-card.tappable{cursor:pointer;}
-.tk-revision-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
-.tk-revision-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
-.tk-revision-course{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);}
-.tk-revision-name{font-size:1.05rem;font-weight:700;color:var(--fg-1);}
-.tk-revision-proof{margin-top:.9rem;padding:.9rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);animation:fadeIn .25s ease both;}
-.tk-revision-proof-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
-.tk-revision-foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem;gap:.6rem;flex-wrap:wrap;}
 
 /* Grade components -- same card chrome as Revision, wider since each row
    packs name + weight + score + remove into one line. */
@@ -503,15 +317,6 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
 .tk-modal-checkbox{display:flex;align-items:center;gap:.5rem;font-size:.76rem;color:var(--fg-2);margin-bottom:.9rem;cursor:pointer;}
 .tk-modal-checkbox input{width:auto;}
 
-@media (max-width: 1100px){
-  .tk-doc-preview-layout{grid-template-columns:1fr;height:auto;}
-  .tk-doc-layout{flex-direction:column;height:auto;}
-  .tk-doc-layout>.tk-doc-toc,.tk-doc-layout.toc-collapsed>.tk-doc-toc{flex-basis:auto;}
-  .tk-doc-layout>.tk-doc-edit,.tk-doc-layout>.tk-doc-preview{flex-basis:auto!important;}
-  .tk-resize-handle{display:none;}
-  .tk-doc-toc{border-right:none;border-bottom:1px solid var(--border);padding-right:0;padding-bottom:1rem;margin-bottom:1rem;overflow-y:visible;}
-  .tk-doc-edit, .tk-doc-preview{height:60vh;}
-}
 @media (max-width: 900px){
   html{font-size:16px;}
   .tk-app{flex-direction:column;}
@@ -543,18 +348,17 @@ body{background:var(--bg);color:var(--fg-1);font-family:var(--font-sans);line-he
      at a legible minimum width instead of squeezing everything unreadable. */
   .wg-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .wg-header,.wg-allday-row,.wg-body{min-width:640px;}
+  .tk-notes-pdf-wrap{height:65vh;}
 }
 @media (min-width: 901px){
   .tk-sidebar-backdrop{display:none;}
 }
 
-/* Manual browser print (Ctrl/Cmd+P) -- the real "Export to PDF" button
-   compiles a genuine Typst PDF instead of going through this, but this
-   still hides UI chrome if someone prints the page directly. */
+/* Manual browser print (Ctrl/Cmd+P) -- hides UI chrome if someone prints
+   the page directly. */
 @media print{
   .no-print, #particles{display:none!important;}
   .tk-main{margin-left:0!important;padding:0!important;max-width:none!important;}
-  .tk-doc-preview-layout{grid-template-columns:1fr!important;}
 }
 
 /* Site-wide corner nav (Dashboard / Math / Japanese) — fixed, out of flow,
