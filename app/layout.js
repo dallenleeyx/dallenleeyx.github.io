@@ -1,4 +1,3 @@
-import 'katex/dist/katex.min.css';
 import './colors_and_type.css';
 import './tracker.css';
 import { AppNav } from '../components/nav/AppNav';
