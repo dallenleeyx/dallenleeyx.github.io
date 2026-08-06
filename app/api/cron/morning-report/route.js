@@ -34,18 +34,19 @@ export async function GET(request) {
   }
 
   const email = process.env.ALLOWED_EMAIL;
-  const context = await buildStudyContext(email);
-
-  const userPrompt = [
-    "Here is Dallen's current situation, as JSON:",
-    JSON.stringify(context, null, 2),
-    '',
-    "Write today's morning brief: what he should focus on today, tied",
-    'explicitly to his 6-month plan and what\'s actually due/next. Be',
-    'specific, concise, and encouraging -- not generic study advice.',
-  ].join('\n');
 
   try {
+    const context = await buildStudyContext(email);
+
+    const userPrompt = [
+      "Here is Dallen's current situation, as JSON:",
+      JSON.stringify(context, null, 2),
+      '',
+      "Write today's morning brief: what he should focus on today, tied",
+      'explicitly to his 6-month plan and what\'s actually due/next. Be',
+      'specific, concise, and encouraging -- not generic study advice.',
+    ].join('\n');
+
     const client = getClaudeClient();
     const message = await client.messages.parse({
       model: CLAUDE_MODEL,

@@ -30,7 +30,14 @@ export async function POST(request) {
     return new Response(JSON.stringify({ error: 'message is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const context = await buildStudyContext(email);
+  let context;
+  try {
+    context = await buildStudyContext(email);
+  } catch (e) {
+    console.error('buildStudyContext failed:', e);
+    return new Response(JSON.stringify({ error: 'failed to load context' }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const systemPrompt = [
     "You are Dallen's personal study assistant, embedded on his own website's Dashboard.",
     'You know his real courses, assignments, Japanese study progress, 6-month goal plan, and',

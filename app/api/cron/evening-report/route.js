@@ -49,23 +49,24 @@ export async function GET(request) {
   }
 
   const email = process.env.ALLOWED_EMAIL;
-  const context = await buildStudyContext(email);
-
-  const userPrompt = [
-    "Here is Dallen's current situation, as JSON:",
-    JSON.stringify(context, null, 2),
-    '',
-    'Write tonight\'s wrap-up. Note: math assignments only carry a',
-    "done/not-done status with no completion timestamp, so you can say",
-    'an assignment is "still pending" but not confidently that it was',
-    '"finished today" specifically -- Japanese does track per-day',
-    'progress, so be concrete there. Assess whether today, and the recent',
-    'trend, is on track for the 6-month plan\'s targets, and suggest any',
-    'concrete revisions to the plan if genuinely warranted (don\'t suggest',
-    'changes just to have something to say).',
-  ].join('\n');
 
   try {
+    const context = await buildStudyContext(email);
+
+    const userPrompt = [
+      "Here is Dallen's current situation, as JSON:",
+      JSON.stringify(context, null, 2),
+      '',
+      'Write tonight\'s wrap-up. Note: math assignments only carry a',
+      "done/not-done status with no completion timestamp, so you can say",
+      'an assignment is "still pending" but not confidently that it was',
+      '"finished today" specifically -- Japanese does track per-day',
+      'progress, so be concrete there. Assess whether today, and the recent',
+      'trend, is on track for the 6-month plan\'s targets, and suggest any',
+      'concrete revisions to the plan if genuinely warranted (don\'t suggest',
+      'changes just to have something to say).',
+    ].join('\n');
+
     const client = getClaudeClient();
     const message = await client.messages.parse({
       model: CLAUDE_MODEL,
