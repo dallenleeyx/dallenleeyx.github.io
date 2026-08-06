@@ -1,28 +1,26 @@
 'use client';
-// components/dashboard/DashboardApp.jsx — the "/" Dashboard: assistant
-// panel up top, today's tasks / 6-month plan / reports below.
-import { useState } from 'react';
+// components/dashboard/DashboardApp.jsx — the "/" Dashboard. No more AI
+// assistant (cut, not worth the recurring spend) -- this is the combined
+// home base instead: this week's academic calendar position, every
+// important date across math and Japanese, an interactive checklist for
+// both, this week's class schedule, and a courses jump grid (the last two
+// moved here from /math's own now-removed in-app Dashboard tab).
+//
+// Mounts Japanese's own JapaneseSyncProvider + PlanProvider so the
+// checklist can read/toggle Japanese tasks through the exact same
+// usePlan() calls /japanese itself uses -- same merge semantics, same
+// synced document, not a separate copy (see TaskChecklist.jsx).
 import { useCoursesSync } from '../../lib/useCoursesSync';
-import { useGoalPlanSync } from '../../hooks/dashboard/useGoalPlanSync';
-import { useDashboardReports } from '../../hooks/dashboard/useDashboardReports';
-import { AssistantPanel } from './AssistantPanel';
-import { TodayTasks } from './TodayTasks';
-import { PlanTimeline } from './PlanTimeline';
-import { MorningReport } from './MorningReport';
-import { EveningReport } from './EveningReport';
-import { PlanSetupModal } from './PlanSetupModal';
+import { JapaneseSyncProvider } from '../../lib/japanese/SyncContext';
+import { PlanProvider } from '../../lib/japanese/PlanContext';
+import { AcademicWeekBanner } from './AcademicWeekBanner';
+import { ImportantDates } from './ImportantDates';
+import { TaskChecklist } from './TaskChecklist';
+import { WeekSchedule } from './WeekSchedule';
+import { CoursesGrid } from './CoursesGrid';
 
-export function DashboardApp() {
-  const { courses } = useCoursesSync();
-  const { plan, regenerating, regeneratePlan } = useGoalPlanSync();
-  const { reports, loading: reportsLoading } = useDashboardReports();
-  const [setupOpen, setSetupOpen] = useState(false);
-
-  const handleGenerate = async (input) => {
-    const result = await regeneratePlan(input);
-    if (result.ok) setSetupOpen(false);
-    else window.alert('Could not generate the plan. Please try again.');
-  };
+function DashboardInner() {
+  const { courses, setCourses, loading } = useCoursesSync();
 
   return (
     <div className="dash-shell">
@@ -31,24 +29,28 @@ export function DashboardApp() {
         <div className="sub">Everything you need to do, in one place</div>
       </div>
 
-      <AssistantPanel />
+      <AcademicWeekBanner />
 
-      <div className="dash-grid">
-        <TodayTasks />
-        <MorningReport reports={reports} loading={reportsLoading} />
-        <EveningReport reports={reports} loading={reportsLoading} />
-        <PlanTimeline plan={plan} onOpenSetup={() => setSetupOpen(true)} />
-      </div>
-
-      {setupOpen && (
-        <PlanSetupModal
-          courses={courses || []}
-          plan={plan}
-          generating={regenerating}
-          onClose={() => setSetupOpen(false)}
-          onGenerate={handleGenerate}
-        />
+      {loading || !courses ? (
+        <p className="tk-note-p tk-note-empty">Loading…</p>
+      ) : (
+        <div className="dash-grid">
+          <ImportantDates courses={courses} />
+          <TaskChecklist courses={courses} setCourses={setCourses} />
+          <WeekSchedule courses={courses} />
+          <CoursesGrid courses={courses} />
+        </div>
       )}
     </div>
+  );
+}
+
+export function DashboardApp() {
+  return (
+    <JapaneseSyncProvider>
+      <PlanProvider>
+        <DashboardInner />
+      </PlanProvider>
+    </JapaneseSyncProvider>
   );
 }

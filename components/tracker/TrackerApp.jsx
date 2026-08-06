@@ -3,10 +3,10 @@
 // and per-course notes. Courses sync cross-device via useCoursesSync; theme
 // and sidebar-collapsed state stay local-only.
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useCoursesSync } from '../../lib/useCoursesSync';
 import { computeGradeSummary, hasScore } from '../../lib/gradeMath';
-import { getWeekSchedule, getWeekDueAssignments, getWeekHolidays, getUpcomingSchedule, getUpcomingDueAssignments, getUpcomingHolidays, groupByDate, isoWeekday, DAY_NAMES } from '../../lib/schedule';
 import { MathParticles } from './MathParticles';
 import { Calendar } from './Calendar';
 import { NotesPdfViewer } from './NotesPdfViewer';
@@ -20,7 +20,6 @@ import { AddVisualizerModal } from './visualizers/AddVisualizerModal';
 import { ImportBanner } from './ImportBanner';
 
 const STATUS_ORDER = ['todo', 'doing', 'done'];
-const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
 function daysInfo(due, status) {
@@ -117,8 +116,13 @@ function GradeTotalBar({ pct }) {
 
 export function TrackerApp() {
   const { courses, setCourses, loading, offline, seeded, importData } = useCoursesSync();
+  const searchParams = useSearchParams();
   const [importDismissed, setImportDismissed] = useState(false);
-  const [view, setView] = useState('dashboard');
+  // No more in-app Dashboard view -- that content moved to the site's main
+  // "/" Dashboard, which combines it with Japanese. Opens on Calendar by
+  // default, or a specific course when linked from the Dashboard's course
+  // grid via ?course=<id>.
+  const [view, setView] = useState(() => searchParams.get('course') || 'calendar');
   const [calCursor, setCalCursor] = useState({ y: new Date().getFullYear(), m: new Date().getMonth() });
   const [selectedDate, setSelectedDate] = useState(null);
   const [drafts, setDrafts] = useState({});
@@ -128,11 +132,6 @@ export function TrackerApp() {
   const [addVisualizerOpen, setAddVisualizerOpen] = useState(false);
   const [addCourseOpen, setAddCourseOpen] = useState(false);
   const [editCourseFor, setEditCourseFor] = useState(null); // course id | null
-  // "week" = only the current calendar week (the original behavior).
-  // "upcoming" = a long forward-looking window -- useful once a whole
-  // semester's timetable is imported and "this week" happens to fall
-  // before/between terms, when it'd otherwise show nothing at all.
-  const [scheduleView, setScheduleView] = useState(() => { try { return localStorage.getItem('proofLabScheduleView') || 'week'; } catch (e) { return 'week'; } });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -159,10 +158,6 @@ export function TrackerApp() {
   const applySidebar = (open) => {
     setSidebarOpen(open);
     try { localStorage.setItem('proofLabSidebar', open ? 'open' : 'closed'); } catch (e) {}
-  };
-  const applyScheduleView = (next) => {
-    setScheduleView(next);
-    try { localStorage.setItem('proofLabScheduleView', next); } catch (e) {}
   };
   // on a phone the sidebar is a slide-in drawer -- picking a destination
   // should close it so the content underneath is actually visible; on a
@@ -200,7 +195,7 @@ export function TrackerApp() {
   const updateCourseMeta = (cid, fields) => mutate(cid, c => ({ ...c, ...fields }));
   const removeCourse = (cid) => {
     setCourses(cs => cs.filter(c => c.id !== cid));
-    if (view === cid) setView('dashboard');
+    if (view === cid) setView('calendar');
     if (gradesOpenFor === cid) setGradesOpenFor(null);
     setAddVisualizerOpen(false);
     setEditCourseFor(null);
@@ -261,34 +256,8 @@ export function TrackerApp() {
   // the sidebar, dashboard stats, and upcoming/schedule widgets.
   const activeCourses = courses.filter(c => !c.archived);
   const archivedCourses = courses.filter(c => c.archived);
-  const totals = {
-    all: activeCourses.reduce((s, c) => s + c.assignments.length, 0),
-    done: activeCourses.reduce((s, c) => s + c.assignments.filter(a => a.status === 'done').length, 0),
-  };
-  const upcoming = activeCourses
-    .flatMap(c => c.assignments.filter(a => a.status !== 'done').map(a => ({ ...a, course: c })))
-    .sort((x, y) => (x.due || '9999').localeCompare(y.due || '9999'));
-  const now = new Date();
   const courseToEdit = editCourseFor ? courses.find(c => c.id === editCourseFor) : null;
   const currentGradeSummary = current ? computeGradeSummary(current.gradeComponents || []) : null;
-  // "week" mirrors the original behavior; "upcoming" is a long
-  // forward-looking window -- useful once a whole semester's timetable is
-  // imported and "this week" happens to fall before/between terms, when
-  // it'd otherwise show nothing at all (its entries carry real
-  // seriesStart/seriesEnd dates, unlike hand-added ones). Both are cheap
-  // to compute, so just compute both and pick based on the toggle.
-  const scheduleSource = scheduleView === 'upcoming'
-    ? {
-        schedule: getUpcomingSchedule(activeCourses, now),
-        due: getUpcomingDueAssignments(activeCourses, now),
-        holidays: getUpcomingHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' })),
-      }
-    : {
-        schedule: getWeekSchedule(activeCourses, now),
-        due: getWeekDueAssignments(activeCourses, now),
-        holidays: getWeekHolidays(now).map(h => ({ date: h.date, title: h.label, kind: 'holiday' })),
-      };
-  const scheduleByDate = groupByDate([...scheduleSource.holidays, ...scheduleSource.due, ...scheduleSource.schedule]);
 
   return (
     <div className={`tk-app${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
@@ -315,7 +284,6 @@ export function TrackerApp() {
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
         <ul className="tk-nav">
-          <li><a className={view === 'dashboard' ? 'active' : ''} onClick={() => navigateTo('dashboard')}><span className="dot" />Dashboard</a></li>
           {activeCourses.map(c => (
             <li key={c.id}>
               <a className={view === c.id ? 'active' : ''} onClick={() => navigateTo(c.id)}>
@@ -339,109 +307,11 @@ export function TrackerApp() {
       </aside>
 
       <main className="tk-main">
-        {view === 'dashboard' && (
-          <section>
-            {seeded && !importDismissed && (
-              <ImportBanner
-                onImport={(imported) => { importData(imported); setImportDismissed(true); }}
-                onDismiss={() => setImportDismissed(true)}
-              />
-            )}
-            <div className="tk-hero fade-up">
-              <div>
-                <h1>Dashboard</h1>
-                <div className="tk-hero-meta">{String(now.getDate()).padStart(2,'0')} {MONTHS[now.getMonth()]} {now.getFullYear()}</div>
-              </div>
-            </div>
-            <div className="tk-stats fade-up d1">
-              <div className="tk-stat"><div className="tk-stat-num">{totals.all - totals.done}</div><div className="tk-stat-cap">Pending</div></div>
-              <div className="tk-stat"><div className="tk-stat-num">{totals.done}<span>/{totals.all}</span></div><div className="tk-stat-cap">Completed</div></div>
-            </div>
-            <div className="fade-up d2">
-              <SectionLabel sub="soonest due first">Assignments</SectionLabel>
-              {upcoming.length ? (
-                <div className="tk-timeline" style={{ marginBottom: '3.2rem' }}>
-                  {upcoming.map(a => (
-                    <AssignmentRow key={a.id} a={a} showCourse={`${a.course.glyph} · ${a.course.name}`} onCycle={() => cycle(a.course.id, a.id)} />
-                  ))}
-                </div>
-              ) : <div style={{ marginBottom: '3.2rem' }}><Empty icon="✅">Nothing pending.</Empty></div>}
-            </div>
-            <div className="fade-up d2">
-              <SectionLabel
-                sub={`${scheduleView === 'upcoming' ? 'upcoming' : 'this week'}, all courses combined — due assignments in blue, holidays in green`}
-                actions={
-                  <select
-                    className="tk-input tk-schedule-view-select no-print"
-                    value={scheduleView}
-                    onChange={e => applyScheduleView(e.target.value)}
-                  >
-                    <option value="week">This week</option>
-                    <option value="upcoming">Upcoming</option>
-                  </select>
-                }
-              >Schedule</SectionLabel>
-              {(scheduleSource.schedule.length || scheduleSource.due.length || scheduleSource.holidays.length) ? (
-                <div className={`tk-week-schedule${scheduleView === 'upcoming' ? ' tk-upcoming-schedule' : ''}`} style={{ marginBottom: '3.2rem' }}>
-                  {[...scheduleByDate.entries()].map(([date, items]) => (
-                    <div key={date} className="tk-week-day">
-                      <div className="tk-week-day-label">{DAY_NAMES[isoWeekday(date)]} · {date.slice(8, 10)} {MONTHS[Number(date.slice(5, 7)) - 1]}</div>
-                      {items.map((it, i) => (
-                        it.kind === 'holiday' ? (
-                          <div key={i} className="tk-week-item is-holiday">
-                            <span className="tk-week-time">Holiday</span>
-                            <span className="tk-week-title">{it.title}</span>
-                          </div>
-                        ) : it.kind === 'assignment' ? (
-                          <div key={i} className="tk-week-item is-assignment">
-                            <span className="tk-week-time">Due</span>
-                            <span className="tk-week-course">{it.course.glyph}</span>
-                            <span className="tk-week-title">{it.title}</span>
-                          </div>
-                        ) : (
-                          <div key={i} className="tk-week-item">
-                            <span className="tk-week-time">{it.start}–{it.end}</span>
-                            <span className="tk-week-course">{it.course.glyph}</span>
-                            <span className="tk-week-title">{it.title}</span>
-                            {it.venue && <span className="tk-week-venue">{it.venue}</span>}
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ marginBottom: '3.2rem' }}>
-                  <Empty icon="🗓️">
-                    {scheduleView === 'upcoming'
-                      ? 'No classes scheduled — add one from the Calendar tab.'
-                      : <>Nothing this week — try <a onClick={() => applyScheduleView('upcoming')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>Upcoming</a> if you've imported a schedule that hasn't started yet.</>}
-                  </Empty>
-                </div>
-              )}
-            </div>
-            <div className="fade-up d3">
-              <SectionLabel>Courses</SectionLabel>
-              <div className="tk-jump-grid">
-                {activeCourses.map(c => {
-                  const done = c.assignments.filter(a => a.status === 'done').length;
-                  const pct = c.assignments.length ? Math.round(done / c.assignments.length * 100) : 0;
-                  return (
-                    <div key={c.id} className="tk-jump" onClick={() => setView(c.id)}>
-                      <div className="tk-jump-glyph">{c.glyph}</div>
-                      <div className="tk-jump-name">{c.name}</div>
-                      <div className="tk-jump-meta">{c.assignments.length - done} open</div>
-                      <div className="tk-progress"><div className="tk-progress-fill" style={{ width: pct + '%' }} /></div>
-                    </div>
-                  );
-                })}
-                <div className="tk-jump tk-jump-add" onClick={() => setAddCourseOpen(true)}>
-                  <div className="tk-jump-add-plus">+</div>
-                  <div className="tk-jump-name">Add course</div>
-                </div>
-              </div>
-            </div>
-          </section>
+        {seeded && !importDismissed && (
+          <ImportBanner
+            onImport={(imported) => { importData(imported); setImportDismissed(true); }}
+            onDismiss={() => setImportDismissed(true)}
+          />
         )}
 
         {current && (

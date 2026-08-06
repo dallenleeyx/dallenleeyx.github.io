@@ -1,9 +1,11 @@
-/* app/dashboard.css — the "/" Dashboard: AI assistant up top, today's
-   tasks / 6-month plan / reports below. Reuses tracker.css's generic
-   button/input/modal/empty-state classes (already loaded globally via
-   app/layout.js) rather than redefining them -- everything here is
-   Dashboard-specific layout only, under its own dash- prefix so it
-   can't collide with existing class names elsewhere on the site. */
+/* app/dashboard.css — the "/" Dashboard: this week's academic-calendar
+   position, important dates, an interactive checklist, this week's class
+   schedule, and a courses jump grid. Reuses tracker.css's generic
+   button/input/empty-state and tk-week/tk-jump/tk-progress classes
+   (already loaded globally via app/layout.js) rather than redefining them
+   -- everything here is Dashboard-specific layout only, under its own
+   dash- prefix so it can't collide with existing class names elsewhere on
+   the site. */
 
 .dash-shell{max-width:1080px;margin:0 auto;padding:3.2rem 2rem 6rem;}
 
@@ -11,89 +13,45 @@
 .dash-header h1{font-family:var(--font-display);font-size:2rem;font-weight:600;letter-spacing:-.01em;color:var(--fg-1);}
 .dash-header .sub{font-family:var(--font-mono);font-size:.72rem;color:var(--fg-muted);margin-top:.3rem;}
 
-/* Assistant panel -- the "Claude voice" at the top */
-.dash-assistant{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem 1.6rem;margin-bottom:2.6rem;box-shadow:var(--shadow-md);}
-.dash-assistant-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
-.dash-assistant-title{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
-.dash-assistant-empty{color:var(--fg-muted);font-size:.85rem;font-style:italic;padding:.6rem 0 1rem;}
-.dash-assistant-messages{display:flex;flex-direction:column;gap:.8rem;max-height:46vh;overflow-y:auto;margin-bottom:1rem;}
-.dash-msg{padding:.7rem .95rem;border-radius:var(--radius-md);font-size:.86rem;line-height:1.6;max-width:88%;}
-.dash-msg-user{align-self:flex-end;background:var(--accent);color:var(--bg);}
-.dash-msg-assistant{align-self:flex-start;background:var(--surface-2);color:var(--fg-1);display:flex;gap:.6rem;align-items:flex-start;}
-.dash-msg-assistant .dash-msg-text{flex:1;min-width:0;}
-.dash-msg-text :is(p){margin-bottom:.5rem;}
-.dash-msg-text :is(p):last-child{margin-bottom:0;}
-.dash-speak-btn{flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--fg-muted);width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;transition:all var(--transition-fast);}
-.dash-speak-btn:hover{border-color:var(--accent);color:var(--accent);}
-.dash-speak-btn.speaking{border-color:var(--accent);color:var(--accent);background:var(--glow);}
-.dash-assistant-row{display:flex;gap:.6rem;align-items:center;}
-.dash-assistant-row .tk-input{flex:1;}
-.dash-mic-btn{flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--fg-2);width:38px;height:38px;border-radius:var(--radius-sm);cursor:pointer;font-size:16px;transition:all var(--transition-fast);}
-.dash-mic-btn:hover{border-color:var(--accent);color:var(--accent);}
-.dash-mic-btn.listening{border-color:#d1453b;color:#d1453b;background:rgba(209,69,59,.08);animation:dashPulse 1.4s ease infinite;}
-@keyframes dashPulse{0%,100%{box-shadow:0 0 0 0 rgba(209,69,59,.35);}50%{box-shadow:0 0 0 6px rgba(209,69,59,0);}}
-.dash-assistant-hint{font-size:.66rem;color:var(--fg-muted);margin-top:.5rem;}
+/* Academic-week banner */
+.dash-week-banner{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.4rem;margin-bottom:2rem;box-shadow:var(--shadow-md);}
+.dash-week-title{font-size:.95rem;font-weight:700;color:var(--fg-1);}
+.dash-week-range{font-family:var(--font-mono);font-size:.7rem;color:var(--fg-muted);}
+.dash-week-holiday{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.2rem .55rem;border-radius:var(--radius-pill,999px);background:rgba(26,156,92,.12);color:#1a9c5c;}
 
 /* Below-the-fold grid */
-.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;}
-.dash-grid-full{grid-column:1/-1;}
+.dash-grid{display:grid;grid-template-columns:1fr;gap:1.4rem;}
 .dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.3rem 1.5rem;}
 .dash-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
 .dash-card-title{font-size:.66rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);}
 .dash-card-meta{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);}
+.dash-schedule-select{width:auto;padding:.3rem .6rem;font-size:.7rem;}
 
-/* Today's tasks */
-.dash-task-group{margin-bottom:1.1rem;}
-.dash-task-group:last-child{margin-bottom:0;}
-.dash-task-group-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
+/* Important dates */
 .dash-task-item{display:flex;align-items:baseline;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.82rem;cursor:pointer;}
 .dash-task-item:last-child{border-bottom:none;}
+.dash-task-item.no-click{cursor:default;}
 .dash-task-item:hover .dash-task-title{color:var(--accent);}
 .dash-task-date{font-family:var(--font-mono);font-size:.64rem;color:var(--fg-muted);flex-shrink:0;min-width:3.4rem;}
 .dash-task-title{color:var(--fg-1);flex:1;transition:color var(--transition-fast);}
 .dash-task-course{font-family:var(--font-mono);font-size:.62rem;color:var(--accent-2);flex-shrink:0;}
+.dash-date-tag{font-family:var(--font-mono);font-size:.6rem;font-weight:700;color:var(--fg-muted);flex-shrink:0;}
+.dash-date-tag.tag-japanese{color:#d1453b;}
+.dash-date-tag.tag-exams{color:var(--accent-2);}
 
-/* 6-month plan timeline */
-.dash-timeline-month{margin-bottom:1.1rem;}
-.dash-timeline-month:last-child{margin-bottom:0;}
-.dash-timeline-month-label{font-family:var(--font-mono);font-size:.62rem;font-weight:700;color:var(--fg-muted);letter-spacing:.06em;margin-bottom:.5rem;}
-.dash-milestone{display:flex;align-items:flex-start;gap:.6rem;padding:.4rem 0;}
-.dash-milestone-dot{width:8px;height:8px;border-radius:50%;background:var(--border);margin-top:.35rem;flex-shrink:0;}
-.dash-milestone-dot.done{background:var(--accent);}
-.dash-milestone-dot.cat-math{box-shadow:0 0 0 2px rgba(59,111,212,.35);}
-.dash-milestone-dot.cat-japanese{box-shadow:0 0 0 2px rgba(209,69,59,.35);}
-.dash-milestone-body{flex:1;min-width:0;}
-.dash-milestone-title{font-size:.82rem;font-weight:700;color:var(--fg-1);}
-.dash-milestone-title.done{text-decoration:line-through;color:var(--fg-muted);}
-.dash-milestone-desc{font-size:.76rem;color:var(--fg-2);line-height:1.5;margin-top:.15rem;}
-.dash-milestone-date{font-family:var(--font-mono);font-size:.6rem;color:var(--fg-muted);flex-shrink:0;}
-.dash-narrative{font-size:.85rem;color:var(--fg-2);line-height:1.7;margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--border);}
-.dash-narrative :is(p){margin-bottom:.8rem;}
-.dash-narrative :is(p):last-child{margin-bottom:0;}
+/* Checklist */
+.dash-task-group{margin-bottom:1.1rem;}
+.dash-task-group:last-child{margin-bottom:0;}
+.dash-task-group-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.5rem;}
+.dash-check-item{display:flex;align-items:baseline;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.82rem;cursor:default;}
+.dash-check-item:last-child{border-bottom:none;}
+.dash-check-item input[type=checkbox]{flex-shrink:0;width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.dash-check-label{color:var(--fg-1);flex:1;cursor:pointer;transition:color var(--transition-fast);}
+.dash-check-label:hover{color:var(--accent);}
 
-/* Morning / evening reports */
-.dash-report-text{font-size:.85rem;color:var(--fg-2);line-height:1.7;}
-.dash-report-text :is(p){margin-bottom:.7rem;}
-.dash-report-text :is(p):last-child{margin-bottom:0;}
-.dash-assessment{display:inline-block;font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.22rem .6rem;border-radius:var(--radius-pill,999px);margin-bottom:.8rem;}
-.dash-assessment.good{background:rgba(26,156,92,.12);color:#1a9c5c;}
-.dash-assessment.on_track{background:var(--glow);color:var(--accent-2);}
-.dash-assessment.behind{background:rgba(209,69,59,.12);color:#d1453b;}
-.dash-suggestions{margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--border);}
-.dash-suggestions-label{font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-muted);margin-bottom:.6rem;}
-.dash-suggestion{margin-bottom:.7rem;}
-.dash-suggestion:last-child{margin-bottom:0;}
-.dash-suggestion-desc{font-size:.8rem;color:var(--fg-1);}
-.dash-suggestion-rationale{font-size:.72rem;color:var(--fg-muted);font-style:italic;margin-top:.15rem;}
-
-/* Plan setup modal */
-.dash-target-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;}
-.dash-target-row:last-child{margin-bottom:0;}
-.dash-target-name{flex:1;min-width:0;font-size:.8rem;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.dash-target-current{font-family:var(--font-mono);font-size:.62rem;color:var(--fg-muted);flex-shrink:0;}
-.dash-target-input{width:5.5rem;flex-shrink:0;text-align:center;}
+/* Schedule (moved here from /math's old in-app Dashboard tab) */
+.dash-week-schedule{display:flex;flex-direction:column;gap:1rem;}
 
 @media (max-width: 900px){
   .dash-shell{padding:4.6rem 1.1rem 5rem;}
-  .dash-grid{grid-template-columns:1fr;}
 }
