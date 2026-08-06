@@ -67,27 +67,27 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const { jlptExamDate, courseTargets, notes } = body || {};
 
-  const context = await buildStudyContext(email);
-
-  const userPrompt = [
-    "Here is Dallen's current situation, as JSON:",
-    JSON.stringify(context, null, 2),
-    '',
-    'He wants a 6-month study plan. His stated inputs:',
-    `- JLPT exam date: ${jlptExamDate || '(not given -- infer from context or leave blank)'}`,
-    `- Per-course target grades: ${JSON.stringify(courseTargets || [])}`,
-    notes ? `- Extra notes from Dallen: ${notes}` : '',
-    '',
-    'Produce a concrete, realistic 6-month plan: a handful of dated',
-    'milestones spread across his math courses and Japanese study (tagged',
-    "by category), the course targets carried through (fill in each course's",
-    'courseId/courseTitle from the courses list above), and a narrative',
-    'explaining the overall strategy to hit his target grades and pass the',
-    "JLPT exam. Be specific and grounded in what's actually in his",
-    'schedule/plan above -- not generic study advice.',
-  ].filter(Boolean).join('\n');
-
   try {
+    const context = await buildStudyContext(email);
+
+    const userPrompt = [
+      "Here is Dallen's current situation, as JSON:",
+      JSON.stringify(context, null, 2),
+      '',
+      'He wants a 6-month study plan. His stated inputs:',
+      `- JLPT exam date: ${jlptExamDate || '(not given -- infer from context or leave blank)'}`,
+      `- Per-course target grades: ${JSON.stringify(courseTargets || [])}`,
+      notes ? `- Extra notes from Dallen: ${notes}` : '',
+      '',
+      'Produce a concrete, realistic 6-month plan: a handful of dated',
+      'milestones spread across his math courses and Japanese study (tagged',
+      "by category), the course targets carried through (fill in each course's",
+      'courseId/courseTitle from the courses list above), and a narrative',
+      'explaining the overall strategy to hit his target grades and pass the',
+      "JLPT exam. Be specific and grounded in what's actually in his",
+      'schedule/plan above -- not generic study advice.',
+    ].filter(Boolean).join('\n');
+
     const client = getClaudeClient();
     const message = await client.messages.parse({
       model: CLAUDE_MODEL,
