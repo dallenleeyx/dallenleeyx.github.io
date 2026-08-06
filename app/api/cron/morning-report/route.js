@@ -5,7 +5,7 @@
 // directly, no lookup needed).
 import { NextResponse } from 'next/server';
 import { jsonSchemaOutputFormat } from '@anthropic-ai/sdk/helpers/json-schema';
-import { getClaudeClient, CLAUDE_MODEL } from '../../../../lib/dashboard/claude';
+import { getClaudeClient, CLAUDE_MODEL_FAST } from '../../../../lib/dashboard/claude';
 import { buildStudyContext } from '../../../../lib/dashboard/context';
 import { setReportForDate } from '../../../../lib/dashboard/reportsKv';
 import { appendMemoryEntries } from '../../../../lib/dashboard/memoryKv';
@@ -49,7 +49,7 @@ export async function GET(request) {
 
     const client = getClaudeClient();
     const message = await client.messages.parse({
-      model: CLAUDE_MODEL,
+      model: CLAUDE_MODEL_FAST,
       max_tokens: 2048,
       system: "You are Dallen's personal study assistant, writing his daily morning brief.",
       messages: [{ role: 'user', content: userPrompt }],

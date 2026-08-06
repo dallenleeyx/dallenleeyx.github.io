@@ -38,15 +38,29 @@ export async function POST(request) {
     return new Response(JSON.stringify({ error: 'failed to load context' }), { status: 502, headers: { 'Content-Type': 'application/json' } });
   }
 
+  // Split into two system blocks so the (larger, semi-stable) context JSON
+  // can be cached separately from the always-identical instructions --
+  // repeat chat messages within the cache window then only pay the ~10%
+  // cached-read rate on this block instead of full input price each time.
   const systemPrompt = [
-    "You are Dallen's personal study assistant, embedded on his own website's Dashboard.",
-    'You know his real courses, assignments, Japanese study progress, 6-month goal plan, and',
-    'what you\'ve learned about him from past reports/conversations -- here it all is as JSON:',
-    JSON.stringify(context, null, 2),
-    '',
-    'Answer naturally and concisely, grounded in the above. If asked something genuinely outside',
-    "this context, say so plainly rather than guessing. You're speaking directly to Dallen.",
-  ].join('\n');
+    {
+      type: 'text',
+      text: [
+        "You are Dallen's personal study assistant, embedded on his own website's Dashboard.",
+        'You know his real courses, assignments, Japanese study progress, 6-month goal plan, and',
+        'what you\'ve learned about him from past reports/conversations -- here it all is as JSON:',
+        JSON.stringify(context, null, 2),
+      ].join('\n'),
+      cache_control: { type: 'ephemeral', ttl: '1h' },
+    },
+    {
+      type: 'text',
+      text: [
+        'Answer naturally and concisely, grounded in the above. If asked something genuinely outside',
+        "this context, say so plainly rather than guessing. You're speaking directly to Dallen.",
+      ].join('\n'),
+    },
+  ];
 
   const messages = [
     ...history.slice(-10).map((h) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: String(h.content || '') })),

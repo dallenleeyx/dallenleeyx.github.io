@@ -5,7 +5,7 @@
 // deliberately-deferred "apply" action).
 import { NextResponse } from 'next/server';
 import { jsonSchemaOutputFormat } from '@anthropic-ai/sdk/helpers/json-schema';
-import { getClaudeClient, CLAUDE_MODEL } from '../../../../lib/dashboard/claude';
+import { getClaudeClient, CLAUDE_MODEL_FAST } from '../../../../lib/dashboard/claude';
 import { buildStudyContext } from '../../../../lib/dashboard/context';
 import { setReportForDate } from '../../../../lib/dashboard/reportsKv';
 import { appendMemoryEntries } from '../../../../lib/dashboard/memoryKv';
