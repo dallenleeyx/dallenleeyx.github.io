@@ -3,10 +3,10 @@ import { SignInButton } from './SignInButton';
 
 export function SignInGate() {
   return (
-    <div className="tk-loading-screen">
-      <div style={{ textAlign: 'center' }}>
-        <div className="tk-brand-name" style={{ marginBottom: '.6rem' }}>Dallen's Math Notes</div>
-        <p className="tk-note-p" style={{ marginBottom: '1.4rem' }}>Sign in to access your courses.</p>
+    <div className="auth-gate">
+      <div>
+        <div className="auth-gate-brand">Dallen Lee</div>
+        <p className="auth-gate-sub">Sign in to continue.</p>
         <SignInButton />
       </div>
     </div>

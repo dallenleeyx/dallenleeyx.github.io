@@ -10,11 +10,10 @@
 // module the PUT route uses server-side, so merge semantics can never
 // drift), and fans the merged result back out to each section's apply().
 //
-// Unlike the math side's useCoursesSync (poll-and-OVERWRITE, safe there
-// because its PUT is last-write-wins on one blob), this is poll-and-MERGE:
-// two devices can each add distinct progress that must both survive, so
-// applying the server's snapshot directly would silently discard whatever
-// this device added since its last successful push.
+// This is poll-and-MERGE, not poll-and-overwrite: two devices can each add
+// distinct progress that must both survive, so applying the server's
+// snapshot directly would silently discard whatever this device added
+// since its last successful push.
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 import { mergeSyncState, normalizeSyncState, stableStringify } from './syncMerge';
 

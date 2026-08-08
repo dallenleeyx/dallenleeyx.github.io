@@ -1,10 +1,9 @@
-import './dashboard.css';
 import { auth } from '../lib/auth';
 import { SignInGate } from '../components/auth/SignInGate';
-import { DashboardApp } from '../components/dashboard/DashboardApp';
+import { RootRedirect } from '../components/nav/RootRedirect';
 
 export default async function Page() {
   const session = await auth();
   if (!session) return <SignInGate />;
-  return <DashboardApp />;
+  return <RootRedirect />;
 }
