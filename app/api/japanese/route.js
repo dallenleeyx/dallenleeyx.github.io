@@ -1,8 +1,8 @@
 // app/api/japanese/route.js — GET/PUT sync API for the Japanese progress
-// document. Unlike app/api/data/route.js (last-write-wins), PUT here merges
-// the incoming state against whatever is already in Redis, since two devices
-// can each add distinct progress that must both survive -- see
-// lib/japanese/syncMerge.js for the section-by-section merge rules.
+// document. PUT merges the incoming state against whatever is already in
+// Redis, since two devices can each add distinct progress that must both
+// survive -- see lib/japanese/syncMerge.js for the section-by-section merge
+// rules.
 import { NextResponse } from 'next/server';
 import { auth } from '../../../lib/auth';
 import { getJapaneseRecord, setJapaneseRecord } from '../../../lib/japanese/kv';

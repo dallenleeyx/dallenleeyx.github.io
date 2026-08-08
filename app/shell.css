@@ -1,0 +1,28 @@
+/* app/shell.css — chrome shared by every route: the sign-in gate/loading
+   screen shown before a section has loaded, and the fixed corner nav that
+   toggles between sites. Deliberately generic, not prefixed per-section
+   (jp-/mus-) the way each site's own CSS is, since this is the only UI
+   that appears outside any one section. */
+
+.auth-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+
+.auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+.auth-gate-brand{font-size:1.1rem;font-weight:800;line-height:1.15;letter-spacing:-.01em;color:var(--fg-1);margin-bottom:.6rem;}
+.auth-gate-sub{color:var(--fg-2);margin-bottom:1.4rem;}
+
+.auth-btn{font-family:var(--font-sans);font-weight:800;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.3rem;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s ease;border:none;background:var(--accent);color:var(--bg);}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px var(--glow-strong);}
+
+/* Site-wide corner nav (Japanese / Music) -- fixed, out of flow, so it
+   never shifts any page's existing layout. */
+.app-nav{position:fixed;bottom:1.2rem;right:1.2rem;z-index:200;display:flex;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill,999px);padding:.35rem;box-shadow:var(--shadow-md);}
+.app-nav-link{font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;padding:.4rem .7rem;border-radius:var(--radius-pill,999px);transition:all var(--transition-fast);}
+.app-nav-link:hover{color:var(--fg-1);background:var(--surface-2);}
+.app-nav-link.active{color:var(--bg);background:var(--fg-1);}
+
+@media (max-width: 900px){
+  .app-nav{bottom:.7rem;right:.7rem;}
+}
+@media print{
+  .app-nav{display:none!important;}
+}

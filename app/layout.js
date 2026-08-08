@@ -1,9 +1,9 @@
 import './colors_and_type.css';
-import './tracker.css';
+import './shell.css';
 import { AppNav } from '../components/nav/AppNav';
 
 export const metadata = {
-  title: "Dallen's Math Notes | Dallen Lee",
+  title: 'Dallen Lee',
 };
 
 const THEME_INIT_SCRIPT = `
@@ -18,9 +18,9 @@ export default function RootLayout({ children }) {
     <html lang="en" data-theme="light" data-scroll-behavior="smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        {/* All sites' fonts loaded upfront as real <link> tags (not a CSS @import,
+        {/* Both sites' fonts loaded upfront as real <link> tags (not a CSS @import,
             which chains a fetch off the stylesheet instead of starting immediately
-            with the HTML), so switching between /math, /japanese, and /music never
+            with the HTML), so switching between /japanese and /music never
             waits on a fresh font fetch. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body data-screen-label="tracker">
+      <body>
         <div id="root">{children}</div>
         <AppNav />
       </body>
