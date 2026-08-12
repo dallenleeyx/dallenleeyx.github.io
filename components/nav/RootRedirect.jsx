@@ -14,7 +14,7 @@ export function RootRedirect() {
   useEffect(() => {
     let last = null;
     try { last = localStorage.getItem(LAST_SITE_KEY); } catch (e) {}
-    router.replace(last === '/music' ? last : '/japanese');
+    router.replace(last === '/fitness' ? last : '/japanese');
   }, [router]);
 
   return <div className="auth-loading">Loading…</div>;

@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 
 const LINKS = [
   { href: '/japanese', label: 'Japanese' },
-  { href: '/music', label: 'Music' },
+  { href: '/fitness', label: 'Fitness' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
