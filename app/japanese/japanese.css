@@ -1069,6 +1069,70 @@ main {
 .wl-row-weak { background: var(--jp-seal-bg); }
 .wl-row-weak .wl-word { color: var(--jp-seal); font-weight: 700; }
 
+/* ---------- reading passages ---------- */
+.reading-empty { color: var(--jp-ink-soft); font-style: italic; margin-top: var(--jp-space-4); }
+.reading-card {
+  border: 1px solid var(--jp-line);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-paper-alt);
+  padding: var(--jp-space-5);
+  margin-top: var(--jp-space-4);
+}
+.reading-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--jp-space-3); margin-bottom: var(--jp-space-4); }
+.reading-lesson-title { font-family: var(--jp-font-ui); font-size: 1rem; font-weight: 700; color: var(--jp-indigo-deep); margin: 0; }
+.reading-mode-toggle { display: flex; gap: var(--jp-space-2); }
+.reading-toolbar { display: flex; align-items: center; gap: var(--jp-space-3); margin: var(--jp-space-4) 0; flex-wrap: wrap; }
+.reading-hint { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); margin: 0 0 var(--jp-space-3); }
+.reading-toggle.active { background: var(--jp-indigo); border-color: var(--jp-indigo); color: #fff; }
+
+.passage-jp {
+  font-family: var(--jp-font-jp);
+  font-size: 1.15rem;
+  line-height: 2.4;
+  color: var(--jp-ink);
+  margin: 0 0 var(--jp-space-4);
+  white-space: pre-wrap;
+}
+.passage-jp ruby { ruby-position: over; }
+.passage-jp rt { font-family: var(--jp-font-ui); font-size: 0.6rem; color: var(--jp-ink-soft); }
+
+.reading-translation {
+  font-family: var(--jp-font-ui);
+  font-size: 0.9rem;
+  color: var(--jp-ink-soft);
+  line-height: 1.7;
+  border-top: 1px solid var(--jp-line);
+  padding-top: var(--jp-space-4);
+}
+.reading-translation p { margin: 0 0 var(--jp-space-3); }
+.reading-translation p:last-child { margin-bottom: 0; }
+
+.cloze-blank {
+  font-family: var(--jp-font-jp);
+  font-size: 1.15rem;
+  border: none;
+  border-bottom: 2px solid var(--jp-line);
+  background: transparent;
+  color: var(--jp-indigo-deep);
+  padding: 0 4px;
+  min-width: 3em;
+  cursor: pointer;
+  position: relative;
+}
+.cloze-blank.active { border-bottom-color: var(--jp-indigo); background: var(--jp-paper); }
+.cloze-blank.correct { border-bottom-color: var(--jp-mastered); color: var(--jp-mastered); }
+.cloze-blank.incorrect { border-bottom-color: var(--jp-seal); color: var(--jp-seal); text-decoration: line-through; }
+.cloze-reveal {
+  font-family: var(--jp-font-ui);
+  font-size: 0.7rem;
+  color: var(--jp-mastered);
+  text-decoration: none;
+  margin-left: 4px;
+}
+.cloze-wordbank { display: flex; flex-wrap: wrap; gap: var(--jp-space-2); margin: var(--jp-space-4) 0; }
+.cloze-word.used { opacity: 0.35; }
+.cloze-score { font-family: var(--jp-font-ui); font-size: 0.9rem; font-weight: 600; color: var(--jp-ink); }
+
 /* ---------- conjugation ---------- */
 .conj-mode { display: none; margin-top: 24px; }
 .conj-mode.active { display: block; }
