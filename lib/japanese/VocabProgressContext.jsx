@@ -115,6 +115,20 @@ function useVocabMasteryStores() {
       setMap((prev) => (prev[k] ? prev : { ...prev, [k]: true }));
       schedulePush();
     },
+    // Manual override for restoring lost progress without redoing the
+    // practice run -- see LessonChips' editMode: markPassed alone was
+    // write-only (no way to undo an accidental toggle, or clear a lesson
+    // you didn't mean to mark).
+    unmarkPassed: (level, lesson) => {
+      const k = lessonKey(level, lesson);
+      setMap((prev) => {
+        if (!prev[k]) return prev;
+        const next = { ...prev };
+        delete next[k];
+        return next;
+      });
+      schedulePush();
+    },
   });
 
   return { fcMastery: makeStore(fc, setFc), kwMastery: makeStore(kw, setKw), fgMastery: makeStore(fg, setFg) };
