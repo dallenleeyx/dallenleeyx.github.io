@@ -1,0 +1,201 @@
+/* app/fitness/fitness.css — Fitness section (Today/Plan/History).
+   Namespaced under .fit-shell with its own --fit-* custom properties and
+   its own @media (prefers-color-scheme: dark) block, same lesson Music and
+   Japanese already learned about the unscoped [data-theme] selector --
+   see music.css's header comment. No manual toggle: it just follows the
+   OS/browser preference, like Music did. */
+.fit-shell {
+  --fit-paper: #FAFAF7;
+  --fit-paper-alt: #F1EFEA;
+  --fit-ink: #1A1613;
+  --fit-ink-soft: #726B63;
+  --fit-line: #E0DAD1;
+  --fit-accent: #D9481F;
+  --fit-accent-ink: #FFFFFF;
+  --fit-active: #2E7D4F;
+  --fit-active-bg: #E1F0E5;
+  --fit-radius-sm: 6px;
+  --fit-radius-md: 12px;
+  --fit-radius-pill: 999px;
+  --fit-shadow-sm: 0 2px 8px rgba(30, 20, 10, 0.06);
+  --fit-shadow-md: 0 8px 20px rgba(30, 20, 10, 0.1);
+
+  min-height: 100vh;
+  background: var(--fit-paper);
+  color: var(--fit-ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  padding-bottom: 80px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fit-shell {
+    --fit-paper: #14120F;
+    --fit-paper-alt: #1D1A16;
+    --fit-ink: #F2EEE8;
+    --fit-ink-soft: #A39A8E;
+    --fit-line: #322C24;
+    --fit-accent: #FF7A47;
+    --fit-accent-ink: #1A1613;
+    --fit-active: #7FC79B;
+    --fit-active-bg: #16301F;
+    --fit-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --fit-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.fit-header { padding: 32px clamp(20px, 5vw, 64px) 0; text-align: center; }
+.fit-brand { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; }
+.fit-subtitle { display: block; margin: 6px 0 0; color: var(--fit-ink-soft); font-size: 0.9rem; }
+
+.fit-subnav {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 20px clamp(20px, 5vw, 64px) 0;
+  border-bottom: 1px solid var(--fit-line);
+}
+.fit-subnav-btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fit-ink-soft);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.fit-subnav-btn:hover { color: var(--fit-ink); }
+.fit-subnav-btn.active { color: var(--fit-accent); border-bottom-color: var(--fit-accent); }
+
+.fit-main { max-width: 720px; margin: 0 auto; padding: 24px clamp(20px, 5vw, 64px) 64px; }
+.fit-subview { display: none; }
+.fit-subview.active { display: block; animation: fitFadeIn 0.2s ease; }
+@keyframes fitFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.fit-empty { color: var(--fit-ink-soft); font-style: italic; padding: 24px 0; }
+
+.fit-ghost-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fit-ink);
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-pill);
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fit-ghost-btn:hover { border-color: var(--fit-accent); color: var(--fit-accent); }
+
+/* ---------- daily log ---------- */
+.fit-log-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.fit-log-heading { text-align: center; }
+.fit-log-heading h3 { margin: 0; font-size: 1.3rem; }
+.fit-log-subheading { color: var(--fit-ink-soft); font-size: 0.85rem; }
+
+.fit-health-card {
+  background: var(--fit-active-bg);
+  border-radius: var(--fit-radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.fit-health-badge { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fit-active); margin-bottom: 4px; }
+.fit-health-summary { margin: 0; font-weight: 600; }
+
+.fit-complete-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  padding: 12px 16px;
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-md);
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+.fit-complete-toggle input { width: 18px; height: 18px; accent-color: var(--fit-accent); cursor: pointer; }
+
+.fit-exercise-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--fit-line); border-radius: var(--fit-radius-md); overflow: hidden; }
+.fit-exercise-row { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--fit-paper); }
+.fit-exercise-name { font-weight: 600; }
+.fit-exercise-target { color: var(--fit-ink-soft); font-variant-numeric: tabular-nums; }
+
+/* ---------- plan editor ---------- */
+/* Single column, not a multi-up grid: .fit-main caps at 720px (a reading-
+   width container, shared with Today/History), which only leaves room for
+   two cramped columns -- not enough for an exercise name next to
+   sets/reps inputs without truncating. Full-width rows fix that; the page
+   just runs a bit taller instead. */
+.fit-plan-grid { display: flex; flex-direction: column; gap: 16px; }
+.fit-day-card { background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 16px; box-shadow: var(--fit-shadow-sm); }
+.fit-day-card-head { margin-bottom: 12px; }
+.fit-day-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fit-ink-soft); margin-bottom: 4px; }
+.fit-day-title-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--fit-ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--fit-line);
+  padding: 2px 0 6px;
+}
+.fit-day-title-input:focus { outline: none; border-bottom-color: var(--fit-accent); }
+
+.fit-plan-exercise-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fit-plan-exercise-row { display: flex; align-items: center; gap: 6px; }
+.fit-ex-name-input { flex: 1; min-width: 0; }
+.fit-ex-sets-input { width: 44px; }
+.fit-ex-reps-input { width: 64px; }
+.fit-ex-x { color: var(--fit-ink-soft); font-size: 0.8rem; }
+.fit-plan-exercise-row input {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 6px 8px;
+}
+.fit-plan-exercise-row input:focus { outline: none; border-color: var(--fit-accent); }
+.fit-ex-remove-btn {
+  border: none;
+  background: none;
+  color: var(--fit-ink-soft);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 4px 6px;
+  border-radius: var(--fit-radius-sm);
+}
+.fit-ex-remove-btn:hover { color: var(--fit-accent); background: var(--fit-paper); }
+.fit-add-ex-btn { width: 100%; text-align: center; }
+
+/* ---------- history ---------- */
+.fit-history-stat { font-weight: 700; font-size: 1rem; margin: 0 0 16px; }
+.fit-history-list { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--fit-line); border-radius: var(--fit-radius-md); overflow: hidden; }
+.fit-history-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--fit-paper); font-size: 0.85rem; }
+.fit-history-dot { color: var(--fit-line); }
+.fit-history-row.active .fit-history-dot { color: var(--fit-active); }
+.fit-history-date { width: 90px; flex-shrink: 0; color: var(--fit-ink-soft); }
+.fit-history-day-title { flex: 1; font-weight: 600; }
+.fit-history-health { color: var(--fit-active); font-size: 0.78rem; text-align: right; }
+
+.fit-sync-setup { border: 1px solid var(--fit-line); border-radius: var(--fit-radius-md); padding: 12px 16px; }
+.fit-sync-setup summary { cursor: pointer; font-weight: 600; }
+.fit-sync-setup-body { margin-top: 12px; font-size: 0.85rem; line-height: 1.6; color: var(--fit-ink-soft); }
+.fit-sync-setup-body code { background: var(--fit-paper-alt); border-radius: 4px; padding: 1px 5px; color: var(--fit-ink); font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.82em; }
+.fit-sync-endpoint { display: block; margin: 8px 0; word-break: break-all; }
+.fit-sync-example {
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-sm);
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--fit-ink);
+}
+

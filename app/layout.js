@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {/* Both sites' fonts loaded upfront as real <link> tags (not a CSS @import,
             which chains a fetch off the stylesheet instead of starting immediately
-            with the HTML), so switching between /japanese and /music never
+            with the HTML), so switching between /japanese and /fitness never
             waits on a fresh font fetch. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

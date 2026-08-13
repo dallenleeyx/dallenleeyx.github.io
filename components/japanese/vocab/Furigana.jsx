@@ -34,6 +34,7 @@ export function Furigana({ active }) {
   const [verdictClass, setVerdictClass] = useState(null); // 'fg-input-correct' | 'fg-input-wrong' | null
   const [showAnswer, setShowAnswer] = useState(false);
   const [justReset, setJustReset] = useState(false);
+  const [fixMastery, setFixMastery] = useState(false);
   const queue = useCleanRunQueue();
   const fieldRef = useRef(null);
 
@@ -161,12 +162,18 @@ export function Furigana({ active }) {
         multiSelect
         onToggle={toggleLesson}
         statusClass={(lv, n) => (fgMastery.isPassed(lv, n) ? ' chip-passed' : '')}
+        editMode={fixMastery}
+        onTogglePassed={(lv, n) => (fgMastery.isPassed(lv, n) ? fgMastery.unmarkPassed(lv, n) : fgMastery.markPassed(lv, n))}
       />
 
       <div className="study-options">
         <button className={`chip isolate-chip${isolateMode ? ' active' : ''}`} onClick={toggleIsolate}>{t('isolateWeak')}</button>
         <button className="text-link" onClick={handleResetProgress}>{t('resetProgress')}</button>
+        <button className={`text-link${fixMastery ? ' active' : ''}`} onClick={() => setFixMastery((v) => !v)}>
+          {fixMastery ? t('fixMasteryDone') : t('fixMasteryStart')}
+        </button>
       </div>
+      {fixMastery && <p className="isolate-note">{t('fixMasteryNote')}</p>}
       {isolateMode && <p className="isolate-note">{t('isolateNote')}</p>}
 
       <div className="fg-stage">

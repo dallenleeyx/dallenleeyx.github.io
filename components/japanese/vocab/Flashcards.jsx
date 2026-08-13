@@ -32,6 +32,7 @@ export function Flashcards({ active }) {
   const [shuffleOn, setShuffleOn] = useState(true);
   const [flipped, setFlipped] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [fixMastery, setFixMastery] = useState(false);
   const queue = useMasteryQueue();
 
   const startSession = (lv, ls, iso) => {
@@ -170,12 +171,18 @@ export function Flashcards({ active }) {
         multiSelect
         onToggle={toggleLesson}
         statusClass={(lv, n) => (fcMastery.isPassed(lv, n) ? ' chip-passed' : '')}
+        editMode={fixMastery}
+        onTogglePassed={(lv, n) => (fcMastery.isPassed(lv, n) ? fcMastery.unmarkPassed(lv, n) : fcMastery.markPassed(lv, n))}
       />
 
       <div className="study-options">
         <button className={`chip isolate-chip${isolateMode ? ' active' : ''}`} onClick={toggleIsolate}>{t('isolateWeak')}</button>
         <button className="text-link" onClick={handleResetProgress}>{t('resetProgress')}</button>
+        <button className={`text-link${fixMastery ? ' active' : ''}`} onClick={() => setFixMastery((v) => !v)}>
+          {fixMastery ? t('fixMasteryDone') : t('fixMasteryStart')}
+        </button>
       </div>
+      {fixMastery && <p className="isolate-note">{t('fixMasteryNote')}</p>}
       {isolateMode && <p className="isolate-note">{t('isolateNote')}</p>}
 
       <div className="card-stage">

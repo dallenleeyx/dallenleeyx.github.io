@@ -36,6 +36,7 @@ export function KanjiWriting({ active }) {
   const [shuffleOn, setShuffleOn] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [justReset, setJustReset] = useState(false);
+  const [fixMastery, setFixMastery] = useState(false);
   const queue = useCleanRunQueue();
   const canvas = useKanjiCanvas();
 
@@ -154,13 +155,19 @@ export function KanjiWriting({ active }) {
         multiSelect
         onToggle={toggleLesson}
         statusClass={(lv, n) => (kwMastery.isPassed(lv, n) ? ' chip-passed' : '')}
+        editMode={fixMastery}
+        onTogglePassed={(lv, n) => (kwMastery.isPassed(lv, n) ? kwMastery.unmarkPassed(lv, n) : kwMastery.markPassed(lv, n))}
       />
 
       <div className="study-options">
         <button className={`chip isolate-chip${isolateMode ? ' active' : ''}`} onClick={toggleIsolate}>{t('isolateWeak')}</button>
         <button className="text-link" onClick={handleResetProgress}>{t('resetProgress')}</button>
+        <button className={`text-link${fixMastery ? ' active' : ''}`} onClick={() => setFixMastery((v) => !v)}>
+          {fixMastery ? t('fixMasteryDone') : t('fixMasteryStart')}
+        </button>
       </div>
       {isolateMode && <p className="isolate-note">{t('kwIsolateNote')}</p>}
+      {fixMastery && <p className="isolate-note">{t('fixMasteryNote')}</p>}
 
       <div className="kw-stage">
         <p className="kw-hint">{t('kwHint')}</p>
