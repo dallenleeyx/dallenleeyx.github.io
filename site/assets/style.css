@@ -72,6 +72,19 @@ a.cv-entry-title:hover { text-decoration: underline; }
 .cv-entry li { margin-bottom: .3rem; }
 .cv-entry li:last-child { margin-bottom: 0; }
 
+.cv-course-list { list-style: none; margin: 0; padding: 0; }
+.cv-course-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: .55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.cv-course-list li:last-child { border-bottom: none; }
+.cv-course-list .course-name { font-weight: 700; }
+.cv-course-list .course-status { font-size: .9rem; color: var(--fg-muted); white-space: nowrap; }
+
 .cv-plain { margin: 0; }
 .cv-plain + .cv-plain { margin-top: .5rem; }
 .cv-skill-label { font-weight: 700; }
