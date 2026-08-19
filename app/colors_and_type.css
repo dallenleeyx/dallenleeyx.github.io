@@ -169,6 +169,24 @@
 
 
 /* ──────────────────────────────────────────────────────────────────────
+   3b. BASE RESET
+   ──────────────────────────────────────────────────────────────────────
+   Applies to every route. /japanese and /fitness immediately repaint their
+   own background on their .jp-shell/.fit-shell wrapper (full viewport
+   height), so this only ever shows as the base layer behind those — it
+   exists mainly so the public CV routes and the sign-in gate aren't stuck
+   on browser-default white before/without a section-specific wrapper.
+   ────────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────────
    4. SEMANTIC TYPE STYLES
    ──────────────────────────────────────────────────────────────────────
    Use these classes (or extend them in your own selectors) instead of
