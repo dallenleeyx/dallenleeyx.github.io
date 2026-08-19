@@ -1,43 +1,41 @@
 // site/assets/projects-data.js — everything projects.html renders. Edit the
-// array below with your real Colab notebooks; nothing else needs to change.
+// array below with your real notebooks; nothing else needs to change.
 // `colabUrl` should point straight at the notebook ("Share" -> "Copy link"
-// in Colab). `category` is freeform -- the filter pills on projects.html
-// are generated automatically from whatever values appear here.
+// in Colab). `category` is freeform -- the filter list on projects.html is
+// generated automatically from whatever values appear here.
+//
+// The entries below are placeholders loosely tied to the research/coursework
+// on the CV (random band matrices, Markowitz portfolios, model theory,
+// algebraic geometry, topology) -- swap in your real notebooks and links.
 var COLAB_PROJECTS = [
   {
-    title: 'Housing Price Prediction with Gradient Boosting',
-    description: 'End-to-end regression pipeline on housing data: cleaning, feature engineering, and an XGBoost model tuned with cross-validation.',
-    category: 'Machine Learning',
+    title: 'Numerical Eigenvector Localisation in Random Band Matrices',
+    description: 'Simulating band matrices at varying bandwidth-to-size ratios and estimating the localisation threshold of their eigenvectors numerically.',
+    category: 'Random Matrix Theory',
     colabUrl: 'https://colab.research.google.com/',
   },
   {
-    title: 'Sentiment Analysis on Social Media Posts',
-    description: 'Fine-tuned a lightweight transformer to classify sentiment on short-form text, with an error analysis of the hardest cases.',
-    category: 'NLP',
+    title: 'Spectral Shrinkage for Markowitz Portfolio Covariance Matrices',
+    description: 'Comparing eigenvalue clipping, linear, and non-linear shrinkage estimators for denoising empirical covariance matrices in a Markowitz optimisation.',
+    category: 'Numerical Linear Algebra',
     colabUrl: 'https://colab.research.google.com/',
   },
   {
-    title: 'Exploratory Analysis of Global Climate Data',
-    description: 'Cleaned and visualized decades of temperature and precipitation records to surface long-term regional trends.',
-    category: 'Data Analysis',
+    title: 'Quantifier Elimination for Cyclic Abelian Groups — Worked Examples',
+    description: 'Implementing the reduction strategy from the capstone project to eliminate quantifiers in small example systems over cyclic abelian groups.',
+    category: 'Logic & Model Theory',
     colabUrl: 'https://colab.research.google.com/',
   },
   {
-    title: 'Handwritten Digit Recognition from Scratch',
-    description: 'A convolutional neural network built with NumPy only (no autograd) to understand backprop at the implementation level.',
-    category: 'Computer Vision',
+    title: 'Visualising Algebraic Curves and Surfaces',
+    description: 'Plotting affine and projective varieties defined by low-degree polynomials to build intuition for singular points and rational parametrisations.',
+    category: 'Algebraic Geometry',
     colabUrl: 'https://colab.research.google.com/',
   },
   {
-    title: 'Movie Recommendation Engine',
-    description: 'Collaborative filtering with matrix factorization, compared against a simple content-based baseline on the MovieLens dataset.',
-    category: 'Machine Learning',
-    colabUrl: 'https://colab.research.google.com/',
-  },
-  {
-    title: 'Named Entity Recognition for News Articles',
-    description: 'Trained a sequence-tagging model to extract people, organizations, and locations from raw news text.',
-    category: 'NLP',
+    title: 'Computing Persistent Homology of Point Clouds',
+    description: 'A short exploration of persistent homology as a tool for detecting topological features (loops, voids) in noisy sampled data.',
+    category: 'Topology',
     colabUrl: 'https://colab.research.google.com/',
   },
 ];
