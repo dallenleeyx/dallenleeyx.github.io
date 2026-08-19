@@ -3,148 +3,93 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dallen Lee — CV</title>
-  <meta name="description" content="Dallen Lee — Computer Science student. Papers, projects, coursework, and Colab notebooks.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+  <title>Dallen Lee Yu Xuan</title>
+  <meta name="description" content="Dallen Lee Yu Xuan — B.Sc. (Hons) Mathematics candidate, National University of Singapore.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.78em' font-size='90' text-anchor='middle' x='50'%3E%CF%80%3C/text%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <!-- ══════════════════════════════════════════════════════════════════
-       Edit-me guide: everything below is plain content, no build step.
-       - Hero name/tagline, About bio, contact links: edit directly here.
-       - "Selected Work" cards: duplicate a .home-writing-card block.
-       - Coursework pills: duplicate a <span class="home-course-pill">.
-       - Colab projects live in projects.html + assets/projects-data.js.
-       ══════════════════════════════════════════════════════════════════ -->
-
-  <nav class="site-nav">
-    <a class="site-nav-brand" href="index.html">Dallen Lee</a>
-    <div class="site-nav-links">
-      <a href="index.html#about">About</a>
-      <a href="index.html#work">Work</a>
-      <a href="index.html#courses">Courses</a>
-      <a href="projects.html">Projects</a>
-      <button class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
-    </div>
-  </nav>
-
-  <main class="home">
-    <header class="home-hero">
-      <p class="t-eyebrow home-eyebrow">Portfolio</p>
-      <h1 class="home-name">Dallen Lee</h1>
-      <p class="home-tagline">Computer Science student building software and machine learning projects.</p>
-
-      <div class="home-actions">
-        <a href="projects.html" class="home-btn home-btn-primary">View Projects</a>
-        <a href="mailto:your.email@example.com" class="home-btn home-btn-ghost">Get in Touch</a>
-      </div>
-
-      <ul class="home-links">
-        <li><a href="https://github.com/dallenleeyx" target="_blank" rel="noreferrer noopener">GitHub</a></li>
-        <li><a href="https://linkedin.com/in/your-handle" target="_blank" rel="noreferrer noopener">LinkedIn</a></li>
-        <li><a href="https://scholar.google.com/" target="_blank" rel="noreferrer noopener">Google Scholar</a></li>
-      </ul>
+  <!-- Edit-me guide: this is plain HTML, no build step. Add/remove
+       .cv-entry blocks under each section as your CV changes. -->
+  <main class="page">
+    <header>
+      <h1 class="cv-name">Dallen Lee Yu Xuan</h1>
+      <p class="cv-affil">B.Sc. (Hons) Mathematics candidate (Pure Mathematics), National University of Singapore</p>
+      <p class="cv-contact">
+        <a href="mailto:e0969261@u.nus.edu">e0969261@u.nus.edu</a><span class="sep">&middot;</span><a href="https://github.com/dallenleeyx" target="_blank" rel="noreferrer noopener">github.com/dallenleeyx</a><span class="sep">&middot;</span><a href="projects.html">Projects &amp; Notebooks</a>
+      </p>
     </header>
 
-    <section class="home-section" id="about" aria-labelledby="about-heading">
-      <p class="t-section-label">About</p>
-      <div class="home-about">
-        <p class="home-about-text">
-          I'm currently studying Computer Science, with a focus on machine learning and
-          data-driven systems. Outside of coursework I like turning small ideas into working
-          prototypes — most of them start as a Google Colab notebook before becoming anything
-          bigger. This site is where I keep a public record of that work: papers and projects
-          I've written, the courses that shaped how I think about the field, and the notebooks
-          themselves.
-        </p>
-        <ul class="home-focus-list">
-          <li class="home-focus-chip">Machine Learning</li>
-          <li class="home-focus-chip">Data Science</li>
-          <li class="home-focus-chip">Software Engineering</li>
-          <li class="home-focus-chip">NLP</li>
+    <section class="cv-section" aria-labelledby="education-heading">
+      <h2 id="education-heading">Education</h2>
+      <div class="cv-entry">
+        <div class="cv-entry-head">
+          <span class="cv-entry-title">National University of Singapore</span>
+          <span class="cv-entry-date">Aug 2022 – Dec 2026</span>
+        </div>
+        <p class="cv-entry-sub">B.Sc. (Hons) in Mathematics, Specialisation in Pure Mathematics</p>
+      </div>
+    </section>
+
+    <section class="cv-section" aria-labelledby="research-heading">
+      <h2 id="research-heading">Research Experience</h2>
+
+      <div class="cv-entry">
+        <div class="cv-entry-head">
+          <span class="cv-entry-title">Localisation of Eigenvectors for Random Band Matrices</span>
+          <span class="cv-entry-date">Aug 2026 – Present</span>
+        </div>
+        <p class="cv-entry-sub">Advisor: Prof. Matteo Mucciconi, NUS</p>
+        <ul>
+          <li>Studying current research papers on localisation of eigenvectors, specifically the threshold at which eigenvectors of random band matrices become localised, with respect to matrix size and band width.</li>
+          <li>Aiming to extend these results and/or carry out numerical experiments to verify claims from the literature.</li>
+        </ul>
+      </div>
+
+      <div class="cv-entry">
+        <div class="cv-entry-head">
+          <span class="cv-entry-title">Covariance Matrix Denoising for Markowitz Portfolios</span>
+          <span class="cv-entry-date">May 2026 – Aug 2026</span>
+        </div>
+        <p class="cv-entry-sub">Advisor: Prof. Timothy Wertz, NUS</p>
+        <ul>
+          <li>Applied spectral shrinkage techniques (eigenvalue clipping, linear and non-linear shrinkage) to denoise empirical covariance matrices.</li>
+          <li>Evaluated the efficacy of cleaned precision matrices for constructing optimised, risk-adjusted portfolios within the Markowitz framework.</li>
+          <li>Proposed an alternate estimator — a cleaned spatial-sign matrix — for optimising the Markowitz portfolio in high-variance regimes.</li>
+        </ul>
+      </div>
+
+      <div class="cv-entry">
+        <div class="cv-entry-head">
+          <span class="cv-entry-title">Mathematics Capstone Project — Model Theory</span>
+          <span class="cv-entry-date">Jan 2026 – Apr 2026</span>
+        </div>
+        <p class="cv-entry-sub">Advisor: Prof. Tran Chieu-Minh, NUS</p>
+        <ul>
+          <li>Explored foundational model theory, Gödel's completeness theorem, Turing computability, and Tarski's decision method for real closed fields and Euclidean geometry.</li>
+          <li>Proved quantifier elimination for the theory of cyclic abelian groups, constructing explicit reduction strategies for systems of equations and inequations using number-theoretic tools.</li>
         </ul>
       </div>
     </section>
 
-    <section class="home-section" id="work" aria-labelledby="work-heading">
-      <div class="home-section-head">
-        <p class="t-section-label">Papers &amp; Projects</p>
-        <h2 id="work-heading" class="t-h2">Selected Work</h2>
-      </div>
-      <div class="home-writing-grid">
-        <article class="home-writing-card">
-          <span class="home-writing-tag">Machine Learning</span>
-          <h3 class="home-writing-title">Predicting Student Performance with Ensemble Learning</h3>
-          <p class="home-writing-desc">Compared gradient boosting and random forest models on academic performance data, with an emphasis on feature importance and fairness across subgroups.</p>
-        </article>
-        <article class="home-writing-card">
-          <span class="home-writing-tag">NLP</span>
-          <h3 class="home-writing-title">Efficient Attention Mechanisms for Long-Context Models</h3>
-          <p class="home-writing-desc">A survey and small-scale implementation of sparse and linear attention variants, benchmarked on throughput and downstream accuracy.</p>
-        </article>
-        <article class="home-writing-card">
-          <span class="home-writing-tag">Algorithms</span>
-          <h3 class="home-writing-title">Sorting Algorithms Under Real-World Data Distributions</h3>
-          <p class="home-writing-desc">An empirical comparison of classic sorting algorithms on non-uniform, real-world datasets rather than the usual randomized benchmarks.</p>
-        </article>
-      </div>
+    <section class="cv-section" aria-labelledby="coursework-heading">
+      <h2 id="coursework-heading">Coursework</h2>
+      <p class="cv-plain">Selected upper-level pure mathematics coursework: Functional Analysis, Measure Theory, Algebraic Topology, Algebraic Geometry, Differential Geometry.</p>
     </section>
 
-    <section class="home-section" id="courses" aria-labelledby="courses-heading">
-      <div class="home-section-head">
-        <p class="t-section-label">Coursework</p>
-        <h2 id="courses-heading" class="t-h2">Courses I&rsquo;ve Taken</h2>
-      </div>
-      <div class="home-course-groups">
-        <div class="home-course-group">
-          <h3 class="home-course-group-title">Computer Science</h3>
-          <ul class="home-course-list">
-            <li class="home-course-pill">Data Structures &amp; Algorithms</li>
-            <li class="home-course-pill">Operating Systems</li>
-            <li class="home-course-pill">Computer Networks</li>
-            <li class="home-course-pill">Database Systems</li>
-          </ul>
-        </div>
-        <div class="home-course-group">
-          <h3 class="home-course-group-title">Mathematics &amp; Statistics</h3>
-          <ul class="home-course-list">
-            <li class="home-course-pill">Linear Algebra</li>
-            <li class="home-course-pill">Multivariable Calculus</li>
-            <li class="home-course-pill">Probability &amp; Statistics</li>
-            <li class="home-course-pill">Discrete Mathematics</li>
-          </ul>
-        </div>
-        <div class="home-course-group">
-          <h3 class="home-course-group-title">Machine Learning &amp; AI</h3>
-          <ul class="home-course-list">
-            <li class="home-course-pill">Machine Learning</li>
-            <li class="home-course-pill">Deep Learning</li>
-            <li class="home-course-pill">Natural Language Processing</li>
-            <li class="home-course-pill">Computer Vision</li>
-          </ul>
-        </div>
-      </div>
+    <section class="cv-section" aria-labelledby="skills-heading">
+      <h2 id="skills-heading">Skills</h2>
+      <p class="cv-plain"><span class="cv-skill-label">Languages:</span> English (native), Chinese (native), Japanese (basic; sitting the JLPT N3 exam in December 2026)</p>
+      <p class="cv-plain"><span class="cv-skill-label">Programming:</span> Python</p>
     </section>
 
-    <section class="home-section home-projects-cta">
-      <div>
-        <p class="t-section-label">More</p>
-        <h2 class="t-h2">Notebooks &amp; Experiments</h2>
-        <p class="home-about-text">A running, searchable collection of the projects I build in Google Colab.</p>
-      </div>
-      <a href="projects.html" class="home-btn home-btn-primary">Browse Projects →</a>
-    </section>
-
-    <footer class="home-footer">
-      <p>© <span id="year"></span> Dallen Lee</p>
+    <footer class="cv-footer">
+      <p>Last updated August 2026.</p>
     </footer>
   </main>
-
-  <script src="assets/theme.js"></script>
-  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

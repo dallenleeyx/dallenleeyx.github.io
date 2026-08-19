@@ -3,44 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projects — Dallen Lee</title>
-  <meta name="description" content="A searchable collection of Dallen Lee's Google Colab projects.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+  <title>Projects &amp; Notebooks — Dallen Lee Yu Xuan</title>
+  <meta name="description" content="Notebooks and small projects by Dallen Lee Yu Xuan.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.78em' font-size='90' text-anchor='middle' x='50'%3E%CF%80%3C/text%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <nav class="site-nav">
-    <a class="site-nav-brand" href="index.html">Dallen Lee</a>
-    <div class="site-nav-links">
-      <a href="index.html#about">About</a>
-      <a href="index.html#work">Work</a>
-      <a href="index.html#courses">Courses</a>
-      <a href="projects.html" class="active">Projects</a>
-      <button class="theme-toggle" type="button" aria-label="Toggle dark mode">🌙</button>
-    </div>
-  </nav>
+  <main class="page">
+    <a class="back-link" href="index.html">&larr; Dallen Lee Yu Xuan</a>
 
-  <main class="proj">
-    <header class="proj-header">
-      <p class="t-eyebrow proj-eyebrow">Projects</p>
-      <h1 class="proj-title">My Colab Projects</h1>
-      <p class="proj-subtitle">A running, searchable collection of notebooks and experiments — mostly built and run in Google Colab.</p>
+    <header>
+      <h1 class="cv-name" style="font-size:1.35rem;">Projects &amp; Notebooks</h1>
+      <p class="cv-affil" style="margin-bottom:2rem;">A running collection of notebooks and small computational projects.</p>
     </header>
 
-    <div class="proj-controls">
-      <label class="proj-search">
-        <svg class="proj-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="7" cy="7" r="5.25" stroke="currentColor" stroke-width="1.5" />
-          <path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
-        <input type="text" placeholder="Search projects…" aria-label="Search projects">
-      </label>
-      <div class="proj-filters" role="group" aria-label="Filter by category"></div>
-    </div>
+    <label class="proj-search">
+      <input type="text" placeholder="Search…" aria-label="Search projects">
+    </label>
+    <div class="proj-filters" role="group" aria-label="Filter by category"></div>
 
     <p class="proj-count"></p>
 
@@ -48,7 +32,6 @@
     <p class="proj-empty" style="display:none;"></p>
   </main>
 
-  <script src="assets/theme.js"></script>
   <script src="assets/projects-data.js"></script>
   <script src="assets/projects.js"></script>
 </body>
