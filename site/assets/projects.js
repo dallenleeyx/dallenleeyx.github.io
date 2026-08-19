@@ -60,7 +60,9 @@
     } else {
       grid.style.display = 'none';
       empty.style.display = '';
-      empty.textContent = 'No projects match ' + (state.query ? '“' + state.query + '”' : 'this category') + '.';
+      empty.textContent = COLAB_PROJECTS.length === 0
+        ? 'No projects yet — check back soon.'
+        : 'No projects match ' + (state.query ? '“' + state.query + '”' : 'this category') + '.';
     }
   }
 
