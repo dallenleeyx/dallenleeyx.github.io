@@ -6,41 +6,59 @@ import { useEffect, useState } from 'react';
 import { useMath } from '../../lib/math/MathSyncContext';
 import { ITEM_TYPES } from '../../lib/math/items';
 import { LatexEditor } from './LatexEditor';
+import { BulkImport } from './BulkImport';
 
 export function ItemEditor({ course, editingItem, onDone }) {
   const { addItem, updateItem } = useMath();
   const [lecture, setLecture] = useState(1);
   const [type, setType] = useState(ITEM_TYPES[0]);
+  const [number, setNumber] = useState('');
   const [name, setName] = useState('');
   const [statement, setStatement] = useState('');
   const [proof, setProof] = useState('');
+  const [remarks, setRemarks] = useState('');
 
   useEffect(() => {
     if (editingItem) {
       setLecture(editingItem.lecture ?? 1);
       setType(editingItem.type || ITEM_TYPES[0]);
+      setNumber(editingItem.number || '');
       setName(editingItem.name || '');
       setStatement(editingItem.statement || '');
       setProof(editingItem.proof || '');
+      setRemarks(editingItem.remarks || '');
     } else {
       setLecture(1);
       setType(ITEM_TYPES[0]);
+      setNumber('');
       setName('');
       setStatement('');
       setProof('');
+      setRemarks('');
     }
   }, [editingItem]);
 
   function handleSave() {
     if (!statement.trim()) return;
-    const payload = { course, lecture: Number(lecture) || 1, type, name: name.trim(), statement, proof };
+    const payload = {
+      course,
+      lecture: Number(lecture) || 1,
+      type,
+      number: number.trim(),
+      name: name.trim(),
+      statement,
+      proof,
+      remarks,
+    };
     if (editingItem) {
       updateItem(editingItem.id, payload);
     } else {
       addItem(payload);
+      setNumber('');
       setName('');
       setStatement('');
       setProof('');
+      setRemarks('');
     }
     onDone?.();
   }
@@ -60,6 +78,10 @@ export function ItemEditor({ course, editingItem, onDone }) {
             {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </label>
+        <label>
+          Number <span className="math-form-optional">(optional, e.g. "4.5")</span>
+          <input type="text" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="4.5" />
+        </label>
       </div>
 
       <label className="math-form-label-block">
@@ -72,7 +94,7 @@ export function ItemEditor({ course, editingItem, onDone }) {
         <LatexEditor
           value={statement}
           onChange={setStatement}
-          placeholder="Write the statement. Use $...$ for inline math, $$...$$ for display math."
+          placeholder="Write the statement. Use $...$ for inline math, $$...$$ for display math, \ref{4.5} to cross-link another entry."
           minRows={4}
         />
       </label>
@@ -82,12 +104,19 @@ export function ItemEditor({ course, editingItem, onDone }) {
         <LatexEditor value={proof} onChange={setProof} placeholder="Write the proof (optional)." minRows={6} />
       </label>
 
+      <label className="math-form-label-block">
+        Remarks <span className="math-form-optional">(optional — your own gloss on what this means)</span>
+        <LatexEditor value={remarks} onChange={setRemarks} placeholder="How you'd explain this to yourself." minRows={3} />
+      </label>
+
       <div className="math-form-actions">
         <button className="math-ghost-btn math-btn-primary" onClick={handleSave}>
           {editingItem ? 'Save changes' : 'Add entry'}
         </button>
         {editingItem && <button className="math-ghost-btn" onClick={onDone}>Cancel</button>}
       </div>
+
+      {!editingItem && <BulkImport course={course} />}
     </div>
   );
 }

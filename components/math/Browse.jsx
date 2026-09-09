@@ -22,6 +22,7 @@ function groupByLecture(items) {
 export function Browse({ course, onEdit }) {
   const { state, deleteItem } = useMath();
   const [revealed, setRevealed] = useState({});
+  const [remarksRevealed, setRemarksRevealed] = useState({});
   const [collapsed, setCollapsed] = useState({});
 
   const items = useMemo(
@@ -53,13 +54,14 @@ export function Browse({ course, onEdit }) {
                   <li key={it.id} className="math-item-card">
                     <div className="math-item-head">
                       <span className={`math-type-badge math-type-${it.type.toLowerCase()}`}>{it.type}</span>
+                      {it.number && <span className="math-item-number">{it.number}</span>}
                       {it.name && <span className="math-item-name">{it.name}</span>}
                       <span className="math-item-actions">
                         <button className="math-icon-btn" onClick={() => onEdit(it.id)} aria-label="Edit">✎</button>
                         <button className="math-icon-btn" onClick={() => deleteItem(it.id)} aria-label="Delete">✕</button>
                       </span>
                     </div>
-                    <LatexText text={it.statement} className="math-statement" />
+                    <LatexText text={it.statement} className="math-statement" course={course} />
                     {it.proof?.trim() && (
                       <div className="math-proof-toggle-wrap">
                         <button
@@ -68,7 +70,18 @@ export function Browse({ course, onEdit }) {
                         >
                           {revealed[it.id] ? 'hide proof' : 'show proof'}
                         </button>
-                        {revealed[it.id] && <LatexText text={it.proof} className="math-proof" />}
+                        {revealed[it.id] && <LatexText text={it.proof} className="math-proof" course={course} />}
+                      </div>
+                    )}
+                    {it.remarks?.trim() && (
+                      <div className="math-remarks-toggle-wrap">
+                        <button
+                          className="math-ghost-btn math-ghost-btn-remark"
+                          onClick={() => setRemarksRevealed((p) => ({ ...p, [it.id]: !p[it.id] }))}
+                        >
+                          {remarksRevealed[it.id] ? 'hide remarks' : 'show remarks'}
+                        </button>
+                        {remarksRevealed[it.id] && <LatexText text={it.remarks} className="math-remarks" course={course} />}
                       </div>
                     )}
                   </li>
