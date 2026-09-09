@@ -84,7 +84,7 @@ export function MathSyncProvider({ children }) {
 
   const addItem = useCallback((item) => {
     const id = uid();
-    setState((prev) => ({ items: { ...prev.items, [id]: { ...item, id, updatedAt: Date.now() } } }));
+    setState((prev) => ({ ...prev, items: { ...prev.items, [id]: { ...item, id, updatedAt: Date.now() } } }));
     schedulePush();
     return id;
   }, []);
@@ -97,7 +97,7 @@ export function MathSyncProvider({ children }) {
         const id = uid();
         next[id] = { ...item, id, updatedAt: now };
       });
-      return { items: next };
+      return { ...prev, items: next };
     });
     schedulePush();
   }, []);
@@ -106,7 +106,7 @@ export function MathSyncProvider({ children }) {
     setState((prev) => {
       const existing = prev.items[id];
       if (!existing) return prev;
-      return { items: { ...prev.items, [id]: { ...existing, ...patch, updatedAt: Date.now() } } };
+      return { ...prev, items: { ...prev.items, [id]: { ...existing, ...patch, updatedAt: Date.now() } } };
     });
     schedulePush();
   }, []);
@@ -115,13 +115,73 @@ export function MathSyncProvider({ children }) {
     setState((prev) => {
       const existing = prev.items[id];
       if (!existing) return prev;
-      return { items: { ...prev.items, [id]: { ...existing, deleted: true, updatedAt: Date.now() } } };
+      return { ...prev, items: { ...prev.items, [id]: { ...existing, deleted: true, updatedAt: Date.now() } } };
     });
     schedulePush();
   }, []);
 
+  // Sections are a per-course ordered name list -- see the comment in
+  // syncMerge.js for why the whole list is one LWW record rather than
+  // merged item-by-item.
+  const addSection = useCallback((course, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setState((prev) => {
+      const list = prev.sections[course]?.list || [];
+      if (list.includes(trimmed)) return prev;
+      return { ...prev, sections: { ...prev.sections, [course]: { list: [...list, trimmed], updatedAt: Date.now() } } };
+    });
+    schedulePush();
+  }, []);
+
+  const renameSection = useCallback((course, oldName, newName) => {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    setState((prev) => {
+      const list = prev.sections[course]?.list || [];
+      if (!list.includes(oldName)) return prev;
+      const now = Date.now();
+      const items = { ...prev.items };
+      Object.keys(items).forEach((id) => {
+        if (items[id].course === course && items[id].section === oldName) {
+          items[id] = { ...items[id], section: trimmed, updatedAt: now };
+        }
+      });
+      const newList = list.map((n) => (n === oldName ? trimmed : n));
+      return { ...prev, items, sections: { ...prev.sections, [course]: { list: newList, updatedAt: now } } };
+    });
+    schedulePush();
+  }, []);
+
+  const deleteSection = useCallback((course, name) => {
+    setState((prev) => {
+      const list = prev.sections[course]?.list || [];
+      if (!list.includes(name)) return prev;
+      const now = Date.now();
+      const items = { ...prev.items };
+      Object.keys(items).forEach((id) => {
+        if (items[id].course === course && items[id].section === name) {
+          items[id] = { ...items[id], section: '', updatedAt: now };
+        }
+      });
+      return {
+        ...prev,
+        items,
+        sections: { ...prev.sections, [course]: { list: list.filter((n) => n !== name), updatedAt: now } },
+      };
+    });
+    schedulePush();
+  }, []);
+
+  const reorderSections = useCallback((course, newList) => {
+    setState((prev) => ({ ...prev, sections: { ...prev.sections, [course]: { list: newList, updatedAt: Date.now() } } }));
+    schedulePush();
+  }, []);
+
   return (
-    <MathSyncContext.Provider value={{ state, loading, addItem, addItems, updateItem, deleteItem }}>
+    <MathSyncContext.Provider
+      value={{ state, loading, addItem, addItems, updateItem, deleteItem, addSection, renameSection, deleteSection, reorderSections }}
+    >
       {children}
     </MathSyncContext.Provider>
   );
