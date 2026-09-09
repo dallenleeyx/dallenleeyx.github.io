@@ -51,7 +51,7 @@ export async function POST(request) {
   };
 
   const incoming = {
-    plan: currentState.plan,
+    ...currentState,
     logs: {
       ...currentState.logs,
       [date]: { ...currentState.logs[date], health: healthEntry },
