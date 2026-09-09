@@ -210,6 +210,10 @@
   --math-shadow-sm: 0 2px 8px rgba(20, 24, 60, 0.06);
   --math-shadow-md: 0 8px 20px rgba(20, 24, 60, 0.1);
   font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
+  /* .math-shell sets this same rule, which this subtree can't inherit since
+     it's portaled outside it -- without it, popover text stayed at the
+     browser's default black, invisible against the dark-mode background. */
+  color: var(--math-ink);
 }
 @media (prefers-color-scheme: dark) {
   .math-ref-portal-root {
