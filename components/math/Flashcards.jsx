@@ -1,10 +1,12 @@
 'use client';
 // components/math/Flashcards.jsx — cycles through a course's entries one at
-// a time. What gets hidden behind the reveal adapts to the entry: if it has
-// a proof, the front is the statement and the reveal is the proof (the
-// classic "can I prove this" drill); if there's no proof (a plain
-// definition/remark), the front is just the name/type and the reveal is
-// the statement itself (recall the definition).
+// a time. Tap the card to flip it (same 3D rotateY animation as the
+// Japanese vocab flashcards). What's hidden behind the flip adapts to the
+// entry: if it has a proof, the front is the statement and the back is the
+// proof (the classic "can I prove this" drill); if there's no proof (a
+// plain definition/remark), the front is just the name/type and the back is
+// the statement itself (recall the definition). Remarks -- your own gloss
+// on the entry -- always show on the back, under whichever of those it is.
 import { useMemo, useState } from 'react';
 import { useMath } from '../../lib/math/MathSyncContext';
 import { LatexText } from './LatexText';
@@ -24,7 +26,7 @@ export function Flashcards({ course }) {
   const [shuffleOn, setShuffleOn] = useState(false);
   const [shuffleSeed, setShuffleSeed] = useState(0);
   const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
+  const [flipped, setFlipped] = useState(false);
 
   const allItems = useMemo(
     () => Object.values(state.items).filter((it) => !it.deleted && it.course === course),
@@ -44,15 +46,20 @@ export function Flashcards({ course }) {
   const safeIndex = filtered.length ? ((index % filtered.length) + filtered.length) % filtered.length : 0;
   const current = filtered[safeIndex] || null;
   const hasProof = !!current?.proof?.trim();
+  const hasRemarks = !!current?.remarks?.trim();
 
   function go(delta) {
-    setRevealed(false);
+    setFlipped(false);
     setIndex((i) => i + delta);
   }
   function reshuffle() {
     setShuffleSeed((s) => s + 1);
     setIndex(0);
-    setRevealed(false);
+    setFlipped(false);
+  }
+  function handleFlip(e) {
+    if (e.target.closest('.math-ref-chip')) return;
+    setFlipped((f) => !f);
   }
 
   if (!allItems.length) {
@@ -65,7 +72,7 @@ export function Flashcards({ course }) {
         <select
           className="math-fc-select"
           value={lectureFilter}
-          onChange={(e) => { setLectureFilter(e.target.value); setIndex(0); setRevealed(false); }}
+          onChange={(e) => { setLectureFilter(e.target.value); setIndex(0); setFlipped(false); }}
         >
           <option value="all">All lectures</option>
           {lectureNums.map((n) => (
@@ -83,28 +90,41 @@ export function Flashcards({ course }) {
       </div>
 
       {current ? (
-        <div className="math-fc-card">
-          <span className={`math-type-badge math-type-${current.type.toLowerCase()}`}>{current.type}</span>
-          {current.lecture != null && <span className="math-fc-lecture">Lecture {current.lecture}</span>}
-
-          {hasProof ? (
-            <>
-              {current.name && <h4 className="math-fc-name">{current.name}</h4>}
-              <LatexText text={current.statement} className="math-fc-statement" />
-              <button className="math-ghost-btn math-btn-primary" onClick={() => setRevealed((r) => !r)}>
-                {revealed ? 'hide proof' : 'show proof'}
-              </button>
-              {revealed && <LatexText text={current.proof} className="math-fc-proof" />}
-            </>
-          ) : (
-            <>
-              <h4 className="math-fc-name">{current.name || current.type}</h4>
-              <button className="math-ghost-btn math-btn-primary" onClick={() => setRevealed((r) => !r)}>
-                {revealed ? 'hide' : 'reveal'}
-              </button>
-              {revealed && <LatexText text={current.statement} className="math-fc-statement" />}
-            </>
-          )}
+        <div className="math-fc-stage">
+          <button
+            type="button"
+            className={`math-fc-card${flipped ? ' flipped' : ''}`}
+            onClick={handleFlip}
+            aria-live="polite"
+          >
+            <div className="math-fc-face math-fc-front">
+              <span className={`math-type-badge math-type-${current.type.toLowerCase()}`}>{current.type}</span>
+              {current.number && <span className="math-item-number">{current.number}</span>}
+              {current.lecture != null && <span className="math-fc-lecture">Lecture {current.lecture}</span>}
+              {hasProof ? (
+                <>
+                  {current.name && <h4 className="math-fc-name">{current.name}</h4>}
+                  <LatexText text={current.statement} className="math-fc-statement" course={course} />
+                </>
+              ) : (
+                <h4 className="math-fc-name">{current.name || current.type}</h4>
+              )}
+            </div>
+            <div className="math-fc-face math-fc-back">
+              {hasProof ? (
+                <LatexText text={current.proof} className="math-fc-proof" course={course} />
+              ) : (
+                <LatexText text={current.statement} className="math-fc-statement" course={course} />
+              )}
+              {hasRemarks && (
+                <div className="math-fc-remarks">
+                  <span className="math-fc-remarks-label">Remarks</span>
+                  <LatexText text={current.remarks} className="math-remarks" course={course} />
+                </div>
+              )}
+            </div>
+          </button>
+          <p className="math-fc-hint">tap the card to flip</p>
         </div>
       ) : (
         <p className="math-empty">No cards for this filter.</p>

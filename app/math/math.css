@@ -154,6 +154,7 @@
 }
 .math-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .math-item-name { font-weight: 700; }
+.math-item-number { font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.78rem; color: var(--math-ink-soft); }
 .math-item-actions { margin-left: auto; display: flex; gap: 2px; }
 .math-icon-btn {
   border: none;
@@ -167,7 +168,7 @@
 .math-icon-btn:hover { color: var(--math-accent); background: var(--math-paper); }
 
 .math-statement, .math-fc-statement { line-height: 1.6; }
-.math-proof-toggle-wrap { margin-top: 10px; }
+.math-proof-toggle-wrap, .math-remarks-toggle-wrap { margin-top: 10px; }
 .math-proof, .math-fc-proof {
   margin-top: 10px;
   padding: 10px 14px;
@@ -176,6 +177,97 @@
   border-radius: var(--math-radius-sm);
   line-height: 1.6;
 }
+.math-ghost-btn-remark:hover { border-color: #0E9384; color: #0E9384; }
+.math-remarks, .math-fc-remarks .math-remarks {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--math-paper);
+  border-left: 3px solid #0E9384;
+  border-radius: var(--math-radius-sm);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* ---------- \ref{} chips + preview popover ---------- */
+/* Portaled to <body>, so it re-declares the tokens .math-shell normally
+   provides by inheritance -- see the comment in RefPopover.jsx. */
+.math-ref-portal-root {
+  --math-paper: #F7F8FB;
+  --math-paper-alt: #ECEEF5;
+  --math-ink: #171A2B;
+  --math-ink-soft: #6B7089;
+  --math-line: #DBDEEA;
+  --math-accent: #3B4FE0;
+  --math-accent-ink: #FFFFFF;
+  --math-radius-sm: 6px;
+  --math-radius-md: 12px;
+  --math-radius-pill: 999px;
+  --math-shadow-sm: 0 2px 8px rgba(20, 24, 60, 0.06);
+  --math-shadow-md: 0 8px 20px rgba(20, 24, 60, 0.1);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .math-ref-portal-root {
+    --math-paper: #12131C;
+    --math-paper-alt: #1B1D2B;
+    --math-ink: #EDEEF6;
+    --math-ink-soft: #9A9DB8;
+    --math-line: #2C2F44;
+    --math-accent: #8B98FF;
+    --math-accent-ink: #12131C;
+    --math-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --math-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+}
+.math-ref-chip {
+  display: inline-block;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--math-accent);
+  border-bottom: 1px dashed var(--math-accent);
+  padding: 0 1px;
+}
+.math-ref-chip:hover { background: var(--math-paper); }
+.math-ref-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 30, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 500;
+}
+.math-ref-popover {
+  position: relative;
+  max-width: 520px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  width: 100%;
+  background: var(--math-paper);
+  border: 1px solid var(--math-line);
+  border-radius: var(--math-radius-md);
+  box-shadow: var(--math-shadow-md);
+  padding: 22px 22px 20px;
+  text-align: left;
+}
+.math-ref-popover-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.math-ref-popover-name { margin: 8px 0; }
+.math-ref-popover-statement { line-height: 1.6; }
+.math-ref-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: none;
+  color: var(--math-ink-soft);
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 4px 8px;
+  border-radius: var(--math-radius-sm);
+}
+.math-ref-close:hover { color: var(--math-accent); background: var(--math-paper-alt); }
+.math-ref-missing { color: var(--math-ink-soft); font-style: italic; }
 
 /* ---------- flashcards ---------- */
 .math-fc-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -190,20 +282,47 @@
 }
 .math-fc-progress { margin-left: auto; font-size: 0.8rem; color: var(--math-ink-soft); font-variant-numeric: tabular-nums; }
 
+.math-fc-stage { display: flex; flex-direction: column; align-items: center; perspective: 1600px; }
 .math-fc-card {
+  width: 100%;
+  min-height: 340px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(.4, .2, .2, 1);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.math-fc-card.flipped { transform: rotateY(180deg); }
+.math-fc-face {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   background: var(--math-paper-alt);
   border: 1px solid var(--math-line);
   border-radius: var(--math-radius-md);
-  padding: 24px;
   box-shadow: var(--math-shadow-sm);
-  text-align: center;
-  min-height: 180px;
+  padding: 22px;
 }
+.math-fc-front { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.math-fc-back { transform: rotateY(180deg); }
 .math-fc-lecture { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--math-ink-soft); }
 .math-fc-name { margin: 12px 0; font-size: 1.15rem; }
 .math-fc-statement { margin: 12px 0 16px; text-align: left; }
 .math-fc-proof { text-align: left; }
+.math-fc-remarks { margin-top: 14px; }
+.math-fc-remarks-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #0E9384; }
+.math-fc-hint { text-align: center; margin-top: 12px; font-size: 0.78rem; color: var(--math-ink-soft); }
 .math-fc-nav { display: flex; justify-content: space-between; margin-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .math-fc-card { transition: none; }
+}
 
 /* ---------- editor ---------- */
 .math-editor-form { display: flex; flex-direction: column; gap: 16px; }
@@ -253,6 +372,24 @@
 /* KaTeX display blocks can be wider than the card -- let them scroll
    horizontally instead of overflowing/breaking the layout. */
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
+
+/* ---------- bulk import ---------- */
+.math-bulk-import { margin-top: 8px; padding-top: 16px; border-top: 1px dashed var(--math-line); }
+.math-bulk-import-body { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.math-bulk-import-hint { font-size: 0.8rem; color: var(--math-ink-soft); line-height: 1.5; }
+.math-bulk-import-hint code { font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.78rem; }
+.math-bulk-import-textarea {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--math-ink);
+  background: var(--math-paper-alt);
+  border: 1px solid var(--math-line);
+  border-radius: var(--math-radius-sm);
+  padding: 10px;
+  resize: vertical;
+}
+.math-bulk-import-ok { color: #0E9384; font-size: 0.82rem; }
+.math-bulk-import-err { color: #DB2777; font-size: 0.82rem; }
 
 @media (max-width: 640px) {
   .math-editor { grid-template-columns: 1fr; }

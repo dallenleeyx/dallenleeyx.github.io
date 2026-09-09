@@ -89,6 +89,19 @@ export function MathSyncProvider({ children }) {
     return id;
   }, []);
 
+  const addItems = useCallback((items) => {
+    setState((prev) => {
+      const now = Date.now();
+      const next = { ...prev.items };
+      items.forEach((item) => {
+        const id = uid();
+        next[id] = { ...item, id, updatedAt: now };
+      });
+      return { items: next };
+    });
+    schedulePush();
+  }, []);
+
   const updateItem = useCallback((id, patch) => {
     setState((prev) => {
       const existing = prev.items[id];
@@ -108,7 +121,7 @@ export function MathSyncProvider({ children }) {
   }, []);
 
   return (
-    <MathSyncContext.Provider value={{ state, loading, addItem, updateItem, deleteItem }}>
+    <MathSyncContext.Provider value={{ state, loading, addItem, addItems, updateItem, deleteItem }}>
       {children}
     </MathSyncContext.Provider>
   );
