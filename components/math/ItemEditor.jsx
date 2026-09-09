@@ -8,15 +8,22 @@ import { ITEM_TYPES } from '../../lib/math/items';
 import { LatexEditor } from './LatexEditor';
 import { BulkImport } from './BulkImport';
 
+const NEW_SECTION_VALUE = '__new__';
+
 export function ItemEditor({ course, editingItem, onDone }) {
-  const { addItem, updateItem } = useMath();
+  const { state, addItem, updateItem, addSection } = useMath();
   const [lecture, setLecture] = useState(1);
   const [type, setType] = useState(ITEM_TYPES[0]);
   const [number, setNumber] = useState('');
   const [name, setName] = useState('');
+  const [section, setSection] = useState('');
+  const [newSectionName, setNewSectionName] = useState('');
+  const [creatingSection, setCreatingSection] = useState(false);
   const [statement, setStatement] = useState('');
   const [proof, setProof] = useState('');
   const [remarks, setRemarks] = useState('');
+
+  const sectionList = state.sections[course]?.list || [];
 
   useEffect(() => {
     if (editingItem) {
@@ -24,6 +31,7 @@ export function ItemEditor({ course, editingItem, onDone }) {
       setType(editingItem.type || ITEM_TYPES[0]);
       setNumber(editingItem.number || '');
       setName(editingItem.name || '');
+      setSection(editingItem.section || '');
       setStatement(editingItem.statement || '');
       setProof(editingItem.proof || '');
       setRemarks(editingItem.remarks || '');
@@ -32,11 +40,30 @@ export function ItemEditor({ course, editingItem, onDone }) {
       setType(ITEM_TYPES[0]);
       setNumber('');
       setName('');
+      setSection('');
       setStatement('');
       setProof('');
       setRemarks('');
     }
+    setCreatingSection(false);
+    setNewSectionName('');
   }, [editingItem]);
+
+  function handleSectionSelect(value) {
+    if (value === NEW_SECTION_VALUE) {
+      setCreatingSection(true);
+      return;
+    }
+    setSection(value);
+  }
+
+  function handleCreateSection() {
+    if (!newSectionName.trim()) return;
+    addSection(course, newSectionName);
+    setSection(newSectionName.trim());
+    setNewSectionName('');
+    setCreatingSection(false);
+  }
 
   function handleSave() {
     if (!statement.trim()) return;
@@ -46,6 +73,7 @@ export function ItemEditor({ course, editingItem, onDone }) {
       type,
       number: number.trim(),
       name: name.trim(),
+      section,
       statement,
       proof,
       remarks,
@@ -87,6 +115,30 @@ export function ItemEditor({ course, editingItem, onDone }) {
       <label className="math-form-label-block">
         Name <span className="math-form-optional">(optional, e.g. "Riesz Representation Theorem")</span>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+      </label>
+
+      <label className="math-form-label-block">
+        Section <span className="math-form-optional">(optional — groups entries under a heading in Browse)</span>
+        {creatingSection ? (
+          <span className="math-section-inline-create">
+            <input
+              type="text"
+              autoFocus
+              value={newSectionName}
+              onChange={(e) => setNewSectionName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSection(); if (e.key === 'Escape') setCreatingSection(false); }}
+              placeholder="New section name"
+            />
+            <button type="button" className="math-ghost-btn math-btn-primary" onClick={handleCreateSection} disabled={!newSectionName.trim()}>Create</button>
+            <button type="button" className="math-ghost-btn" onClick={() => setCreatingSection(false)}>Cancel</button>
+          </span>
+        ) : (
+          <select value={section} onChange={(e) => handleSectionSelect(e.target.value)}>
+            <option value="">— No section —</option>
+            {sectionList.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value={NEW_SECTION_VALUE}>+ New section…</option>
+          </select>
+        )}
       </label>
 
       <label className="math-form-label-block">

@@ -46,7 +46,7 @@ function ShellInner() {
           <span className="math-brand-icon" aria-hidden="true">∑</span>
           <span className="math-brand-text">Math</span>
         </span>
-        <span className="math-subtitle">theorems, definitions & proofs — categorised by lecture</span>
+        <span className="math-subtitle">theorems, definitions & proofs — organised by section and lecture</span>
       </header>
 
       <div className="math-course-switch">
