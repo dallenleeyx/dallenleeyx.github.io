@@ -2,7 +2,12 @@
    Namespaced under .math-shell with its own --math-* custom properties and
    its own @media (prefers-color-scheme: dark) block, same lesson Japanese/
    Fitness/Music already learned about the unscoped [data-theme] selector.
-   No manual toggle: it just follows the OS/browser preference. */
+   No manual toggle: it just follows the OS/browser preference.
+
+   Body/heading font is STIX Two Text -- a serif designed to typeset
+   alongside LaTeX/AMS math fonts for scientific publishing, so it sits
+   naturally next to KaTeX's own output instead of clashing with it the way
+   a rounded sans (Plus Jakarta Sans, used elsewhere on the site) did. */
 .math-shell {
   --math-paper: #F7F8FB;
   --math-paper-alt: #ECEEF5;
@@ -20,7 +25,7 @@
   min-height: 100vh;
   background: var(--math-paper);
   color: var(--math-ink);
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
   padding-bottom: 80px;
 }
 
@@ -204,7 +209,7 @@
   --math-radius-pill: 999px;
   --math-shadow-sm: 0 2px 8px rgba(20, 24, 60, 0.06);
   --math-shadow-md: 0 8px 20px rgba(20, 24, 60, 0.1);
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
 }
 @media (prefers-color-scheme: dark) {
   .math-ref-portal-root {
