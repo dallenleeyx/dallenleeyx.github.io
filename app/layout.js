@@ -22,8 +22,8 @@ export default function RootLayout({ children }) {
             @import, which chains a fetch off the stylesheet instead of
             starting immediately with the HTML), so switching between
             /japanese, /fitness, and /math never waits on a fresh font
-            fetch. Math reuses Plus Jakarta Sans + DM Mono, already listed
-            below for Fitness. */}
+            fetch. Math uses STIX Two Text (headings/body) + DM Mono (code),
+            already listed below for Fitness. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
