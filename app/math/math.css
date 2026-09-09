@@ -86,7 +86,7 @@
 .math-subnav-btn:hover { color: var(--math-ink); }
 .math-subnav-btn.active { color: var(--math-accent); border-bottom-color: var(--math-accent); }
 
-.math-main { max-width: 1040px; margin: 0 auto; padding: 24px clamp(20px, 5vw, 64px) 64px; }
+.math-main { max-width: 760px; margin: 0 auto; padding: 24px clamp(20px, 5vw, 64px) 64px; }
 .math-subview { display: none; }
 .math-subview.active { display: block; animation: mathFadeIn 0.2s ease; }
 @keyframes mathFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -129,76 +129,6 @@
 .math-type-corollary { background: #DB2777; }
 .math-type-remark { background: #6B7089; }
 .math-type-example { background: #2E9E4F; }
-
-/* ---------- browse: section grouping + table of contents ---------- */
-/* .math-main is wide enough to fit a sidebar, but Flashcards/Add read
-   better narrower -- each caps its own width below instead. */
-.math-browse-layout { display: flex; gap: 40px; align-items: flex-start; }
-.math-browse-content { flex: 1 1 auto; min-width: 0; } /* min-width:0 lets a wide KaTeX block scroll inside instead of pushing the sidebar out */
-
-.math-toc { flex: 0 0 200px; position: sticky; top: 24px; align-self: flex-start; }
-.math-toc-title { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--math-ink-soft); margin-bottom: 10px; }
-.math-toc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.math-toc-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: var(--math-ink-soft);
-  text-decoration: none;
-  padding: 5px 8px;
-  border-radius: var(--math-radius-sm);
-  transition: all 0.15s ease;
-}
-.math-toc-link:hover { color: var(--math-accent); background: var(--math-paper-alt); }
-.math-toc-link-unsectioned { font-style: italic; }
-.math-toc-count { font-size: 0.7rem; color: var(--math-ink-soft); font-variant-numeric: tabular-nums; }
-
-.math-section-block { margin-bottom: 32px; scroll-margin-top: 20px; }
-.math-section-heading { font-size: 1.15rem; font-weight: 700; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid var(--math-line); }
-.math-section-empty { padding: 4px 0 0; }
-
-@media (max-width: 900px) {
-  .math-browse-layout { flex-direction: column; }
-  /* flex-basis governs height once the flex container turns column, so the
-     200px sidebar width from the wide layout has to be reset here too --
-     otherwise the TOC becomes a 200px-tall box with a wrapped chip row
-     stranded at its top. */
-  .math-toc { flex: none; position: static; width: 100%; order: -1; margin-bottom: 20px; }
-  .math-toc-list { flex-direction: row; flex-wrap: wrap; }
-  .math-toc-link { background: var(--math-paper-alt); border: 1px solid var(--math-line); }
-}
-
-/* ---------- section manager ---------- */
-.math-section-manager { margin-bottom: 20px; }
-.math-section-manager-body { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-.math-section-manager-hint { font-size: 0.82rem; color: var(--math-ink-soft); font-style: italic; }
-.math-section-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.math-section-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: var(--math-paper-alt);
-  border: 1px solid var(--math-line);
-  border-radius: var(--math-radius-sm);
-}
-.math-section-arrows { display: flex; }
-.math-section-name { flex: 1; cursor: pointer; font-weight: 600; }
-.math-section-name:hover { color: var(--math-accent); }
-.math-section-edit-input, .math-section-add-row input, .math-section-inline-create input {
-  flex: 1;
-  font-family: inherit;
-  font-size: 0.9rem;
-  color: var(--math-ink);
-  background: var(--math-paper-alt);
-  border: 1px solid var(--math-line);
-  border-radius: var(--math-radius-sm);
-  padding: 6px 10px;
-}
-.math-section-edit-input { background: var(--math-paper); border-color: var(--math-accent); }
-.math-section-add-row, .math-section-inline-create { display: flex; gap: 8px; align-items: center; }
 
 /* ---------- browse ---------- */
 .math-lecture-block { margin-bottom: 16px; }
@@ -345,7 +275,6 @@
 .math-ref-missing { color: var(--math-ink-soft); font-style: italic; }
 
 /* ---------- flashcards ---------- */
-.math-flashcards { max-width: 640px; margin: 0 auto; }
 .math-fc-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .math-fc-select {
   font-family: inherit;
@@ -401,7 +330,7 @@
 }
 
 /* ---------- editor ---------- */
-.math-editor-form { display: flex; flex-direction: column; gap: 16px; max-width: 720px; margin: 0 auto; }
+.math-editor-form { display: flex; flex-direction: column; gap: 16px; }
 .math-editor-form h3 { margin: 0; }
 .math-form-row { display: flex; gap: 16px; }
 .math-form-row label, .math-form-label-block {
@@ -470,5 +399,4 @@
 @media (max-width: 640px) {
   .math-editor { grid-template-columns: 1fr; }
   .math-form-row { flex-direction: column; }
-  .math-section-add-row, .math-section-inline-create { flex-direction: column; align-items: stretch; }
 }
