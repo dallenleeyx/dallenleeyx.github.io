@@ -1,20 +1,13 @@
 'use client';
-// components/fitness/History.jsx — last 14 days at a glance (manual
-// check-offs and/or synced Apple Health workouts both count as "active"),
-// plus the reference info for wiring up the Apple Shortcut that POSTs to
-// /api/fitness/health-sync.
+// components/fitness/History.jsx — last 14 days at a glance: whichever
+// workout you logged (or the Apple Health workout that synced in), your
+// weight if you logged it, and any cardio -- plus the reference info for
+// wiring up the Apple Shortcut that POSTs to /api/fitness/health-sync.
 import { useMemo } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
-import { dayKeyForDate, DAY_LABELS } from '../../lib/fitness/defaultPlan';
+import { toISO, addDays } from '../../lib/fitness/util';
 
 const DAYS_SHOWN = 14;
-
-function toISO(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 function healthSummary(health) {
   if (!health) return null;
@@ -25,21 +18,36 @@ function healthSummary(health) {
   return parts.join(' · ') || 'synced';
 }
 
+function cardioSummary(cardio) {
+  if (!cardio || !cardio.type) return null;
+  const parts = [cardio.type];
+  if (cardio.durationMin != null) parts.push(`${cardio.durationMin} min`);
+  if (cardio.distanceKm != null) parts.push(`${cardio.distanceKm} km`);
+  return parts.join(' · ');
+}
+
 export function History() {
   const { state, loading } = useFitness();
 
   const rows = useMemo(() => {
     const out = [];
     for (let i = 0; i < DAYS_SHOWN; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
+      const date = addDays(new Date(), -i);
       const iso = toISO(date);
       const entry = state.logs[iso] || {};
-      const active = !!entry.manual?.completed || !!entry.health;
-      out.push({ iso, date, dayKey: dayKeyForDate(date), active, health: entry.health });
+      const manual = entry.manual || {};
+      const workout = manual.workoutId ? state.workouts.list.find((w) => w.id === manual.workoutId) : null;
+      const setsLogged = (manual.exercises || []).reduce((n, ex) => n + ex.sets.filter((s) => s != null).length, 0);
+      const active = !!workout || !!manual.cardio?.type || !!entry.health || manual.weightKg != null;
+      out.push({
+        iso, date, active, workout, setsLogged,
+        weightKg: manual.weightKg,
+        cardio: cardioSummary(manual.cardio),
+        health: entry.health,
+      });
     }
     return out;
-  }, [state.logs]);
+  }, [state.logs, state.workouts.list]);
 
   const activeInLastWeek = rows.slice(0, 7).filter((r) => r.active).length;
   const syncOrigin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -57,8 +65,14 @@ export function History() {
             <span className="fit-history-date">
               {row.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
-            <span className="fit-history-day-title">{state.plan.days[row.dayKey]?.title || DAY_LABELS[row.dayKey]}</span>
-            <span className="fit-history-health">{healthSummary(row.health)}</span>
+            <span className="fit-history-day-title">
+              {row.workout ? row.workout.name : row.cardio ? 'Cardio' : row.health ? (row.health.workoutType || 'Workout') : '—'}
+              {row.setsLogged > 0 && <span className="fit-history-sets"> · {row.setsLogged} sets</span>}
+            </span>
+            <span className="fit-history-health">
+              {row.weightKg != null && <span className="fit-history-weight">{row.weightKg} kg</span>}
+              {row.cardio || healthSummary(row.health)}
+            </span>
           </li>
         ))}
       </ul>

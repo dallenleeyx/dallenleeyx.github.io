@@ -6,9 +6,10 @@
 // polling applies the SAME pure mergeFitnessState the PUT route uses
 // server-side rather than just overwriting local state with the server's.
 //
-// Simpler than the Japanese provider: Fitness only ever has two top-level
-// fields (plan, logs) shared by one component tree, so there's no need for
-// Japanese's per-store "section" registry -- the mutators just live here.
+// Simpler than the Japanese provider: Fitness only ever has three top-level
+// fields (workouts, schedule, logs) shared by one component tree, so
+// there's no need for Japanese's per-store "section" registry -- the
+// mutators just live here.
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { mergeFitnessState, normalizeFitnessState, stableStringify } from './syncMerge';
 
@@ -89,8 +90,13 @@ export function FitnessSyncProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updatePlan = useCallback((days) => {
-    setState((prev) => ({ ...prev, plan: { updatedAt: Date.now(), days } }));
+  const updateWorkouts = useCallback((list) => {
+    setState((prev) => ({ ...prev, workouts: { updatedAt: Date.now(), list } }));
+    schedulePush();
+  }, []);
+
+  const updateSchedule = useCallback((days) => {
+    setState((prev) => ({ ...prev, schedule: { updatedAt: Date.now(), days } }));
     schedulePush();
   }, []);
 
@@ -106,7 +112,7 @@ export function FitnessSyncProvider({ children }) {
   }, []);
 
   return (
-    <FitnessSyncContext.Provider value={{ state, loading, updatePlan, updateLog }}>
+    <FitnessSyncContext.Provider value={{ state, loading, updateWorkouts, updateSchedule, updateLog }}>
       {children}
     </FitnessSyncContext.Provider>
   );
