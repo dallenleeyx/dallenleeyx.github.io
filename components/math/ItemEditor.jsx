@@ -1,0 +1,93 @@
+'use client';
+// components/math/ItemEditor.jsx — add or edit one entry. Reused for both
+// the "Add" subview (editingItem is null) and the pencil icon in Browse
+// (editingItem is set, via MathAppShell lifting the editing id).
+import { useEffect, useState } from 'react';
+import { useMath } from '../../lib/math/MathSyncContext';
+import { ITEM_TYPES } from '../../lib/math/items';
+import { LatexEditor } from './LatexEditor';
+
+export function ItemEditor({ course, editingItem, onDone }) {
+  const { addItem, updateItem } = useMath();
+  const [lecture, setLecture] = useState(1);
+  const [type, setType] = useState(ITEM_TYPES[0]);
+  const [name, setName] = useState('');
+  const [statement, setStatement] = useState('');
+  const [proof, setProof] = useState('');
+
+  useEffect(() => {
+    if (editingItem) {
+      setLecture(editingItem.lecture ?? 1);
+      setType(editingItem.type || ITEM_TYPES[0]);
+      setName(editingItem.name || '');
+      setStatement(editingItem.statement || '');
+      setProof(editingItem.proof || '');
+    } else {
+      setLecture(1);
+      setType(ITEM_TYPES[0]);
+      setName('');
+      setStatement('');
+      setProof('');
+    }
+  }, [editingItem]);
+
+  function handleSave() {
+    if (!statement.trim()) return;
+    const payload = { course, lecture: Number(lecture) || 1, type, name: name.trim(), statement, proof };
+    if (editingItem) {
+      updateItem(editingItem.id, payload);
+    } else {
+      addItem(payload);
+      setName('');
+      setStatement('');
+      setProof('');
+    }
+    onDone?.();
+  }
+
+  return (
+    <div className="math-editor-form">
+      <h3>{editingItem ? 'Edit entry' : `New entry — ${course}`}</h3>
+
+      <div className="math-form-row">
+        <label>
+          Lecture
+          <input type="number" min="1" value={lecture} onChange={(e) => setLecture(e.target.value)} />
+        </label>
+        <label>
+          Type
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <label className="math-form-label-block">
+        Name <span className="math-form-optional">(optional, e.g. "Riesz Representation Theorem")</span>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+      </label>
+
+      <label className="math-form-label-block">
+        Statement
+        <LatexEditor
+          value={statement}
+          onChange={setStatement}
+          placeholder="Write the statement. Use $...$ for inline math, $$...$$ for display math."
+          minRows={4}
+        />
+      </label>
+
+      <label className="math-form-label-block">
+        Proof <span className="math-form-optional">(optional)</span>
+        <LatexEditor value={proof} onChange={setProof} placeholder="Write the proof (optional)." minRows={6} />
+      </label>
+
+      <div className="math-form-actions">
+        <button className="math-ghost-btn math-btn-primary" onClick={handleSave}>
+          {editingItem ? 'Save changes' : 'Add entry'}
+        </button>
+        {editingItem && <button className="math-ghost-btn" onClick={onDone}>Cancel</button>}
+      </div>
+    </div>
+  );
+}
