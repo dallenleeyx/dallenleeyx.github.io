@@ -20,7 +20,7 @@ function groupByLecture(items) {
 }
 
 export function Browse({ course, onEdit }) {
-  const { state, deleteItem, toggleRevised } = useMath();
+  const { state, deleteItem, updateItem } = useMath();
   const [revealed, setRevealed] = useState({});
   const [remarksRevealed, setRemarksRevealed] = useState({});
   const [collapsed, setCollapsed] = useState({});
@@ -39,37 +39,40 @@ export function Browse({ course, onEdit }) {
     <div className="math-browse">
       {groups.map(({ lecture, items: lectureItems }) => {
         const isCollapsed = !!collapsed[lecture];
-        const isRevised = !!state.revised[`${course}::${lecture}`]?.done;
+        const isRevised = lectureItems.every((it) => !!it.revised);
         return (
           <section key={lecture} className={`math-lecture-block${isRevised ? ' revised' : ''}`}>
-            <div className="math-lecture-heading">
-              <button
-                className="math-lecture-toggle"
-                onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
-              >
-                <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
-                <span className="math-lecture-count">{lectureItems.length}</span>
-              </button>
-              <label className="math-lecture-revised">
-                <input
-                  type="checkbox"
-                  checked={isRevised}
-                  onChange={() => toggleRevised(course, lecture)}
-                />
-                revised
-              </label>
-            </div>
+            <button
+              className="math-lecture-heading"
+              onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
+            >
+              <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
+              <span className="math-lecture-count">
+                {isRevised && <span className="math-lecture-revised-badge">✓ revised</span>}
+                {lectureItems.length}
+              </span>
+            </button>
             {!isCollapsed && (
               <ul className="math-item-list">
                 {lectureItems.map((it) => (
-                  <li key={it.id} className="math-item-card">
+                  <li key={it.id} className={`math-item-card${it.revised ? ' revised' : ''}`}>
                     <div className="math-item-head">
                       <span className={`math-type-badge math-type-${it.type.toLowerCase()}`}>{it.type}</span>
                       {it.number && <span className="math-item-number">{it.number}</span>}
                       {it.name && <span className="math-item-name">{it.name}</span>}
                       <span className="math-item-actions">
-                        <button className="math-icon-btn" onClick={() => onEdit(it.id)} aria-label="Edit">✎</button>
-                        <button className="math-icon-btn" onClick={() => deleteItem(it.id)} aria-label="Delete">✕</button>
+                        <label className="math-item-revised">
+                          <input
+                            type="checkbox"
+                            checked={!!it.revised}
+                            onChange={() => updateItem(it.id, { revised: !it.revised })}
+                          />
+                          revised
+                        </label>
+                        <span className="math-item-icon-group">
+                          <button className="math-icon-btn" onClick={() => onEdit(it.id)} aria-label="Edit">✎</button>
+                          <button className="math-icon-btn" onClick={() => deleteItem(it.id)} aria-label="Delete">✕</button>
+                        </span>
                       </span>
                     </div>
                     <LatexText text={it.statement} className="math-statement" course={course} />
