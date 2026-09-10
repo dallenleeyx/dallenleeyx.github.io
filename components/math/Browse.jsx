@@ -20,7 +20,7 @@ function groupByLecture(items) {
 }
 
 export function Browse({ course, onEdit }) {
-  const { state, deleteItem } = useMath();
+  const { state, deleteItem, toggleRevised } = useMath();
   const [revealed, setRevealed] = useState({});
   const [remarksRevealed, setRemarksRevealed] = useState({});
   const [collapsed, setCollapsed] = useState({});
@@ -39,15 +39,26 @@ export function Browse({ course, onEdit }) {
     <div className="math-browse">
       {groups.map(({ lecture, items: lectureItems }) => {
         const isCollapsed = !!collapsed[lecture];
+        const isRevised = !!state.revised[`${course}::${lecture}`]?.done;
         return (
-          <section key={lecture} className="math-lecture-block">
-            <button
-              className="math-lecture-heading"
-              onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
-            >
-              <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
-              <span className="math-lecture-count">{lectureItems.length}</span>
-            </button>
+          <section key={lecture} className={`math-lecture-block${isRevised ? ' revised' : ''}`}>
+            <div className="math-lecture-heading">
+              <button
+                className="math-lecture-toggle"
+                onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
+              >
+                <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
+                <span className="math-lecture-count">{lectureItems.length}</span>
+              </button>
+              <label className="math-lecture-revised">
+                <input
+                  type="checkbox"
+                  checked={isRevised}
+                  onChange={() => toggleRevised(course, lecture)}
+                />
+                revised
+              </label>
+            </div>
             {!isCollapsed && (
               <ul className="math-item-list">
                 {lectureItems.map((it) => (

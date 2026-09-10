@@ -135,20 +135,42 @@
 .math-lecture-heading {
   width: 100%;
   display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--math-paper-alt);
+  border-radius: var(--math-radius-md);
+  padding: 10px 16px;
+  margin-bottom: 8px;
+}
+.math-lecture-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 700;
   color: var(--math-ink);
-  background: var(--math-paper-alt);
+  background: none;
   border: none;
-  border-radius: var(--math-radius-md);
-  padding: 10px 16px;
+  padding: 0;
   cursor: pointer;
-  margin-bottom: 8px;
 }
 .math-lecture-count { font-size: 0.78rem; font-weight: 600; color: var(--math-ink-soft); }
+.math-lecture-revised {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--math-ink-soft);
+  cursor: pointer;
+}
+.math-lecture-revised input { accent-color: var(--math-accent); cursor: pointer; }
+.math-lecture-block.revised .math-lecture-heading { background: rgba(14, 147, 132, 0.12); }
+.math-lecture-block.revised .math-lecture-revised { color: #0E9384; }
 
 .math-item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .math-item-card {
