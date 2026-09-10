@@ -1,12 +1,11 @@
 'use client';
 // components/math/Flashcards.jsx — cycles through a course's entries one at
-// a time. Tap the card to flip it (same 3D rotateY animation as the
-// Japanese vocab flashcards). What's hidden behind the flip adapts to the
-// entry: if it has a proof, the front is the statement and the back is the
-// proof (the classic "can I prove this" drill); if there's no proof (a
-// plain definition/remark), the front is just the name/type and the back is
-// the statement itself (recall the definition). Remarks -- your own gloss
-// on the entry -- always show on the back, under whichever of those it is.
+// a time. This isn't a memorising drill: the front always shows the full
+// entry (name, statement, and your own remarks) up front, nothing hidden.
+// The only thing behind the flip is the proof, since that's the one thing
+// worth deliberately looking away from before checking -- if an entry has
+// no proof, the card doesn't flip at all (same 3D rotateY animation as the
+// Japanese vocab flashcards otherwise).
 import { useMemo, useState } from 'react';
 import { useMath } from '../../lib/math/MathSyncContext';
 import { LatexText } from './LatexText';
@@ -58,6 +57,7 @@ export function Flashcards({ course }) {
     setFlipped(false);
   }
   function handleFlip(e) {
+    if (!hasProof) return;
     if (e.target.closest('.math-ref-chip')) return;
     setFlipped((f) => !f);
   }
@@ -93,29 +93,18 @@ export function Flashcards({ course }) {
         <div className="math-fc-stage">
           <button
             type="button"
-            className={`math-fc-card${flipped ? ' flipped' : ''}`}
+            className={`math-fc-card${flipped ? ' flipped' : ''}${hasProof ? '' : ' no-flip'}`}
             onClick={handleFlip}
             aria-live="polite"
           >
             <div className="math-fc-face math-fc-front">
-              <span className={`math-type-badge math-type-${current.type.toLowerCase()}`}>{current.type}</span>
-              {current.number && <span className="math-item-number">{current.number}</span>}
-              {current.lecture != null && <span className="math-fc-lecture">Lecture {current.lecture}</span>}
-              {hasProof ? (
-                <>
-                  {current.name && <h4 className="math-fc-name">{current.name}</h4>}
-                  <LatexText text={current.statement} className="math-fc-statement" course={course} />
-                </>
-              ) : (
-                <h4 className="math-fc-name">{current.name || current.type}</h4>
-              )}
-            </div>
-            <div className="math-fc-face math-fc-back">
-              {hasProof ? (
-                <LatexText text={current.proof} className="math-fc-proof" course={course} />
-              ) : (
-                <LatexText text={current.statement} className="math-fc-statement" course={course} />
-              )}
+              <div className="math-fc-head">
+                <span className={`math-type-badge math-type-${current.type.toLowerCase()}`}>{current.type}</span>
+                {current.number && <span className="math-item-number">{current.number}</span>}
+                {current.lecture != null && <span className="math-fc-lecture">Lecture {current.lecture}</span>}
+              </div>
+              {current.name && <h4 className="math-fc-name">{current.name}</h4>}
+              <LatexText text={current.statement} className="math-fc-statement" course={course} />
               {hasRemarks && (
                 <div className="math-fc-remarks">
                   <span className="math-fc-remarks-label">Remarks</span>
@@ -123,8 +112,16 @@ export function Flashcards({ course }) {
                 </div>
               )}
             </div>
+            <div className="math-fc-face math-fc-back">
+              {hasProof && (
+                <>
+                  <span className="math-fc-proof-label">Proof</span>
+                  <LatexText text={current.proof} className="math-fc-proof" course={course} />
+                </>
+              )}
+            </div>
           </button>
-          <p className="math-fc-hint">tap the card to flip</p>
+          {hasProof && <p className="math-fc-hint">tap to {flipped ? 'hide' : 'show'} proof</p>}
         </div>
       ) : (
         <p className="math-empty">No cards for this filter.</p>

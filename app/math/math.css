@@ -318,14 +318,17 @@
   box-shadow: var(--math-shadow-sm);
   padding: 22px;
 }
-.math-fc-front { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.math-fc-back { transform: rotateY(180deg); }
-.math-fc-lecture { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--math-ink-soft); }
+.math-fc-front { text-align: left; }
+.math-fc-back { text-align: left; transform: rotateY(180deg); }
+.math-fc-card.no-flip { cursor: default; }
+.math-fc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.math-fc-lecture { font-size: 0.75rem; color: var(--math-ink-soft); }
 .math-fc-name { margin: 12px 0; font-size: 1.15rem; }
 .math-fc-statement { margin: 12px 0 16px; text-align: left; }
 .math-fc-proof { text-align: left; }
 .math-fc-remarks { margin-top: 14px; }
 .math-fc-remarks-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #0E9384; }
+.math-fc-proof-label { display: block; margin-bottom: 10px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--math-accent); }
 .math-fc-hint { text-align: center; margin-top: 12px; font-size: 0.78rem; color: var(--math-ink-soft); }
 .math-fc-nav { display: flex; justify-content: space-between; margin-top: 16px; }
 
