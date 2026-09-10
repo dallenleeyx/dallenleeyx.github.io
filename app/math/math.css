@@ -135,42 +135,25 @@
 .math-lecture-heading {
   width: 100%;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--math-paper-alt);
-  border-radius: var(--math-radius-md);
-  padding: 10px 16px;
-  margin-bottom: 8px;
-}
-.math-lecture-toggle {
-  flex: 1;
-  min-width: 0;
-  display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 700;
   color: var(--math-ink);
-  background: none;
+  background: var(--math-paper-alt);
   border: none;
-  padding: 0;
+  border-radius: var(--math-radius-md);
+  padding: 10px 16px;
   cursor: pointer;
+  margin-bottom: 8px;
 }
-.math-lecture-count { font-size: 0.78rem; font-weight: 600; color: var(--math-ink-soft); }
-.math-lecture-revised {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--math-ink-soft);
-  cursor: pointer;
-}
-.math-lecture-revised input { accent-color: var(--math-accent); cursor: pointer; }
+.math-lecture-count { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 600; color: var(--math-ink-soft); }
+/* Not a control -- every entry in the lecture already carries its own
+   "revised" checkbox, so the lecture's badge is purely a derived readout
+   (every block ticked -> the lecture heading turns green too). */
+.math-lecture-revised-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #0E9384; }
 .math-lecture-block.revised .math-lecture-heading { background: rgba(14, 147, 132, 0.12); }
-.math-lecture-block.revised .math-lecture-revised { color: #0E9384; }
 
 .math-item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .math-item-card {
@@ -179,10 +162,23 @@
   border-radius: var(--math-radius-md);
   padding: 14px 16px;
 }
+.math-item-card.revised { background: rgba(14, 147, 132, 0.08); border-color: rgba(14, 147, 132, 0.35); }
 .math-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .math-item-name { font-weight: 700; }
 .math-item-number { font-family: 'DM Mono', ui-monospace, monospace; font-size: 0.78rem; color: var(--math-ink-soft); }
-.math-item-actions { margin-left: auto; display: flex; gap: 2px; }
+.math-item-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.math-item-icon-group { display: flex; gap: 2px; }
+.math-item-revised {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--math-ink-soft);
+  cursor: pointer;
+}
+.math-item-revised input { accent-color: #0E9384; cursor: pointer; }
+.math-item-card.revised .math-item-revised { color: #0E9384; }
 .math-icon-btn {
   border: none;
   background: none;
