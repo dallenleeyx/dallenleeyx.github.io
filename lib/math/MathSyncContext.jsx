@@ -84,7 +84,7 @@ export function MathSyncProvider({ children }) {
 
   const addItem = useCallback((item) => {
     const id = uid();
-    setState((prev) => ({ items: { ...prev.items, [id]: { ...item, id, updatedAt: Date.now() } } }));
+    setState((prev) => ({ ...prev, items: { ...prev.items, [id]: { ...item, id, updatedAt: Date.now() } } }));
     schedulePush();
     return id;
   }, []);
@@ -97,7 +97,7 @@ export function MathSyncProvider({ children }) {
         const id = uid();
         next[id] = { ...item, id, updatedAt: now };
       });
-      return { items: next };
+      return { ...prev, items: next };
     });
     schedulePush();
   }, []);
@@ -106,7 +106,7 @@ export function MathSyncProvider({ children }) {
     setState((prev) => {
       const existing = prev.items[id];
       if (!existing) return prev;
-      return { items: { ...prev.items, [id]: { ...existing, ...patch, updatedAt: Date.now() } } };
+      return { ...prev, items: { ...prev.items, [id]: { ...existing, ...patch, updatedAt: Date.now() } } };
     });
     schedulePush();
   }, []);
@@ -115,13 +115,27 @@ export function MathSyncProvider({ children }) {
     setState((prev) => {
       const existing = prev.items[id];
       if (!existing) return prev;
-      return { items: { ...prev.items, [id]: { ...existing, deleted: true, updatedAt: Date.now() } } };
+      return { ...prev, items: { ...prev.items, [id]: { ...existing, deleted: true, updatedAt: Date.now() } } };
+    });
+    schedulePush();
+  }, []);
+
+  // Per-(course, lecture) revised flag -- its own LWW record, same as an
+  // item, keyed by a composite string since a lecture isn't an entity with
+  // its own id anywhere else in the state.
+  const toggleRevised = useCallback((course, lecture) => {
+    const key = `${course}::${lecture}`;
+    setState((prev) => {
+      const current = !!prev.revised[key]?.done;
+      return { ...prev, revised: { ...prev.revised, [key]: { done: !current, updatedAt: Date.now() } } };
     });
     schedulePush();
   }, []);
 
   return (
-    <MathSyncContext.Provider value={{ state, loading, addItem, addItems, updateItem, deleteItem }}>
+    <MathSyncContext.Provider
+      value={{ state, loading, addItem, addItems, updateItem, deleteItem, toggleRevised }}
+    >
       {children}
     </MathSyncContext.Provider>
   );
