@@ -136,18 +136,27 @@
 .math-lecture-heading {
   width: 100%;
   display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--math-paper-alt);
+  border-radius: var(--math-radius-md);
+  padding: 10px 16px;
+  margin-bottom: 8px;
+}
+.math-lecture-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 700;
   color: var(--math-ink);
-  background: var(--math-paper-alt);
+  background: none;
   border: none;
-  border-radius: var(--math-radius-md);
-  padding: 10px 16px;
+  padding: 0;
   cursor: pointer;
-  margin-bottom: 8px;
 }
 .math-lecture-count { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 600; color: var(--math-ink-soft); }
 /* Not a control -- every entry in the lecture already carries its own
@@ -155,6 +164,7 @@
    (every block ticked -> the lecture heading turns green too). */
 .math-lecture-revised-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #0E9384; }
 .math-lecture-block.revised .math-lecture-heading { background: rgba(14, 147, 132, 0.12); }
+.math-lecture-reorder-controls { flex-shrink: 0; display: flex; gap: 6px; }
 
 .math-item-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .math-item-card {
@@ -190,6 +200,37 @@
   border-radius: var(--math-radius-sm);
 }
 .math-icon-btn:hover { color: var(--math-accent); background: var(--math-paper); }
+
+/* ---------- reorder mode ---------- */
+.math-reorder-list { position: relative; }
+.math-reorder-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 52px;
+  will-change: transform;
+  touch-action: none;
+}
+.math-reorder-row-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 14px;
+  background: var(--math-paper-alt);
+  border: 1px solid var(--math-line);
+  border-radius: var(--math-radius-md);
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+}
+.math-reorder-row.dragging .math-reorder-row-inner {
+  cursor: grabbing;
+  border-color: var(--math-accent);
+  box-shadow: var(--math-shadow-md);
+}
+.math-reorder-grip { color: var(--math-ink-soft); font-size: 1rem; line-height: 1; }
 
 .math-statement, .math-fc-statement { line-height: 1.6; }
 .math-proof-toggle-wrap, .math-remarks-toggle-wrap { margin-top: 10px; }

@@ -5,7 +5,14 @@
 import { useMemo, useState } from 'react';
 import { useMath } from '../../lib/math/MathSyncContext';
 import { LatexText } from './LatexText';
+import { ReorderList } from './ReorderList';
 
+// Items are grouped by lecture and, within a lecture, sorted by an explicit
+// `order` field (set only once a lecture has been manually reordered).
+// Items without one sort to the end but keep their original relative order
+// (Array#sort is stable), so a lecture nobody has ever reordered just keeps
+// showing entries in the order they were added -- identical to the old
+// insertion-order-only behavior.
 function groupByLecture(items) {
   const groups = {};
   items.forEach((it) => {
@@ -16,7 +23,10 @@ function groupByLecture(items) {
   return Object.keys(groups)
     .map(Number)
     .sort((a, b) => a - b)
-    .map((n) => ({ lecture: n, items: groups[n] }));
+    .map((n) => ({
+      lecture: n,
+      items: groups[n].slice().sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity)),
+    }));
 }
 
 export function Browse({ course, onEdit }) {
@@ -24,15 +34,40 @@ export function Browse({ course, onEdit }) {
   const [revealed, setRevealed] = useState({});
   const [remarksRevealed, setRemarksRevealed] = useState({});
   const [collapsed, setCollapsed] = useState({});
+  const [reorderingLecture, setReorderingLecture] = useState(null);
+  const [workingOrder, setWorkingOrder] = useState([]);
 
   const items = useMemo(
     () => Object.values(state.items).filter((it) => !it.deleted && it.course === course),
     [state.items, course]
   );
   const groups = useMemo(() => groupByLecture(items), [items]);
+  const byId = useMemo(() => Object.fromEntries(items.map((it) => [it.id, it])), [items]);
 
   if (!items.length) {
     return <p className="math-empty">No entries yet for {course} — add your first theorem or definition.</p>;
+  }
+
+  function startReorder(lecture, lectureItems) {
+    setCollapsed((p) => ({ ...p, [lecture]: false }));
+    setWorkingOrder(lectureItems.map((it) => it.id));
+    setReorderingLecture(lecture);
+  }
+
+  function confirmReorder() {
+    workingOrder.forEach((id, idx) => {
+      if ((byId[id]?.order ?? Infinity) !== idx) updateItem(id, { order: idx });
+    });
+    setReorderingLecture(null);
+  }
+
+  function cancelReorder() {
+    setReorderingLecture(null);
+  }
+
+  function handleDelete(it) {
+    const label = [it.number, it.name || it.type].filter(Boolean).join(' — ');
+    if (window.confirm(`Delete "${label}"? This can't be undone.`)) deleteItem(it.id);
   }
 
   return (
@@ -40,19 +75,56 @@ export function Browse({ course, onEdit }) {
       {groups.map(({ lecture, items: lectureItems }) => {
         const isCollapsed = !!collapsed[lecture];
         const isRevised = lectureItems.every((it) => !!it.revised);
+        const isReordering = reorderingLecture === lecture;
         return (
           <section key={lecture} className={`math-lecture-block${isRevised ? ' revised' : ''}`}>
-            <button
-              className="math-lecture-heading"
-              onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
-            >
-              <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
-              <span className="math-lecture-count">
-                {isRevised && <span className="math-lecture-revised-badge">✓ revised</span>}
-                {lectureItems.length}
-              </span>
-            </button>
-            {!isCollapsed && (
+            <div className="math-lecture-heading">
+              <button
+                className="math-lecture-toggle"
+                onClick={() => setCollapsed((p) => ({ ...p, [lecture]: !p[lecture] }))}
+              >
+                <span>{isCollapsed ? '▸' : '▾'} Lecture {lecture}</span>
+                <span className="math-lecture-count">
+                  {isRevised && <span className="math-lecture-revised-badge">✓ revised</span>}
+                  {lectureItems.length}
+                </span>
+              </button>
+              <div className="math-lecture-reorder-controls">
+                {isReordering ? (
+                  <>
+                    <button className="math-ghost-btn math-btn-primary" onClick={confirmReorder}>Confirm</button>
+                    <button className="math-ghost-btn" onClick={cancelReorder}>Cancel</button>
+                  </>
+                ) : (
+                  <button
+                    className="math-ghost-btn"
+                    onClick={() => startReorder(lecture, lectureItems)}
+                    disabled={lectureItems.length < 2 || reorderingLecture != null}
+                  >
+                    ⇅ reorder
+                  </button>
+                )}
+              </div>
+            </div>
+            {!isCollapsed && isReordering && (
+              <ReorderList
+                ids={workingOrder}
+                onChange={setWorkingOrder}
+                renderRow={(id) => {
+                  const it = byId[id];
+                  if (!it) return null;
+                  return (
+                    <div className="math-reorder-row-inner">
+                      <span className="math-reorder-grip" aria-hidden="true">⠿</span>
+                      <span className={`math-type-badge math-type-${it.type.toLowerCase()}`}>{it.type}</span>
+                      {it.number && <span className="math-item-number">{it.number}</span>}
+                      {it.name && <span className="math-item-name">{it.name}</span>}
+                    </div>
+                  );
+                }}
+              />
+            )}
+            {!isCollapsed && !isReordering && (
               <ul className="math-item-list">
                 {lectureItems.map((it) => (
                   <li key={it.id} className={`math-item-card${it.revised ? ' revised' : ''}`}>
@@ -71,7 +143,7 @@ export function Browse({ course, onEdit }) {
                         </label>
                         <span className="math-item-icon-group">
                           <button className="math-icon-btn" onClick={() => onEdit(it.id)} aria-label="Edit">✎</button>
-                          <button className="math-icon-btn" onClick={() => deleteItem(it.id)} aria-label="Delete">✕</button>
+                          <button className="math-icon-btn" onClick={() => handleDelete(it)} aria-label="Delete">✕</button>
                         </span>
                       </span>
                     </div>
