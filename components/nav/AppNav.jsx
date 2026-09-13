@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/japanese', label: 'Japanese' },
   { href: '/fitness', label: 'Fitness' },
   { href: '/math', label: 'Math' },
+  { href: '/bible', label: 'Bible' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
