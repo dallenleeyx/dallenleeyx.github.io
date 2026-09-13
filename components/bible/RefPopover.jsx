@@ -5,6 +5,7 @@
 // synced item), this one fetches NIV text from the server-side passage proxy.
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { VerseText } from './VerseText';
 
 export function RefPopover({ refText, onClose }) {
   const [result, setResult] = useState({ status: 'loading' });
@@ -47,7 +48,7 @@ export function RefPopover({ refText, onClose }) {
               {result.status === 'error' && <p className="bible-ref-missing">{result.data?.error || 'Could not load this passage.'}</p>}
               {result.status === 'ok' && (
                 <>
-                  <p className="bible-ref-popover-text">{result.data.text}</p>
+                  <p className="bible-ref-popover-text"><VerseText text={result.data.text} /></p>
                   {result.data.placeholder && <p className="bible-ref-placeholder-note">{result.data.label}</p>}
                 </>
               )}

@@ -4,9 +4,12 @@
    Japanese/Fitness/Math already learned about the unscoped [data-theme]
    selector. No manual toggle: it just follows the OS/browser preference.
 
-   Warm parchment palette with a deep wine-red accent, reusing Math's STIX
-   Two Text serif (already loaded site-wide) instead of pulling in a new
-   webfont just for this section. */
+   Warm parchment palette with a deep wine-red accent. Typography is its
+   own pairing rather than reusing Math's STIX Two Text: Cormorant Garamond
+   for headings/chapter titles (a classic literary display serif with real
+   presence at large sizes) and Lora for body/verse text (a warm, highly
+   legible book serif built for long-form reading) -- scripture wants a
+   different feel than math notation. */
 .bible-shell {
   --bible-paper: #FBF7F0;
   --bible-paper-alt: #F3EBDD;
@@ -20,11 +23,13 @@
   --bible-radius-pill: 999px;
   --bible-shadow-sm: 0 2px 8px rgba(60, 40, 20, 0.08);
   --bible-shadow-md: 0 8px 20px rgba(60, 40, 20, 0.12);
+  --bible-font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --bible-font-body: 'Lora', Georgia, 'Times New Roman', serif;
 
   min-height: 100vh;
   background: var(--bible-paper);
   color: var(--bible-ink);
-  font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
+  font-family: var(--bible-font-body);
   padding-bottom: 80px;
 }
 
@@ -42,10 +47,41 @@
   }
 }
 
-.bible-header { padding: 32px clamp(20px, 5vw, 64px) 0; text-align: center; }
-.bible-brand { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; }
+.bible-header {
+  padding: 40px clamp(20px, 5vw, 64px) 0;
+  text-align: center;
+  background: linear-gradient(180deg, var(--bible-paper-alt) 0%, var(--bible-paper) 100%);
+}
+.bible-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--bible-font-display);
+  font-size: 2.3rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
 .bible-brand-icon { color: var(--bible-accent); }
-.bible-subtitle { display: block; margin: 6px 0 0; color: var(--bible-ink-soft); font-size: 0.9rem; }
+.bible-subtitle {
+  display: block;
+  margin: 8px 0 0;
+  color: var(--bible-ink-soft);
+  font-family: var(--bible-font-display);
+  font-style: italic;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+.bible-header::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin: 20px auto 0;
+  border-radius: var(--bible-radius-pill);
+  background: var(--bible-accent);
+  opacity: 0.6;
+}
 
 .bible-subnav {
   display: flex;
@@ -69,7 +105,7 @@
 .bible-subnav-btn:hover { color: var(--bible-ink); }
 .bible-subnav-btn.active { color: var(--bible-accent); border-bottom-color: var(--bible-accent); }
 
-.bible-main { max-width: 760px; margin: 0 auto; padding: 24px clamp(20px, 5vw, 64px) 64px; }
+.bible-main { max-width: 920px; margin: 0 auto; padding: 24px clamp(20px, 5vw, 64px) 64px; }
 .bible-subview { display: none; }
 .bible-subview.active { display: block; animation: bibleFadeIn 0.2s ease; }
 @keyframes bibleFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -136,8 +172,8 @@
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 3px 9px;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
   border-radius: var(--bible-radius-pill);
   background: var(--bible-accent);
   color: var(--bible-accent-ink);
@@ -153,16 +189,32 @@
 .bible-reader-book-select { flex: 2; margin-top: 0; }
 .bible-reader-chapter-select { flex: 1; margin-top: 0; }
 
-.bible-reader-panes { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+.bible-reader-panes { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 20px; }
 .bible-reader-pane {
   background: var(--bible-paper-alt);
   border: 1px solid var(--bible-line);
   border-radius: var(--bible-radius-md);
-  padding: 16px 18px;
+  box-shadow: var(--bible-shadow-sm);
+  padding: 28px clamp(20px, 4vw, 48px);
 }
-.bible-reader-pane-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.bible-reader-pane-ref { font-weight: 700; }
-.bible-reader-pane-text { line-height: 1.7; white-space: pre-wrap; }
+.bible-reader-pane-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+.bible-reader-pane-ref {
+  font-family: var(--bible-font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--bible-accent);
+}
+.bible-reader-pane-text { font-size: 1.08rem; line-height: 1.9; white-space: pre-wrap; }
+
+/* verse numbers: small, muted-accent superscripts, no brackets */
+.bible-verse-num {
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--bible-accent);
+  vertical-align: super;
+  margin-right: 0.2em;
+  opacity: 0.85;
+}
 
 .bible-reader-chapter-nav { display: flex; justify-content: space-between; margin-top: 14px; }
 
@@ -193,7 +245,9 @@
   --bible-radius-md: 12px;
   --bible-radius-pill: 999px;
   --bible-shadow-md: 0 8px 20px rgba(60, 40, 20, 0.12);
-  font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
+  --bible-font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --bible-font-body: 'Lora', Georgia, 'Times New Roman', serif;
+  font-family: var(--bible-font-body);
 }
 @media (prefers-color-scheme: dark) {
   .bible-ref-portal-root {
@@ -242,11 +296,17 @@
   border-radius: var(--bible-radius-sm);
 }
 .bible-ref-close:hover { color: var(--bible-accent); background: var(--bible-paper-alt); }
-.bible-ref-popover-title { margin: 0 28px 14px 0; font-size: 1.1rem; }
+.bible-ref-popover-title {
+  margin: 0 28px 16px 0;
+  font-family: var(--bible-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--bible-accent);
+}
 .bible-ref-popover-versions { display: flex; flex-direction: column; gap: 16px; }
 .bible-ref-popover-version { padding-top: 14px; border-top: 1px solid var(--bible-line); }
 .bible-ref-popover-version:first-child { padding-top: 0; border-top: none; }
-.bible-ref-popover-text { margin: 8px 0 0; line-height: 1.7; white-space: pre-wrap; }
+.bible-ref-popover-text { margin: 8px 0 0; font-size: 1.02rem; line-height: 1.8; white-space: pre-wrap; }
 
 /* ---------- commentary ---------- */
 .bible-commentary-textarea { font-size: 1rem; line-height: 1.6; }
@@ -276,7 +336,7 @@
 .bible-qt-prayer-edit { margin-top: 8px; }
 
 .bible-qt-day-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
-.bible-qt-day-label { font-weight: 700; text-align: center; }
+.bible-qt-day-label { font-family: var(--bible-font-display); font-size: 1.2rem; font-weight: 700; text-align: center; }
 .bible-qt-today-badge {
   margin-left: 8px;
   font-size: 0.68rem;
@@ -320,7 +380,7 @@
   padding: 18px 10px;
   text-align: center;
 }
-.bible-stat-value { display: block; font-size: 1.8rem; font-weight: 700; }
+.bible-stat-value { display: block; font-family: var(--bible-font-display); font-size: 2.1rem; font-weight: 700; color: var(--bible-accent); }
 .bible-stat-label { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--bible-ink-soft); }
 
 @media (max-width: 520px) {
