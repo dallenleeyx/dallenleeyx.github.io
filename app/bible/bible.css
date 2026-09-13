@@ -146,10 +146,14 @@
 .bible-ref-placeholder-note { margin-top: 6px; font-size: 0.75rem; color: var(--bible-ink-soft); font-style: italic; }
 
 /* ---------- reader ---------- */
-.bible-reader-form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.bible-reader-jump-form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .bible-reader-input { flex: 1; min-width: 200px; margin-top: 0; }
 
-.bible-reader-panes { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 24px; }
+.bible-reader-controls { display: flex; gap: 10px; margin-top: 14px; }
+.bible-reader-book-select { flex: 2; margin-top: 0; }
+.bible-reader-chapter-select { flex: 1; margin-top: 0; }
+
+.bible-reader-panes { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
 .bible-reader-pane {
   background: var(--bible-paper-alt);
   border: 1px solid var(--bible-line);
@@ -159,6 +163,12 @@
 .bible-reader-pane-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .bible-reader-pane-ref { font-weight: 700; }
 .bible-reader-pane-text { line-height: 1.7; white-space: pre-wrap; }
+
+.bible-reader-chapter-nav { display: flex; justify-content: space-between; margin-top: 14px; }
+
+@media (max-width: 480px) {
+  .bible-reader-controls { flex-direction: column; }
+}
 
 /* ---------- ref chips + preview popover ---------- */
 .bible-ref-chip {
