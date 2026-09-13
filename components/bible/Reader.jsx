@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { BOOKS } from '../../lib/bible/books';
 import { parseRef } from '../../lib/bible/refs';
+import { VerseText } from './VerseText';
 
 const LAST_POSITION_KEY = 'bibleReaderPosition';
 
@@ -134,7 +135,7 @@ export function Reader() {
           {result?.status === 'error' && <p className="bible-ref-missing">{result.data?.error || 'Could not load this chapter.'}</p>}
           {result?.status === 'ok' && (
             <>
-              <p className="bible-reader-pane-text">{result.data.text}</p>
+              <p className="bible-reader-pane-text"><VerseText text={result.data.text} /></p>
               {result.data.placeholder && <p className="bible-ref-placeholder-note">{result.data.label}</p>}
             </>
           )}
