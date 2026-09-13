@@ -129,6 +129,7 @@
 .math-type-corollary { background: #DB2777; }
 .math-type-remark { background: #6B7089; }
 .math-type-example { background: #2E9E4F; }
+.math-type-exercise { background: #DC2626; }
 
 /* ---------- browse ---------- */
 .math-lecture-block { margin-bottom: 16px; }
