@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const LAST_SITE_KEY = 'lastSite';
-const KNOWN_SITES = ['/japanese', '/fitness', '/math', '/bible'];
+const KNOWN_SITES = ['/japanese', '/fitness', '/math', '/bible', '/jobs'];
 
 export function RootRedirect() {
   const router = useRouter();
