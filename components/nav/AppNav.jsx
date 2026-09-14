@@ -13,6 +13,7 @@ const LINKS = [
   { href: '/fitness', label: 'Fitness' },
   { href: '/math', label: 'Math' },
   { href: '/bible', label: 'Bible' },
+  { href: '/jobs', label: 'Jobs' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
