@@ -9,9 +9,16 @@
 // add a stand-in exercise you don't normally do, or cancel one you skipped
 // -- without ever touching the workout template in the library. Prev/next
 // arrows let you glance at yesterday or back-fill a day you forgot to log.
+//
+// Also pick which saved gym (see Gyms.jsx) you're training at today. If an
+// exercise's usual equipment (tagged in defaultWorkouts.js / WorkoutLibrary)
+// isn't in that gym's saved inventory, SubstitutionBanner suggests the
+// closest available alternative -- the workout program itself never
+// changes, this is purely "what to do differently just for today."
 import { useMemo, useState } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
 import { toISO, addDays, todayISO, normalizeSet } from '../../lib/fitness/util';
+import { SubstitutionBanner } from './SubstitutionBanner';
 
 const CARDIO_TYPES = ['Run', 'Swim', 'Bike', 'Row', 'Other'];
 
@@ -50,10 +57,13 @@ export function DailyLog() {
   if (loading) return <p className="fit-empty">Loading…</p>;
 
   const workouts = state.workouts.list;
+  const gyms = state.gyms.list;
   const scheduled = state.schedule.days[dateISO];
   const entry = state.logs[dateISO] || {};
   const manual = entry.manual || {};
   const activeWorkoutId = manual.workoutId ?? '';
+  const activeGymId = manual.gymId ?? '';
+  const activeGym = activeGymId ? gyms.find((g) => g.id === activeGymId) || null : null;
   const scheduledWorkout = scheduled?.workoutId ? workouts.find((w) => w.id === scheduled.workoutId) : null;
   const loggedExercises = manual.exercises || [];
   const cardio = manual.cardio || null;
@@ -68,8 +78,13 @@ export function DailyLog() {
       workoutId,
       exercises: (workout?.exercises || []).map((ex) => ({
         name: ex.name, targetSets: ex.sets, targetReps: ex.reps, note: '', sets: [],
+        equipmentIds: ex.equipmentIds || [], muscleGroup: ex.muscleGroup || null,
       })),
     });
+  }
+
+  function selectGym(gymId) {
+    updateLog(dateISO, { gymId: gymId || null });
   }
 
   // Today's exercise list starts from whichever workout's default exercises
@@ -151,6 +166,22 @@ export function DailyLog() {
         </select>
       </label>
 
+      {activeGym ? (
+        <div className="fit-current-gym">
+          <span className="fit-current-gym-label">Gym</span>
+          <span className="fit-current-gym-name">{activeGym.name}</span>
+          <button type="button" className="fit-ghost-btn fit-change-gym-btn" onClick={() => selectGym('')}>Change gym</button>
+        </div>
+      ) : (
+        <label className="fit-form-label-block">
+          Which gym are you training at today?
+          <select value={activeGymId} onChange={(e) => selectGym(e.target.value)}>
+            <option value="">{gyms.length ? '— select a gym —' : '— no gyms saved yet (see the Gyms tab) —'}</option>
+            {gyms.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </label>
+      )}
+
       <ul className="fit-log-exercise-list">
         {loggedExercises.map((ex, i) => (
           <li key={i} className="fit-log-exercise-card">
@@ -200,6 +231,7 @@ export function DailyLog() {
               })}
               <button type="button" className="fit-ghost-btn fit-add-set-btn" onClick={() => addSet(i)}>+ set</button>
             </div>
+            <SubstitutionBanner exercise={ex} gym={activeGym} />
           </li>
         ))}
       </ul>

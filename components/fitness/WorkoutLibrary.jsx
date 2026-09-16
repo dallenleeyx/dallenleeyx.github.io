@@ -6,11 +6,20 @@
 // workout, add/remove/edit its exercises, or add/delete a whole workout.
 // Schedule.jsx assigns these to upcoming dates; Today.jsx logs actual
 // performance against whichever one you pick for that day.
+//
+// Each exercise can optionally link to one or more equipmentCatalog.js
+// entries -- that's what lets DailyLog.jsx's gym-substitution feature work
+// for it. Linking is optional: an exercise with nothing linked just never
+// gets flagged, so this never blocks adding a plain exercise the old way.
+import { useState } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
 import { uid } from '../../lib/fitness/util';
+import { findEquipment } from '../../lib/fitness/equipmentCatalog';
+import { EquipmentPicker } from './EquipmentPicker';
 
 export function WorkoutLibrary() {
   const { state, loading, updateWorkouts } = useFitness();
+  const [equipmentEditorId, setEquipmentEditorId] = useState(null);
 
   if (loading) return <p className="fit-empty">Loading…</p>;
 
@@ -25,7 +34,7 @@ export function WorkoutLibrary() {
   }
   function addExercise(workoutId) {
     const workout = workouts.find((w) => w.id === workoutId);
-    updateWorkout(workoutId, { exercises: [...workout.exercises, { id: uid(), name: '', sets: 3, reps: '' }] });
+    updateWorkout(workoutId, { exercises: [...workout.exercises, { id: uid(), name: '', sets: 3, reps: '', equipmentIds: [], muscleGroup: null }] });
   }
   function removeExercise(workoutId, exId) {
     const workout = workouts.find((w) => w.id === workoutId);
@@ -37,6 +46,15 @@ export function WorkoutLibrary() {
   function removeWorkout(workoutId) {
     if (!window.confirm('Delete this workout? This does not affect logs you’ve already recorded.')) return;
     updateWorkouts(workouts.filter((w) => w.id !== workoutId));
+  }
+
+  function linkEquipment(workoutId, ex, catalogId) {
+    const current = ex.equipmentIds || [];
+    if (current.includes(catalogId)) return;
+    updateExercise(workoutId, ex.id, { equipmentIds: [...current, catalogId] });
+  }
+  function unlinkEquipment(workoutId, ex, catalogId) {
+    updateExercise(workoutId, ex.id, { equipmentIds: (ex.equipmentIds || []).filter((id) => id !== catalogId) });
   }
 
   return (
@@ -54,40 +72,66 @@ export function WorkoutLibrary() {
           </div>
 
           <ul className="fit-plan-exercise-list">
-            {workout.exercises.map((ex) => (
-              <li key={ex.id} className="fit-plan-exercise-row">
-                <input
-                  className="fit-ex-name-input"
-                  value={ex.name}
-                  onChange={(e) => updateExercise(workout.id, ex.id, { name: e.target.value })}
-                  placeholder="Exercise name"
-                />
-                <input
-                  className="fit-ex-sets-input"
-                  type="number"
-                  min="0"
-                  value={ex.sets}
-                  onChange={(e) => updateExercise(workout.id, ex.id, { sets: e.target.value === '' ? '' : Number(e.target.value) })}
-                  aria-label="Sets"
-                />
-                <span className="fit-ex-x">×</span>
-                <input
-                  className="fit-ex-reps-input"
-                  value={ex.reps}
-                  onChange={(e) => updateExercise(workout.id, ex.id, { reps: e.target.value })}
-                  placeholder="reps"
-                  aria-label="Reps"
-                />
-                <button
-                  type="button"
-                  className="fit-ex-remove-btn"
-                  onClick={() => removeExercise(workout.id, ex.id)}
-                  aria-label="Remove exercise"
-                >
-                  ✕
-                </button>
-              </li>
-            ))}
+            {workout.exercises.map((ex) => {
+              const linkedIds = ex.equipmentIds || [];
+              const linked = linkedIds.map(findEquipment).filter(Boolean);
+              const isEditingEquipment = equipmentEditorId === ex.id;
+              return (
+                <li key={ex.id} className="fit-plan-exercise-item">
+                  <div className="fit-plan-exercise-row">
+                    <input
+                      className="fit-ex-name-input"
+                      value={ex.name}
+                      onChange={(e) => updateExercise(workout.id, ex.id, { name: e.target.value })}
+                      placeholder="Exercise name"
+                    />
+                    <input
+                      className="fit-ex-sets-input"
+                      type="number"
+                      min="0"
+                      value={ex.sets}
+                      onChange={(e) => updateExercise(workout.id, ex.id, { sets: e.target.value === '' ? '' : Number(e.target.value) })}
+                      aria-label="Sets"
+                    />
+                    <span className="fit-ex-x">×</span>
+                    <input
+                      className="fit-ex-reps-input"
+                      value={ex.reps}
+                      onChange={(e) => updateExercise(workout.id, ex.id, { reps: e.target.value })}
+                      placeholder="reps"
+                      aria-label="Reps"
+                    />
+                    <button
+                      type="button"
+                      className="fit-ex-remove-btn"
+                      onClick={() => removeExercise(workout.id, ex.id)}
+                      aria-label="Remove exercise"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="fit-ex-equipment-row">
+                    {linked.map((item) => (
+                      <span key={item.id} className="fit-ex-equipment-chip">
+                        {item.name}
+                        <button type="button" onClick={() => unlinkEquipment(workout.id, ex, item.id)} aria-label={`Unlink ${item.name}`}>✕</button>
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      className="fit-ghost-btn fit-ex-link-equipment-btn"
+                      onClick={() => setEquipmentEditorId(isEditingEquipment ? null : ex.id)}
+                    >
+                      {isEditingEquipment ? 'done' : '+ link equipment'}
+                    </button>
+                  </div>
+                  {isEditingEquipment && (
+                    <EquipmentPicker excludeIds={linkedIds} onAdd={(catalogId) => linkEquipment(workout.id, ex, catalogId)} />
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
           <button type="button" className="fit-ghost-btn fit-add-ex-btn" onClick={() => addExercise(workout.id)}>

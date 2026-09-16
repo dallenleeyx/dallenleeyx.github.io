@@ -408,3 +408,210 @@
   .fit-stat-tiles { grid-template-columns: 1fr; }
 }
 
+/* ---------- shared form input (gyms/equipment) ---------- */
+.fit-form-input {
+  display: block;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 8px 10px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.fit-form-input:focus { outline: none; border-color: var(--fit-accent); }
+
+/* ---------- current gym (Today) ---------- */
+.fit-current-gym {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-md);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.fit-current-gym-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fit-ink-soft); }
+.fit-current-gym-name { flex: 1; font-weight: 700; }
+.fit-change-gym-btn { padding: 4px 12px; font-size: 0.75rem; }
+
+/* ---------- substitution banner ---------- */
+.fit-sub-banner {
+  margin-top: 10px;
+  background: var(--fit-active-bg);
+  border-radius: var(--fit-radius-sm);
+  padding: 10px 12px;
+}
+.fit-sub-banner-title { margin: 0 0 8px; font-weight: 700; font-size: 0.82rem; color: var(--fit-ink); }
+.fit-sub-banner-body { display: flex; flex-wrap: wrap; gap: 20px; }
+.fit-sub-banner-col { display: flex; flex-direction: column; gap: 4px; }
+.fit-sub-banner-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fit-ink-soft); }
+.fit-sub-banner-item { font-weight: 700; }
+.fit-sub-banner-alt-list { margin: 0; padding-left: 16px; font-size: 0.85rem; }
+.fit-sub-banner-none { margin: 0; font-size: 0.85rem; color: var(--fit-ink-soft); font-style: italic; }
+.fit-muscle-diagram { display: block; margin-top: 2px; border-radius: var(--fit-radius-sm); background: var(--fit-paper); }
+
+/* ---------- exercise equipment linking (Workouts) ---------- */
+.fit-plan-exercise-item { display: flex; flex-direction: column; gap: 6px; }
+.fit-ex-equipment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.fit-ex-equipment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--fit-ink-soft);
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-pill);
+  padding: 3px 6px 3px 10px;
+}
+.fit-ex-equipment-chip button { border: none; background: none; color: inherit; cursor: pointer; font-size: 0.7rem; padding: 0; }
+.fit-ex-equipment-chip button:hover { color: var(--fit-accent); }
+.fit-ex-link-equipment-btn { font-size: 0.72rem; padding: 3px 10px; }
+
+/* ---------- gyms list ---------- */
+.fit-gym-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fit-gym-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-md);
+  padding: 4px 8px 4px 4px;
+}
+.fit-gym-card-main {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font-family: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 8px;
+  border-radius: var(--fit-radius-sm);
+}
+.fit-gym-card-main:hover { background: var(--fit-paper); }
+.fit-gym-card-name { font-weight: 700; }
+.fit-gym-card-location { color: var(--fit-ink-soft); font-size: 0.85rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fit-gym-card-count { color: var(--fit-ink-soft); font-size: 0.75rem; flex-shrink: 0; }
+.fit-add-gym-btn { width: 100%; text-align: center; }
+
+/* ---------- gym detail / equipment editor ---------- */
+.fit-gym-back-btn { margin-bottom: 16px; }
+.fit-gym-detail-fields { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.fit-gym-name-input {
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--fit-ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--fit-line);
+  padding: 4px 0 8px;
+}
+.fit-gym-name-input:focus { outline: none; border-bottom-color: var(--fit-accent); }
+.fit-gym-notes-input { min-height: 44px; }
+
+.fit-gym-equipment-heading { margin: 0 0 10px; font-size: 0.95rem; }
+
+.fit-gym-category-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--fit-line); border-radius: var(--fit-radius-md); overflow: hidden; }
+.fit-gym-category { background: var(--fit-paper); }
+.fit-gym-category-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fit-ink);
+  background: var(--fit-paper);
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+.fit-gym-category-head:disabled { color: var(--fit-ink-soft); cursor: default; }
+.fit-gym-category-count { font-size: 0.78rem; color: var(--fit-ink-soft); font-variant-numeric: tabular-nums; }
+.fit-gym-equipment-list { list-style: none; margin: 0; padding: 0 16px 10px; display: flex; flex-direction: column; gap: 6px; }
+.fit-gym-equipment-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--fit-paper-alt);
+  border-radius: var(--fit-radius-sm);
+  padding: 6px 10px;
+}
+.fit-gym-equipment-row.unavailable { opacity: 0.5; }
+.fit-gym-equipment-row.unavailable .fit-gym-equipment-name { text-decoration: line-through; }
+.fit-gym-equipment-name { flex: 1; font-size: 0.85rem; font-weight: 600; min-width: 0; }
+.fit-gym-equipment-note {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--fit-ink-soft);
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+}
+.fit-gym-equipment-note:focus { outline: none; }
+.fit-gym-unavailable-toggle { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--fit-ink-soft); white-space: nowrap; cursor: pointer; }
+.fit-gym-unavailable-toggle input { accent-color: var(--fit-accent); cursor: pointer; }
+
+.fit-add-equip-btn { margin-bottom: 12px; }
+
+.fit-gym-custom-form { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--fit-line); }
+.fit-gym-custom-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--fit-ink-soft); margin-bottom: 8px; }
+.fit-gym-custom-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.fit-gym-custom-row .fit-form-input { flex: 2; min-width: 140px; }
+.fit-gym-custom-row select { flex: 1; min-width: 120px; font-family: inherit; font-size: 0.85rem; color: var(--fit-ink); background: var(--fit-paper-alt); border: 1px solid var(--fit-line); border-radius: var(--fit-radius-sm); padding: 8px 10px; }
+
+/* ---------- equipment picker (catalog search/filter) ---------- */
+.fit-equip-picker { margin-top: 10px; margin-bottom: 12px; background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 12px; }
+.fit-equip-picker-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.fit-equip-picker-search { flex: 2; min-width: 160px; }
+.fit-equip-picker-controls select {
+  flex: 1;
+  min-width: 130px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 8px 10px;
+}
+.fit-equip-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.fit-equip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  font-family: inherit;
+  background: var(--fit-paper);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.fit-equip-card:hover { border-color: var(--fit-accent); }
+.fit-equip-card-name { font-size: 0.82rem; font-weight: 600; }
+.fit-equip-card-meta { font-size: 0.68rem; color: var(--fit-ink-soft); text-transform: uppercase; letter-spacing: 0.02em; }
+
+@media (max-width: 480px) {
+  .fit-sub-banner-body { flex-direction: column; gap: 12px; }
+  .fit-equip-picker-grid { grid-template-columns: 1fr 1fr; }
+}
+
