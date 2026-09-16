@@ -90,8 +90,18 @@ export function FitnessSyncProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Carries the existing programVersion forward -- dropping it here would
+  // make normalizeFitnessState think every ordinary edit (reorder a set,
+  // rename a note) is stale legacy data and wholesale re-replace the
+  // program with the fixed template on the next load. Only an explicit
+  // programVersion bump in programTemplate.js should ever trigger that.
   const updateWorkouts = useCallback((list) => {
-    setState((prev) => ({ ...prev, workouts: { updatedAt: Date.now(), list } }));
+    setState((prev) => ({ ...prev, workouts: { ...prev.workouts, updatedAt: Date.now(), list } }));
+    schedulePush();
+  }, []);
+
+  const updateCustomExercises = useCallback((list) => {
+    setState((prev) => ({ ...prev, customExercises: { updatedAt: Date.now(), list } }));
     schedulePush();
   }, []);
 
@@ -117,7 +127,7 @@ export function FitnessSyncProvider({ children }) {
   }, []);
 
   return (
-    <FitnessSyncContext.Provider value={{ state, loading, updateWorkouts, updateGyms, updateSchedule, updateLog }}>
+    <FitnessSyncContext.Provider value={{ state, loading, updateWorkouts, updateCustomExercises, updateGyms, updateSchedule, updateLog }}>
       {children}
     </FitnessSyncContext.Provider>
   );

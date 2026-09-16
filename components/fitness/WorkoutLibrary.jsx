@@ -1,148 +1,175 @@
 'use client';
-// components/fitness/WorkoutLibrary.jsx — the workout library: named,
-// reusable workouts (e.g. "Workout A — Upper Pull + Chest") instead of a
-// fixed Monday-Sunday template, since the rotation runs by "whichever
-// workout comes next" rather than by weekday. Fully editable: rename a
-// workout, add/remove/edit its exercises, or add/delete a whole workout.
-// Schedule.jsx assigns these to upcoming dates; Today.jsx logs actual
-// performance against whichever one you pick for that day.
-//
-// Each exercise can optionally link to one or more equipmentCatalog.js
-// entries -- that's what lets DailyLog.jsx's gym-substitution feature work
-// for it. Linking is optional: an exercise with nothing linked just never
-// gets flagged, so this never blocks adding a plain exercise the old way.
+// components/fitness/WorkoutLibrary.jsx — "My Program": the fixed weekly
+// program (Push/Pull/Legs/Upper/Lower+Core, see programTemplate.js) as a
+// day-card grid, each opening a full workout editor. This replaces the old
+// "+ Link Equipment" workflow entirely -- every exercise here is a
+// reference to a canonical Exercise (see exerciseCatalog.js), so its
+// muscles/equipment are automatic and never hand-configured. The program
+// itself stays fixed (no add/delete a whole day); what's editable per day
+// is the exercise order, which exercise fills each slot, and its
+// sets/rep-range/rest prescription.
 import { useState } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
 import { uid } from '../../lib/fitness/util';
-import { findEquipment } from '../../lib/fitness/equipmentCatalog';
-import { EquipmentPicker } from './EquipmentPicker';
+import { getAllExercises, findExercise } from '../../lib/fitness/exerciseUtils';
+import { ExerciseCard } from './ExerciseCard';
+import { ExerciseDetails } from './ExerciseDetails';
+import { ExerciseLibrary } from './ExerciseLibrary';
+import { MuscleHeatmap } from './MuscleHeatmap';
+
+function DayCard({ day, allExercises, onOpen }) {
+  const muscleSummary = [...new Set(day.focus || [])];
+  return (
+    <button type="button" className="fit-program-day-card" onClick={() => onOpen(day.id)}>
+      <span className="fit-program-day-name">{day.name}</span>
+      <span className="fit-program-day-meta">
+        {day.exercises.length} exercise{day.exercises.length === 1 ? '' : 's'}
+        {muscleSummary.length ? ` · ${muscleSummary.join(' • ')}` : ''}
+      </span>
+    </button>
+  );
+}
 
 export function WorkoutLibrary() {
-  const { state, loading, updateWorkouts } = useFitness();
-  const [equipmentEditorId, setEquipmentEditorId] = useState(null);
+  const { state, loading, updateWorkouts, updateCustomExercises } = useFitness();
+  const [openDayId, setOpenDayId] = useState(null);
+  const [detailsExercise, setDetailsExercise] = useState(null);
+  const [libraryFor, setLibraryFor] = useState(null); // { mode: 'add' | 'replace', weId? }
 
   if (loading) return <p className="fit-empty">Loading…</p>;
 
   const workouts = state.workouts.list;
+  const customExercises = state.customExercises.list;
+  const allExercises = getAllExercises(customExercises);
+  const openDay = workouts.find((w) => w.id === openDayId) || null;
 
-  function updateWorkout(workoutId, patch) {
-    updateWorkouts(workouts.map((w) => (w.id === workoutId ? { ...w, ...patch } : w)));
+  function updateDay(dayId, patch) {
+    updateWorkouts(workouts.map((w) => (w.id === dayId ? { ...w, ...patch } : w)));
   }
-  function updateExercise(workoutId, exId, patch) {
-    const workout = workouts.find((w) => w.id === workoutId);
-    updateWorkout(workoutId, { exercises: workout.exercises.map((ex) => (ex.id === exId ? { ...ex, ...patch } : ex)) });
+  function updateWorkoutExercise(dayId, weId, patch) {
+    const day = workouts.find((w) => w.id === dayId);
+    updateDay(dayId, { exercises: day.exercises.map((e) => (e.id === weId ? { ...e, ...patch } : e)) });
   }
-  function addExercise(workoutId) {
-    const workout = workouts.find((w) => w.id === workoutId);
-    updateWorkout(workoutId, { exercises: [...workout.exercises, { id: uid(), name: '', sets: 3, reps: '', equipmentIds: [], muscleGroup: null }] });
+  function removeWorkoutExercise(dayId, weId) {
+    const day = workouts.find((w) => w.id === dayId);
+    if (!window.confirm('Remove this exercise from the day? This does not affect logs you’ve already recorded.')) return;
+    updateDay(dayId, { exercises: day.exercises.filter((e) => e.id !== weId) });
   }
-  function removeExercise(workoutId, exId) {
-    const workout = workouts.find((w) => w.id === workoutId);
-    updateWorkout(workoutId, { exercises: workout.exercises.filter((ex) => ex.id !== exId) });
+  function moveWorkoutExercise(dayId, index, dir) {
+    const day = workouts.find((w) => w.id === dayId);
+    const next = [...day.exercises];
+    const j = index + dir;
+    if (j < 0 || j >= next.length) return;
+    [next[index], next[j]] = [next[j], next[index]];
+    updateDay(dayId, { exercises: next });
   }
-  function addWorkout() {
-    updateWorkouts([...workouts, { id: uid(), name: 'New workout', exercises: [] }]);
+  function addWorkoutExercise(dayId, exercise) {
+    const day = workouts.find((w) => w.id === dayId);
+    updateDay(dayId, {
+      exercises: [...day.exercises, { id: uid(), exerciseId: exercise.id, sets: 3, minReps: 8, maxReps: 12, restSeconds: 90, notes: '' }],
+    });
+    setLibraryFor(null);
   }
-  function removeWorkout(workoutId) {
-    if (!window.confirm('Delete this workout? This does not affect logs you’ve already recorded.')) return;
-    updateWorkouts(workouts.filter((w) => w.id !== workoutId));
+  function replaceWorkoutExercise(dayId, weId, exercise) {
+    updateWorkoutExercise(dayId, weId, { exerciseId: exercise.id });
+    setLibraryFor(null);
+  }
+  function createCustomExercise(exercise) {
+    updateCustomExercises([...customExercises, exercise]);
   }
 
-  function linkEquipment(workoutId, ex, catalogId) {
-    const current = ex.equipmentIds || [];
-    if (current.includes(catalogId)) return;
-    updateExercise(workoutId, ex.id, { equipmentIds: [...current, catalogId] });
+  if (!openDay) {
+    return (
+      <div className="fit-program">
+        <p className="fit-program-hint">
+          Your fixed weekly program. Tap a day to reorder exercises, swap one out, or adjust sets/reps/rest —
+          the exercises themselves already know their own muscles and equipment.
+        </p>
+        <div className="fit-program-grid">
+          {workouts.map((day) => (
+            <DayCard key={day.id} day={day} allExercises={allExercises} onOpen={setOpenDayId} />
+          ))}
+        </div>
+      </div>
+    );
   }
-  function unlinkEquipment(workoutId, ex, catalogId) {
-    updateExercise(workoutId, ex.id, { equipmentIds: (ex.equipmentIds || []).filter((id) => id !== catalogId) });
-  }
+
+  const resolvedExercises = openDay.exercises.map((we) => findExercise(we.exerciseId, customExercises)).filter(Boolean);
 
   return (
-    <div className="fit-plan-grid">
-      {workouts.map((workout) => (
-        <div key={workout.id} className="fit-day-card">
-          <div className="fit-day-card-head fit-workout-card-head">
-            <input
-              className="fit-day-title-input"
-              value={workout.name}
-              onChange={(e) => updateWorkout(workout.id, { name: e.target.value })}
-              placeholder="Workout name (e.g. Workout A — Upper Pull + Chest)"
-            />
-            <button type="button" className="fit-icon-btn" onClick={() => removeWorkout(workout.id)} aria-label="Delete workout">✕</button>
-          </div>
+    <div className="fit-workout-editor">
+      <div className="fit-workout-editor-head">
+        <button type="button" className="fit-ghost-btn" onClick={() => setOpenDayId(null)}>← My Program</button>
+        <h3>{openDay.name}</h3>
+      </div>
 
-          <ul className="fit-plan-exercise-list">
-            {workout.exercises.map((ex) => {
-              const linkedIds = ex.equipmentIds || [];
-              const linked = linkedIds.map(findEquipment).filter(Boolean);
-              const isEditingEquipment = equipmentEditorId === ex.id;
-              return (
-                <li key={ex.id} className="fit-plan-exercise-item">
-                  <div className="fit-plan-exercise-row">
-                    <input
-                      className="fit-ex-name-input"
-                      value={ex.name}
-                      onChange={(e) => updateExercise(workout.id, ex.id, { name: e.target.value })}
-                      placeholder="Exercise name"
-                    />
-                    <input
-                      className="fit-ex-sets-input"
-                      type="number"
-                      min="0"
-                      value={ex.sets}
-                      onChange={(e) => updateExercise(workout.id, ex.id, { sets: e.target.value === '' ? '' : Number(e.target.value) })}
-                      aria-label="Sets"
-                    />
-                    <span className="fit-ex-x">×</span>
-                    <input
-                      className="fit-ex-reps-input"
-                      value={ex.reps}
-                      onChange={(e) => updateExercise(workout.id, ex.id, { reps: e.target.value })}
-                      placeholder="reps"
-                      aria-label="Reps"
-                    />
-                    <button
-                      type="button"
-                      className="fit-ex-remove-btn"
-                      onClick={() => removeExercise(workout.id, ex.id)}
-                      aria-label="Remove exercise"
-                    >
-                      ✕
-                    </button>
+      <MuscleHeatmap exercises={resolvedExercises} title={`${openDay.name} — muscles trained`} />
+
+      <ul className="fit-workout-editor-list">
+        {openDay.exercises.map((we, i) => {
+          const exercise = findExercise(we.exerciseId, customExercises);
+          if (!exercise) return null;
+          return (
+            <li key={we.id}>
+              <ExerciseCard
+                exercise={exercise}
+                sets={we.sets}
+                minReps={we.minReps}
+                maxReps={we.maxReps}
+                restSeconds={we.restSeconds}
+                allExercises={allExercises}
+                onOpenDetails={setDetailsExercise}
+                actions={
+                  <div className="fit-ex-editor-actions">
+                    <button type="button" className="fit-icon-btn" disabled={i === 0} onClick={() => moveWorkoutExercise(openDay.id, i, -1)} aria-label="Move up">↑</button>
+                    <button type="button" className="fit-icon-btn" disabled={i === openDay.exercises.length - 1} onClick={() => moveWorkoutExercise(openDay.id, i, 1)} aria-label="Move down">↓</button>
+                    <button type="button" className="fit-icon-btn" onClick={() => removeWorkoutExercise(openDay.id, we.id)} aria-label="Remove exercise">✕</button>
                   </div>
+                }
+              >
+                <div className="fit-ex-editor-row">
+                  <label>Sets <input type="number" min="1" value={we.sets ?? ''} onChange={(e) => updateWorkoutExercise(openDay.id, we.id, { sets: e.target.value === '' ? null : Number(e.target.value) })} /></label>
+                  <label>Min reps <input type="number" min="0" value={we.minReps ?? ''} onChange={(e) => updateWorkoutExercise(openDay.id, we.id, { minReps: e.target.value === '' ? null : Number(e.target.value) })} /></label>
+                  <label>Max reps <input type="number" min="0" value={we.maxReps ?? ''} onChange={(e) => updateWorkoutExercise(openDay.id, we.id, { maxReps: e.target.value === '' ? null : Number(e.target.value) })} /></label>
+                  <label>Rest (s) <input type="number" min="0" step="15" value={we.restSeconds ?? ''} onChange={(e) => updateWorkoutExercise(openDay.id, we.id, { restSeconds: e.target.value === '' ? null : Number(e.target.value) })} /></label>
+                  <button type="button" className="fit-ghost-btn" onClick={() => setLibraryFor({ mode: 'replace', weId: we.id })}>Replace</button>
+                </div>
+                <input
+                  className="fit-ex-editor-notes"
+                  value={we.notes || ''}
+                  onChange={(e) => updateWorkoutExercise(openDay.id, we.id, { notes: e.target.value })}
+                  placeholder="note (optional)"
+                />
+              </ExerciseCard>
+            </li>
+          );
+        })}
+      </ul>
 
-                  <div className="fit-ex-equipment-row">
-                    {linked.map((item) => (
-                      <span key={item.id} className="fit-ex-equipment-chip">
-                        {item.name}
-                        <button type="button" onClick={() => unlinkEquipment(workout.id, ex, item.id)} aria-label={`Unlink ${item.name}`}>✕</button>
-                      </span>
-                    ))}
-                    <button
-                      type="button"
-                      className="fit-ghost-btn fit-ex-link-equipment-btn"
-                      onClick={() => setEquipmentEditorId(isEditingEquipment ? null : ex.id)}
-                    >
-                      {isEditingEquipment ? 'done' : '+ link equipment'}
-                    </button>
-                  </div>
-                  {isEditingEquipment && (
-                    <EquipmentPicker excludeIds={linkedIds} onAdd={(catalogId) => linkEquipment(workout.id, ex, catalogId)} />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-
-          <button type="button" className="fit-ghost-btn fit-add-ex-btn" onClick={() => addExercise(workout.id)}>
-            + add exercise
-          </button>
-        </div>
-      ))}
-
-      <button type="button" className="fit-ghost-btn fit-btn-primary fit-add-workout-btn" onClick={addWorkout}>
-        + add workout
+      <button type="button" className="fit-ghost-btn fit-btn-primary fit-add-ex-btn" onClick={() => setLibraryFor({ mode: 'add' })}>
+        + Add Exercise
       </button>
+
+      {detailsExercise && (
+        <ExerciseDetails
+          exercise={detailsExercise}
+          logs={state.logs}
+          customExercises={customExercises}
+          onClose={() => setDetailsExercise(null)}
+        />
+      )}
+
+      {libraryFor && (
+        <ExerciseLibrary
+          allExercises={allExercises}
+          replacing={libraryFor.mode === 'replace' ? findExercise(openDay.exercises.find((e) => e.id === libraryFor.weId)?.exerciseId, customExercises) : null}
+          onCreateCustom={createCustomExercise}
+          onSelect={(exercise) => (libraryFor.mode === 'replace'
+            ? replaceWorkoutExercise(openDay.id, libraryFor.weId, exercise)
+            : addWorkoutExercise(openDay.id, exercise))}
+          onClose={() => setLibraryFor(null)}
+        />
+      )}
     </div>
   );
 }
