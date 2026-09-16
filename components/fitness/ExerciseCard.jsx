@@ -8,23 +8,26 @@
 // previous performance) is passed in as `children`/`actions` by the caller
 // rather than duplicated here.
 //
-// Media fallback chain (GIF -> muscle diagram -> text-only card) lives
-// here via onError, so a broken image is never what the user sees -- see
-// exerciseMedia.js's header comment for why there's no separate
-// video/static-image tier for this provider.
+// Media fallback chain (real GIF -> Anatome's GIF -> muscle diagram ->
+// text-only card) lives here via onError, so a broken image is never what
+// the user sees -- and a single provider being down or missing one
+// exercise's asset falls through to the next rather than straight to a
+// static diagram. See exerciseMedia.js's header comment for why there are
+// two GIF providers.
 import { useState } from 'react';
-import { exerciseGifUrl } from '../../lib/fitness/exerciseMedia';
+import { exerciseGifSources } from '../../lib/fitness/exerciseMedia';
 import { buildMuscleImageUrl } from '../../lib/fitness/muscleDiagram';
 import { exerciseFitsGym, primaryEquipmentNames } from '../../lib/fitness/exerciseUtils';
 
 function ExerciseThumb({ exercise, onClick, size = 56 }) {
-  const [tier, setTier] = useState('gif');
-  const gif = exerciseGifUrl(exercise);
   const diagram = buildMuscleImageUrl({ primary: exercise.primaryMuscles, secondary: exercise.secondaryMuscles, width: size * 2 });
-
-  let src = null;
-  if (tier === 'gif' && gif) src = gif;
-  else if (tier !== 'text' && diagram) src = diagram;
+  // Walks every source in order on each failure; once the list is
+  // exhausted `src` is undefined and the text-only fallback below renders
+  // instead of an <img> at all, so onError can't loop forever retrying a
+  // dead final source.
+  const sources = [...exerciseGifSources(exercise), diagram].filter(Boolean);
+  const [index, setIndex] = useState(0);
+  const src = sources[index];
 
   if (!src) {
     return (
@@ -42,7 +45,7 @@ function ExerciseThumb({ exercise, onClick, size = 56 }) {
         height={size}
         alt=""
         loading="lazy"
-        onError={() => setTier((t) => (t === 'gif' ? (diagram ? 'diagram' : 'text') : 'text'))}
+        onError={() => setIndex((i) => i + 1)}
       />
     </button>
   );

@@ -5,23 +5,27 @@
 // primary/secondary muscle diagram, movement pattern, every equipment
 // option (not just the canonical one), and last/best training history.
 import { useState } from 'react';
-import { exerciseGifUrl, EXERCISE_MEDIA_ATTRIBUTION } from '../../lib/fitness/exerciseMedia';
+import { exerciseGifSources, EXERCISE_MEDIA_ATTRIBUTION } from '../../lib/fitness/exerciseMedia';
 import { buildMuscleImageUrl, MUSCLE_DIAGRAM_ATTRIBUTION } from '../../lib/fitness/muscleDiagram';
 import { findEquipment } from '../../lib/fitness/equipmentCatalog';
 import { findPreviousPerformance, findBestPerformance } from '../../lib/fitness/exerciseUtils';
 
 function GifOrDiagram({ exercise }) {
-  const [broken, setBroken] = useState(false);
-  const gif = exerciseGifUrl(exercise);
   const diagram = buildMuscleImageUrl({ primary: exercise.primaryMuscles, secondary: exercise.secondaryMuscles, width: 480 });
-  const src = !broken && gif ? gif : diagram;
+  // Same walk-the-list-then-stop pattern as ExerciseCard's thumbnail: once
+  // every source (both GIF providers, then the muscle diagram) has failed,
+  // `src` is undefined and the text fallback renders instead of an <img>,
+  // so onError can't loop retrying a dead final source.
+  const sources = [...exerciseGifSources(exercise), diagram].filter(Boolean);
+  const [index, setIndex] = useState(0);
+  const src = sources[index];
   if (!src) return <div className="fit-ex-details-media fit-ex-details-media-empty">No demo media available</div>;
   return (
     <img
       className="fit-ex-details-media"
       src={src}
       alt={`${exercise.canonicalName} demonstration`}
-      onError={() => setBroken(true)}
+      onError={() => setIndex((i) => i + 1)}
     />
   );
 }
