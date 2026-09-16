@@ -467,3 +467,81 @@
   .math-editor { grid-template-columns: 1fr; }
   .math-form-row { flex-direction: column; }
 }
+
+/* ---------- export ---------- */
+.math-export-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
+.math-export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--math-ink-soft);
+}
+.math-export-field select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--math-ink);
+  background: var(--math-paper-alt);
+  border: 1px solid var(--math-line);
+  border-radius: var(--math-radius-sm);
+  padding: 8px 10px;
+}
+.math-export-field select:focus { outline: none; border-color: var(--math-accent); }
+.math-export-btn { padding: 9px 20px; }
+.math-export-hint { margin-top: 14px; font-size: 0.82rem; color: var(--math-ink-soft); line-height: 1.5; }
+
+/* The print sheet only ever exists to be printed -- invisible on screen,
+   shown (and everything else hidden) under @media print below. */
+.math-print-sheet { display: none; }
+
+@media print {
+  body * { visibility: hidden; }
+  .math-print-sheet, .math-print-sheet * { visibility: visible; }
+  .math-print-sheet {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  @page { size: A4; margin: 14mm 12mm; }
+
+  /* One page per lecture as a target, not a guarantee -- a lecture with an
+     unusually long proof can still spill onto a second page. */
+  .math-print-lecture { break-after: page; page-break-after: always; }
+  .math-print-lecture:last-child { break-after: auto; page-break-after: auto; }
+
+  .math-print-lecture-title {
+    font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
+    font-size: 13pt;
+    font-weight: 700;
+    margin: 0 0 8pt;
+    padding-bottom: 4pt;
+    border-bottom: 1pt solid #000;
+  }
+
+  .math-print-item { margin-bottom: 5pt; font-size: 8.3pt; line-height: 1.32; break-inside: avoid; }
+  .math-print-item-head { display: flex; align-items: baseline; gap: 5pt; margin-bottom: 2pt; }
+  .math-print-badge {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 6.6pt;
+    letter-spacing: 0.03em;
+    border: 0.5pt solid #000;
+    border-radius: 3pt;
+    padding: 0 3pt;
+  }
+  .math-print-number { font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; }
+  .math-print-name { font-weight: 700; }
+
+  .math-print-statement, .math-print-proof-text, .math-print-remarks-text {
+    font-family: 'STIX Two Text', Georgia, 'Times New Roman', serif;
+  }
+  .math-print-proof, .math-print-remarks { margin-top: 3pt; padding-left: 8pt; border-left: 0.75pt solid #999; }
+  .math-print-label { font-style: italic; font-weight: 700; margin-right: 3pt; }
+
+  .math-print-sheet .katex { font-size: 0.95em; }
+  .math-print-sheet .katex-display { margin: 1.5pt 0; overflow: visible; }
+}

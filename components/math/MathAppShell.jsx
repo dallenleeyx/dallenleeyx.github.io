@@ -11,11 +11,13 @@ import { COURSES } from '../../lib/math/items';
 import { Browse } from './Browse';
 import { Flashcards } from './Flashcards';
 import { ItemEditor } from './ItemEditor';
+import { Export } from './Export';
 
 const SUBVIEWS = [
   { id: 'browse', label: 'Browse' },
   { id: 'flashcards', label: 'Flashcards' },
   { id: 'add', label: 'Add' },
+  { id: 'export', label: 'Export' },
 ];
 
 function ShellInner() {
@@ -82,6 +84,9 @@ function ShellInner() {
         </div>
         <div className={`math-subview${subview === 'add' ? ' active' : ''}`}>
           <ItemEditor course={course} editingItem={editingItem} onDone={handleDoneEditing} />
+        </div>
+        <div className={`math-subview${subview === 'export' ? ' active' : ''}`}>
+          <Export course={course} />
         </div>
       </main>
     </div>
