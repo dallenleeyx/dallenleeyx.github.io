@@ -95,6 +95,11 @@ export function FitnessSyncProvider({ children }) {
     schedulePush();
   }, []);
 
+  const updateGyms = useCallback((list) => {
+    setState((prev) => ({ ...prev, gyms: { updatedAt: Date.now(), list } }));
+    schedulePush();
+  }, []);
+
   const updateSchedule = useCallback((days) => {
     setState((prev) => ({ ...prev, schedule: { updatedAt: Date.now(), days } }));
     schedulePush();
@@ -112,7 +117,7 @@ export function FitnessSyncProvider({ children }) {
   }, []);
 
   return (
-    <FitnessSyncContext.Provider value={{ state, loading, updateWorkouts, updateSchedule, updateLog }}>
+    <FitnessSyncContext.Provider value={{ state, loading, updateWorkouts, updateGyms, updateSchedule, updateLog }}>
       {children}
     </FitnessSyncContext.Provider>
   );

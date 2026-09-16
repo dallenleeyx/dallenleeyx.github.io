@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { FitnessSyncProvider } from '../../lib/fitness/FitnessSyncContext';
 import { DailyLog } from './DailyLog';
 import { WorkoutLibrary } from './WorkoutLibrary';
+import { Gyms } from './Gyms';
 import { Schedule } from './Schedule';
 import { History } from './History';
 import { Stats } from './Stats';
@@ -14,6 +15,7 @@ import { Stats } from './Stats';
 const SUBVIEWS = [
   { id: 'log', label: 'Today' },
   { id: 'workouts', label: 'Workouts' },
+  { id: 'gyms', label: 'Gyms' },
   { id: 'schedule', label: 'Schedule' },
   { id: 'history', label: 'History' },
   { id: 'stats', label: 'Stats' },
@@ -50,6 +52,9 @@ function ShellInner() {
         </div>
         <div className={`fit-subview${activeSubview === 'workouts' ? ' active' : ''}`}>
           <WorkoutLibrary />
+        </div>
+        <div className={`fit-subview${activeSubview === 'gyms' ? ' active' : ''}`}>
+          <Gyms />
         </div>
         <div className={`fit-subview${activeSubview === 'schedule' ? ' active' : ''}`}>
           <Schedule />
