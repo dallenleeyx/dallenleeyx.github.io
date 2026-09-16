@@ -727,8 +727,12 @@
   transition: border-color 0.15s ease;
 }
 .fit-equip-card:hover { border-color: var(--fit-accent); }
+.fit-equip-card-thumb { display: block; width: 100%; height: 72px; object-fit: cover; border-radius: var(--fit-radius-sm); background: var(--fit-paper-alt); margin-bottom: 2px; }
 .fit-equip-card-name { font-size: 0.82rem; font-weight: 600; }
 .fit-equip-card-meta { font-size: 0.68rem; color: var(--fit-ink-soft); text-transform: uppercase; letter-spacing: 0.02em; }
+
+/* ---------- equipment details (opened from EquipmentPicker) ---------- */
+.fit-equip-details-add-btn { display: block; width: 100%; text-align: center; margin-top: 4px; }
 
 @media (max-width: 480px) {
   .fit-sub-banner-body { flex-direction: column; gap: 12px; }

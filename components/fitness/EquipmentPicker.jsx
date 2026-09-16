@@ -1,16 +1,35 @@
 'use client';
 // components/fitness/EquipmentPicker.jsx — searchable, filterable catalog
-// browser. Selecting a card adds it immediately (onAdd) rather than
-// requiring a separate "confirm" step, since a gym's equipment list is
-// trivially undoable (remove button right there) and the whole point is
-// fast entry -- "select equipment" per the spec, not type it out.
+// browser. Tapping a result opens EquipmentDetails (its demo GIF, muscles,
+// category/type) rather than adding immediately -- seeing what the machine
+// actually looks like before confirming is the point; the details view's
+// "+ Add Equipment" button is what actually calls onAdd.
 import { useMemo, useState } from 'react';
 import { CATEGORIES, EQUIPMENT_CATALOG, EQUIPMENT_TYPES } from '../../lib/fitness/equipmentCatalog';
+import { equipmentMediaSources } from '../../lib/fitness/equipmentMedia';
+import { EquipmentDetails } from './EquipmentDetails';
+
+function EquipmentThumb({ item }) {
+  const sources = equipmentMediaSources(item);
+  const [index, setIndex] = useState(0);
+  const src = sources[index];
+  if (!src) return null;
+  return (
+    <img
+      className="fit-equip-card-thumb"
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => setIndex((i) => i + 1)}
+    />
+  );
+}
 
 export function EquipmentPicker({ excludeIds, onAdd }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [type, setType] = useState('');
+  const [detailsItem, setDetailsItem] = useState(null);
 
   const excluded = useMemo(() => new Set(excludeIds || []), [excludeIds]);
 
@@ -54,7 +73,8 @@ export function EquipmentPicker({ excludeIds, onAdd }) {
       </div>
       <div className="fit-equip-picker-grid">
         {results.map((item) => (
-          <button type="button" key={item.id} className="fit-equip-card" onClick={() => onAdd(item.id)}>
+          <button type="button" key={item.id} className="fit-equip-card" onClick={() => setDetailsItem(item)}>
+            <EquipmentThumb item={item} />
             <span className="fit-equip-card-name">{item.name}</span>
             <span className="fit-equip-card-meta">
               {item.categories.map((c) => CATEGORIES.find((cc) => cc.id === c)?.label || c).join(' · ')}
@@ -63,6 +83,10 @@ export function EquipmentPicker({ excludeIds, onAdd }) {
         ))}
         {!results.length && <p className="fit-empty">No equipment matches.</p>}
       </div>
+
+      {detailsItem && (
+        <EquipmentDetails item={detailsItem} onAdd={onAdd} onClose={() => setDetailsItem(null)} />
+      )}
     </div>
   );
 }
