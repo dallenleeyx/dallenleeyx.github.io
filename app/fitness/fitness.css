@@ -162,20 +162,6 @@
 
 .fit-log-exercise-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .fit-log-exercise-card { background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 12px 16px; }
-.fit-log-exercise-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
-.fit-log-exercise-name-input {
-  flex: 1;
-  min-width: 0;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--fit-ink);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid transparent;
-  padding: 2px 0;
-}
-.fit-log-exercise-name-input:hover, .fit-log-exercise-name-input:focus { border-bottom-color: var(--fit-line); outline: none; }
 .fit-log-exercise-note-input {
   display: block;
   width: 100%;
@@ -241,59 +227,59 @@
 }
 .fit-cardio-row select:focus, .fit-cardio-row input:focus { outline: none; border-color: var(--fit-accent); }
 
-/* ---------- plan editor ---------- */
-/* Single column, not a multi-up grid: .fit-main caps at 720px (a reading-
-   width container, shared with Today/History), which only leaves room for
-   two cramped columns -- not enough for an exercise name next to
-   sets/reps inputs without truncating. Full-width rows fix that; the page
-   just runs a bit taller instead. */
-.fit-plan-grid { display: flex; flex-direction: column; gap: 16px; }
-.fit-day-card { background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 16px; box-shadow: var(--fit-shadow-sm); }
-.fit-day-card-head { margin-bottom: 12px; }
-.fit-workout-card-head { display: flex; align-items: center; gap: 8px; }
-.fit-workout-card-head .fit-day-title-input { flex: 1; }
-.fit-add-workout-btn { text-align: center; }
-.fit-day-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fit-ink-soft); margin-bottom: 4px; }
-.fit-day-title-input {
-  width: 100%;
+/* ---------- My Program (day list + workout editor) ---------- */
+.fit-program-hint { color: var(--fit-ink-soft); font-size: 0.85rem; line-height: 1.5; margin-bottom: 18px; }
+.fit-program-grid { display: flex; flex-direction: column; gap: 10px; }
+.fit-program-day-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
   font-family: inherit;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--fit-ink);
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--fit-line);
-  padding: 2px 0 6px;
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-md);
+  padding: 16px;
+  box-shadow: var(--fit-shadow-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
-.fit-day-title-input:focus { outline: none; border-bottom-color: var(--fit-accent); }
+.fit-program-day-card:hover { border-color: var(--fit-accent); }
+.fit-program-day-name { font-size: 1.05rem; font-weight: 700; }
+.fit-program-day-meta { font-size: 0.8rem; color: var(--fit-ink-soft); }
 
-.fit-plan-exercise-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.fit-plan-exercise-row { display: flex; align-items: center; gap: 6px; }
-.fit-ex-name-input { flex: 1; min-width: 0; }
-.fit-ex-sets-input { width: 44px; }
-.fit-ex-reps-input { width: 64px; }
-.fit-ex-x { color: var(--fit-ink-soft); font-size: 0.8rem; }
-.fit-plan-exercise-row input {
+.fit-workout-editor-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.fit-workout-editor-head h3 { margin: 0; font-size: 1.2rem; }
+.fit-workout-editor-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fit-add-ex-btn { width: 100%; text-align: center; margin-bottom: 16px; }
+
+.fit-ex-editor-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.fit-ex-editor-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.fit-ex-editor-row label { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: var(--fit-ink-soft); }
+.fit-ex-editor-row input {
+  width: 48px;
   font-family: inherit;
   font-size: 0.85rem;
   color: var(--fit-ink);
   background: var(--fit-paper);
   border: 1px solid var(--fit-line);
   border-radius: var(--fit-radius-sm);
-  padding: 6px 8px;
+  padding: 5px 6px;
 }
-.fit-plan-exercise-row input:focus { outline: none; border-color: var(--fit-accent); }
-.fit-ex-remove-btn {
-  border: none;
-  background: none;
+.fit-ex-editor-row input:focus { outline: none; border-color: var(--fit-accent); }
+.fit-ex-editor-notes {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-style: italic;
   color: var(--fit-ink-soft);
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 4px 6px;
-  border-radius: var(--fit-radius-sm);
+  background: transparent;
+  border: none;
+  padding: 0;
 }
-.fit-ex-remove-btn:hover { color: var(--fit-accent); background: var(--fit-paper); }
-.fit-add-ex-btn { width: 100%; text-align: center; margin-bottom: 16px; }
+.fit-ex-editor-notes:focus { outline: none; }
 
 /* ---------- schedule ---------- */
 .fit-schedule-hint { color: var(--fit-ink-soft); font-size: 0.85rem; line-height: 1.5; margin-bottom: 18px; }
@@ -452,24 +438,158 @@
 .fit-sub-banner-item { font-weight: 700; }
 .fit-sub-banner-alt-list { margin: 0; padding-left: 16px; font-size: 0.85rem; }
 .fit-sub-banner-none { margin: 0; font-size: 0.85rem; color: var(--fit-ink-soft); font-style: italic; }
+.fit-sub-banner-note { flex-basis: 100%; margin: 6px 0 0; font-size: 0.72rem; color: var(--fit-ink-soft); font-style: italic; }
 .fit-muscle-diagram { display: block; margin-top: 2px; border-radius: var(--fit-radius-sm); background: var(--fit-paper); }
 
-/* ---------- exercise equipment linking (Workouts) ---------- */
-.fit-plan-exercise-item { display: flex; flex-direction: column; gap: 6px; }
-.fit-ex-equipment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.fit-ex-equipment-chip {
-  display: inline-flex;
+/* ---------- exercise card (shared: My Program editor + Today log) ---------- */
+.fit-ex-card { background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 12px 16px; }
+.fit-ex-card-head { display: flex; align-items: flex-start; gap: 10px; }
+.fit-ex-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--fit-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--fit-line);
+  background: var(--fit-paper);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  color: var(--fit-ink-soft);
-  background: var(--fit-paper-alt);
-  border-radius: var(--fit-radius-pill);
-  padding: 3px 6px 3px 10px;
+  justify-content: center;
 }
-.fit-ex-equipment-chip button { border: none; background: none; color: inherit; cursor: pointer; font-size: 0.7rem; padding: 0; }
-.fit-ex-equipment-chip button:hover { color: var(--fit-accent); }
-.fit-ex-link-equipment-btn { font-size: 0.72rem; padding: 3px 10px; }
+.fit-ex-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fit-ex-thumb-text { font-size: 0.7rem; font-weight: 700; color: var(--fit-ink-soft); }
+.fit-ex-card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fit-ex-card-name {
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--fit-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.fit-ex-card-name:hover { color: var(--fit-accent); }
+.fit-ex-card-muscles { display: flex; flex-wrap: wrap; gap: 4px; }
+.fit-muscle-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border-radius: var(--fit-radius-pill);
+  padding: 1px 8px;
+}
+.fit-muscle-tag.primary { background: var(--fit-accent); color: var(--fit-accent-ink); }
+.fit-muscle-tag.secondary { background: var(--fit-paper); color: var(--fit-ink-soft); border: 1px solid var(--fit-line); }
+.fit-ex-card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0 0; }
+.fit-ex-meta-chip { font-size: 0.75rem; font-weight: 600; color: var(--fit-ink-soft); background: var(--fit-paper); border-radius: var(--fit-radius-pill); padding: 3px 10px; }
+.fit-ex-avail { font-size: 0.75rem; font-weight: 700; border-radius: var(--fit-radius-pill); padding: 3px 10px; }
+.fit-ex-avail-ok { color: var(--fit-active); background: var(--fit-active-bg); }
+.fit-ex-avail-warn { color: var(--fit-accent); background: var(--fit-paper); border: 1px solid var(--fit-accent); }
+
+/* ---------- previous performance / progression ---------- */
+.fit-prev-performance { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 0.78rem; font-weight: 600; color: var(--fit-ink-soft); }
+.fit-progression-hint { margin: 6px 0 0; font-size: 0.78rem; font-style: italic; color: var(--fit-active); }
+
+/* ---------- muscle heatmap (Level 1: whole workout day) ---------- */
+.fit-heatmap { background: var(--fit-paper-alt); border-radius: var(--fit-radius-md); padding: 14px 16px; margin-bottom: 16px; }
+.fit-heatmap-title { display: block; font-weight: 700; margin-bottom: 8px; }
+.fit-heatmap-body { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.fit-heatmap-diagram { border-radius: var(--fit-radius-sm); background: var(--fit-paper); flex-shrink: 0; max-width: 160px; height: auto; }
+.fit-heatmap-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+.fit-heatmap-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; text-transform: capitalize; }
+.fit-heatmap-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fit-ink-soft); flex-shrink: 0; }
+.fit-heatmap-legend-item.level-high .fit-heatmap-dot { background: var(--fit-accent); }
+.fit-heatmap-legend-item.level-moderate .fit-heatmap-dot { background: #E0A030; }
+.fit-heatmap-legend-item.level-low .fit-heatmap-dot { background: var(--fit-ink-soft); }
+.fit-heatmap-level { color: var(--fit-ink-soft); font-size: 0.72rem; font-weight: 600; }
+.fit-attribution { font-size: 0.68rem; color: var(--fit-ink-soft); margin: 10px 0 0; }
+
+/* ---------- modal (Exercise Details / Exercise Library) ---------- */
+.fit-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 10, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000; /* above .app-nav's fixed floating pill (z-index: 200, shell.css) */
+  padding: 0;
+}
+.fit-modal {
+  background: var(--fit-paper);
+  border-radius: var(--fit-radius-md) var(--fit-radius-md) 0 0;
+  padding: 20px clamp(16px, 5vw, 28px) 28px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: var(--fit-shadow-md);
+}
+@media (min-width: 640px) {
+  .fit-modal-backdrop { align-items: center; }
+  .fit-modal { border-radius: var(--fit-radius-md); max-height: 80vh; }
+}
+.fit-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.fit-modal-head h3 { margin: 0; font-size: 1.1rem; }
+
+.fit-ex-details-media { display: block; width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--fit-radius-md); background: var(--fit-paper-alt); margin-bottom: 14px; }
+.fit-ex-details-media-empty { display: flex; align-items: center; justify-content: center; height: 140px; color: var(--fit-ink-soft); font-style: italic; font-size: 0.85rem; }
+.fit-ex-details-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 14px; }
+.fit-ex-details-col { flex: 1; min-width: 180px; }
+.fit-ex-details-col h4, .fit-ex-details-instructions h4, .fit-ex-details-history h4 { margin: 0 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--fit-ink-soft); }
+.fit-ex-details-col p, .fit-ex-details-history p { margin: 0 0 4px; font-size: 0.88rem; }
+.fit-ex-details-diagram { display: block; margin-top: 8px; border-radius: var(--fit-radius-sm); background: var(--fit-paper-alt); }
+.fit-ex-details-instructions { margin-bottom: 14px; }
+.fit-ex-details-instructions ol { margin: 0; padding-left: 20px; font-size: 0.88rem; line-height: 1.6; }
+.fit-ex-details-history { margin-bottom: 6px; }
+
+.fit-ex-library { display: flex; flex-direction: column; }
+.fit-ex-lib-search {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.fit-ex-lib-search:focus { outline: none; border-color: var(--fit-accent); }
+.fit-ex-lib-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.fit-ex-lib-filters select {
+  flex: 1;
+  min-width: 110px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 7px 8px;
+}
+.fit-ex-lib-suggestions { margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--fit-line); }
+.fit-ex-lib-suggestions-label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fit-ink-soft); margin-bottom: 6px; }
+.fit-ex-lib-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+.fit-ex-lib-row { display: flex; align-items: center; gap: 10px; background: var(--fit-paper-alt); border-radius: var(--fit-radius-sm); padding: 6px 10px 6px 6px; }
+.fit-ex-lib-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fit-ex-lib-row-name { font-weight: 600; font-size: 0.88rem; }
+.fit-ex-lib-row-meta { font-size: 0.72rem; color: var(--fit-ink-soft); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fit-ex-lib-custom { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--fit-line); }
+.fit-ex-lib-custom-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.fit-ex-lib-custom-form input, .fit-ex-lib-custom-form select {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--fit-ink);
+  background: var(--fit-paper-alt);
+  border: 1px solid var(--fit-line);
+  border-radius: var(--fit-radius-sm);
+  padding: 8px 10px;
+}
 
 /* ---------- gyms list ---------- */
 .fit-gym-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -613,5 +733,8 @@
 @media (max-width: 480px) {
   .fit-sub-banner-body { flex-direction: column; gap: 12px; }
   .fit-equip-picker-grid { grid-template-columns: 1fr 1fr; }
+  .fit-ex-lib-filters select { min-width: 45%; }
+  .fit-heatmap-diagram { max-width: 120px; }
+  .fit-ex-details-row { flex-direction: column; gap: 14px; }
 }
 

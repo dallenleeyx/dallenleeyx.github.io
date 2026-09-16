@@ -3,22 +3,25 @@
 // did, not just what was planned. Pick whichever workout you trained (it
 // defaults to whatever Schedule.jsx has for the day, but you can always log
 // something different) to seed today's exercises from that workout's
-// defaults, then log each set as weight x reps (with an optional note like
-// "failure"), plus today's body weight and any cardio. Every exercise's
-// name/note and its set of sets is freely editable for just this one day --
-// add a stand-in exercise you don't normally do, or cancel one you skipped
-// -- without ever touching the workout template in the library. Prev/next
-// arrows let you glance at yesterday or back-fill a day you forgot to log.
+// canonical Exercise references, then log each set as weight x reps (with
+// an optional note like "failure"). Every logged exercise for the day is
+// freely editable -- swap in a stand-in exercise, or cancel one you skipped
+// -- without ever touching the workout template in "My Program".
 //
-// Also pick which saved gym (see Gyms.jsx) you're training at today. If an
-// exercise's usual equipment (tagged in defaultWorkouts.js / WorkoutLibrary)
-// isn't in that gym's saved inventory, SubstitutionBanner suggests the
-// closest available alternative -- the workout program itself never
-// changes, this is purely "what to do differently just for today."
+// Also pick which saved gym (see Gyms.jsx) you're training at today. Each
+// exercise's REQUIRED equipment (automatic, from exerciseCatalog.js) is
+// checked against that gym's saved inventory; if it doesn't fit,
+// SubstitutionBanner suggests the closest available alternative EXERCISE
+// for today only -- the workout program itself never changes.
 import { useMemo, useState } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
 import { toISO, addDays, todayISO, normalizeSet } from '../../lib/fitness/util';
+import { getAllExercises, findExercise, findPreviousPerformance, progressionSuggestion } from '../../lib/fitness/exerciseUtils';
 import { SubstitutionBanner } from './SubstitutionBanner';
+import { ExerciseCard } from './ExerciseCard';
+import { ExerciseDetails } from './ExerciseDetails';
+import { ExerciseLibrary } from './ExerciseLibrary';
+import { MuscleHeatmap } from './MuscleHeatmap';
 
 const CARDIO_TYPES = ['Run', 'Swim', 'Bike', 'Row', 'Other'];
 
@@ -47,8 +50,10 @@ function HealthCard({ health }) {
 }
 
 export function DailyLog() {
-  const { state, loading, updateLog } = useFitness();
+  const { state, loading, updateLog, updateCustomExercises } = useFitness();
   const [offset, setOffset] = useState(0);
+  const [detailsExercise, setDetailsExercise] = useState(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const date = useMemo(() => addDays(new Date(), offset), [offset]);
   const dateISO = toISO(date);
@@ -58,6 +63,8 @@ export function DailyLog() {
 
   const workouts = state.workouts.list;
   const gyms = state.gyms.list;
+  const customExercises = state.customExercises.list;
+  const allExercises = getAllExercises(customExercises);
   const scheduled = state.schedule.days[dateISO];
   const entry = state.logs[dateISO] || {};
   const manual = entry.manual || {};
@@ -68,6 +75,10 @@ export function DailyLog() {
   const loggedExercises = manual.exercises || [];
   const cardio = manual.cardio || null;
 
+  const resolvedForHeatmap = loggedExercises
+    .map((ex) => findExercise(ex.exerciseId, customExercises))
+    .filter(Boolean);
+
   function selectWorkout(workoutId) {
     if (!workoutId) {
       updateLog(dateISO, { workoutId: null, exercises: [] });
@@ -76,9 +87,10 @@ export function DailyLog() {
     const workout = workouts.find((w) => w.id === workoutId);
     updateLog(dateISO, {
       workoutId,
-      exercises: (workout?.exercises || []).map((ex) => ({
-        name: ex.name, targetSets: ex.sets, targetReps: ex.reps, note: '', sets: [],
-        equipmentIds: ex.equipmentIds || [], muscleGroup: ex.muscleGroup || null,
+      exercises: (workout?.exercises || []).map((we) => ({
+        exerciseId: we.exerciseId,
+        targetSets: we.sets, minReps: we.minReps, maxReps: we.maxReps, restSeconds: we.restSeconds,
+        note: '', sets: [],
       })),
     });
   }
@@ -87,18 +99,20 @@ export function DailyLog() {
     updateLog(dateISO, { gymId: gymId || null });
   }
 
-  // Today's exercise list starts from whichever workout's default exercises
-  // you picked above, but these two only ever touch *this day's* log entry
-  // -- never the workout template in the library -- so adding a stand-in
-  // exercise or skipping one you didn't get to today doesn't affect the
-  // default for next time.
-  function addLoggedExercise() {
-    updateLog(dateISO, { exercises: [...loggedExercises, { name: '', targetSets: null, targetReps: '', note: '', sets: [] }] });
+  // These two only ever touch *this day's* log entry -- never the workout
+  // template in My Program -- so adding a stand-in exercise or skipping one
+  // you didn't get to today doesn't affect the default for next time.
+  function addLoggedExercise(exercise) {
+    updateLog(dateISO, {
+      exercises: [...loggedExercises, { exerciseId: exercise.id, targetSets: 3, minReps: 8, maxReps: 12, restSeconds: 90, note: '', sets: [] }],
+    });
+    setLibraryOpen(false);
   }
   function cancelLoggedExercise(exIndex) {
     const ex = loggedExercises[exIndex];
     const hasData = ex.sets.some((s) => s != null);
-    if (hasData && !window.confirm(`Remove "${ex.name || 'this exercise'}" from today's log? Its logged sets will be lost.`)) return;
+    const exercise = findExercise(ex.exerciseId, customExercises);
+    if (hasData && !window.confirm(`Remove "${exercise?.canonicalName || 'this exercise'}" from today's log? Its logged sets will be lost.`)) return;
     updateLog(dateISO, { exercises: loggedExercises.filter((_, i) => i !== exIndex) });
   }
   function updateExerciseField(exIndex, patch) {
@@ -123,6 +137,12 @@ export function DailyLog() {
   }
   function removeSet(exIndex, setIndex) {
     const next = loggedExercises.map((ex, i) => (i === exIndex ? { ...ex, sets: ex.sets.filter((_, j) => j !== setIndex) } : ex));
+    updateLog(dateISO, { exercises: next });
+  }
+  function copyPreviousWeights(exIndex, previous) {
+    const next = loggedExercises.map((ex, i) => (i === exIndex
+      ? { ...ex, sets: previous.sets.map((s) => ({ weight: s.weight ?? null, reps: null, note: '' })) }
+      : ex));
     updateLog(dateISO, { exercises: next });
   }
 
@@ -182,60 +202,77 @@ export function DailyLog() {
         </label>
       )}
 
+      <MuscleHeatmap exercises={resolvedForHeatmap} title="Today's muscles trained" />
+
       <ul className="fit-log-exercise-list">
-        {loggedExercises.map((ex, i) => (
-          <li key={i} className="fit-log-exercise-card">
-            <div className="fit-log-exercise-head">
-              <input
-                className="fit-log-exercise-name-input"
-                value={ex.name}
-                onChange={(e) => updateExerciseField(i, { name: e.target.value })}
-                placeholder="Exercise name"
-              />
-              {ex.targetSets != null && ex.targetReps && (
-                <span className="fit-exercise-target">target {ex.targetSets} × {ex.targetReps}</span>
-              )}
-              <button type="button" className="fit-icon-btn" onClick={() => cancelLoggedExercise(i)} aria-label="Cancel exercise">✕</button>
-            </div>
-            <input
-              className="fit-log-exercise-note-input"
-              value={ex.note || ''}
-              onChange={(e) => updateExerciseField(i, { note: e.target.value })}
-              placeholder="note, e.g. set knob at 1"
-            />
-            <div className="fit-set-chip-row">
-              {ex.sets.map((raw, si) => {
-                const s = normalizeSet(raw);
-                return (
-                  <span key={si} className="fit-set-chip">
-                    <span className="fit-set-chip-label">{si + 1}</span>
-                    <input
-                      type="number" min="0" step="0.5" className="fit-set-weight-input" value={s.weight ?? ''}
-                      onChange={(e) => updateSet(i, si, { weight: e.target.value === '' ? null : Number(e.target.value) })}
-                      placeholder="wt"
-                    />
-                    <span className="fit-set-x">×</span>
-                    <input
-                      type="number" min="0" className="fit-set-reps-input" value={s.reps ?? ''}
-                      onChange={(e) => updateSet(i, si, { reps: e.target.value === '' ? null : Number(e.target.value) })}
-                      placeholder="reps"
-                    />
-                    <input
-                      type="text" className="fit-set-note-input" value={s.note}
-                      onChange={(e) => updateSet(i, si, { note: e.target.value })}
-                      placeholder="note"
-                    />
-                    <button type="button" onClick={() => removeSet(i, si)} aria-label="Remove set">✕</button>
-                  </span>
-                );
-              })}
-              <button type="button" className="fit-ghost-btn fit-add-set-btn" onClick={() => addSet(i)}>+ set</button>
-            </div>
-            <SubstitutionBanner exercise={ex} gym={activeGym} />
-          </li>
-        ))}
+        {loggedExercises.map((ex, i) => {
+          const exercise = findExercise(ex.exerciseId, customExercises);
+          if (!exercise) return null;
+          const previous = findPreviousPerformance(ex.exerciseId, state.logs, { beforeDateISO: dateISO, customExercises });
+          const suggestion = progressionSuggestion(previous, ex.maxReps);
+          return (
+            <li key={i}>
+              <ExerciseCard
+                exercise={exercise}
+                sets={ex.targetSets}
+                minReps={ex.minReps}
+                maxReps={ex.maxReps}
+                restSeconds={ex.restSeconds}
+                gym={activeGym}
+                allExercises={allExercises}
+                onOpenDetails={setDetailsExercise}
+                className="fit-log-exercise-card"
+                actions={<button type="button" className="fit-icon-btn" onClick={() => cancelLoggedExercise(i)} aria-label="Cancel exercise">✕</button>}
+              >
+                {previous && (
+                  <div className="fit-prev-performance">
+                    <span>LAST SESSION: {previous.sets.map((s) => `${s.weight ?? '?'}${s.weight != null ? 'kg' : ''}/${s.reps ?? '?'}`).join(', ')}</span>
+                    <button type="button" className="fit-ghost-btn" onClick={() => copyPreviousWeights(i, previous)}>Copy weights</button>
+                  </div>
+                )}
+                {suggestion && <p className="fit-progression-hint">{suggestion}</p>}
+
+                <input
+                  className="fit-log-exercise-note-input"
+                  value={ex.note || ''}
+                  onChange={(e) => updateExerciseField(i, { note: e.target.value })}
+                  placeholder="note, e.g. set knob at 1"
+                />
+                <div className="fit-set-chip-row">
+                  {ex.sets.map((raw, si) => {
+                    const s = normalizeSet(raw);
+                    return (
+                      <span key={si} className="fit-set-chip">
+                        <span className="fit-set-chip-label">{si + 1}</span>
+                        <input
+                          type="number" min="0" step="0.5" className="fit-set-weight-input" value={s.weight ?? ''}
+                          onChange={(e) => updateSet(i, si, { weight: e.target.value === '' ? null : Number(e.target.value) })}
+                          placeholder="wt"
+                        />
+                        <span className="fit-set-x">×</span>
+                        <input
+                          type="number" min="0" className="fit-set-reps-input" value={s.reps ?? ''}
+                          onChange={(e) => updateSet(i, si, { reps: e.target.value === '' ? null : Number(e.target.value) })}
+                          placeholder="reps"
+                        />
+                        <input
+                          type="text" className="fit-set-note-input" value={s.note}
+                          onChange={(e) => updateSet(i, si, { note: e.target.value })}
+                          placeholder="note"
+                        />
+                        <button type="button" onClick={() => removeSet(i, si)} aria-label="Remove set">✕</button>
+                      </span>
+                    );
+                  })}
+                  <button type="button" className="fit-ghost-btn fit-add-set-btn" onClick={() => addSet(i)}>+ set</button>
+                </div>
+                <SubstitutionBanner exercise={exercise} gym={activeGym} allExercises={allExercises} />
+              </ExerciseCard>
+            </li>
+          );
+        })}
       </ul>
-      <button type="button" className="fit-ghost-btn fit-add-ex-btn" onClick={addLoggedExercise}>+ add exercise</button>
+      <button type="button" className="fit-ghost-btn fit-add-ex-btn" onClick={() => setLibraryOpen(true)}>+ add exercise</button>
 
       <div className="fit-cardio-block">
         <div className="fit-cardio-head">
@@ -259,6 +296,23 @@ export function DailyLog() {
           />
         </div>
       </div>
+
+      {detailsExercise && (
+        <ExerciseDetails
+          exercise={detailsExercise}
+          logs={state.logs}
+          customExercises={customExercises}
+          onClose={() => setDetailsExercise(null)}
+        />
+      )}
+      {libraryOpen && (
+        <ExerciseLibrary
+          allExercises={allExercises}
+          onSelect={addLoggedExercise}
+          onCreateCustom={(exercise) => updateCustomExercises([...customExercises, exercise])}
+          onClose={() => setLibraryOpen(false)}
+        />
+      )}
     </div>
   );
 }
