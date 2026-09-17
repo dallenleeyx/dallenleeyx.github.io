@@ -61,12 +61,11 @@ a:hover { color: #000; }
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  flex-wrap: wrap;
 }
-.cv-entry-title { font-weight: 700; }
+.cv-entry-title { font-weight: 700; flex: 1 1 auto; min-width: 0; }
 a.cv-entry-title { text-decoration: none; }
 a.cv-entry-title:hover { text-decoration: underline; }
-.cv-entry-date { font-size: .88rem; color: var(--fg-muted); white-space: nowrap; }
+.cv-entry-date { font-size: .88rem; color: var(--fg-muted); white-space: nowrap; flex: 0 0 auto; }
 .cv-entry-sub { font-size: .92rem; color: var(--fg-muted); margin: .15rem 0 .5rem; }
 .cv-entry ul { margin: .3rem 0 0; padding-left: 1.15rem; }
 .cv-entry li { margin-bottom: .3rem; }
