@@ -6,6 +6,7 @@
 import { useMemo } from 'react';
 import { useFitness } from '../../lib/fitness/FitnessSyncContext';
 import { toISO, addDays } from '../../lib/fitness/util';
+import { FitnessExport } from './FitnessExport';
 
 const DAYS_SHOWN = 14;
 
@@ -76,6 +77,8 @@ export function History() {
           </li>
         ))}
       </ul>
+
+      <FitnessExport />
 
       <details className="fit-sync-setup">
         <summary>Set up Apple Health sync</summary>
