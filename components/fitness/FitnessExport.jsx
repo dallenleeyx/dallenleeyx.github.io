@@ -32,7 +32,7 @@ function isTrainingSession(entry) {
     health?.calories != null ||
     health?.distanceKm != null
   );
-  return !!manual.workoutId || hasExerciseSets || hasManualCardio || hasHealthWorkout;
+  return hasExerciseSets || hasManualCardio || hasHealthWorkout;
 }
 
 function workoutName(workouts, id) {
