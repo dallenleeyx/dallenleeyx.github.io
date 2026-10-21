@@ -1,83 +1,21 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A playful listening room with a browser beat machine and a SoundCloud player.">
-<meta name="theme-color" content="#101116">
-<title>Music & Sound — Dallen Lee</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<meta name="description" content="Music projects and recordings by Dallen Lee.">
+<title>Music — Dallen Lee</title>
 <link rel="stylesheet" href="../assets/portfolio.css">
-</head><body class="portfolio-site music" data-page="music">
-<div class="topbar"><div class="wrap topbar-inner">
-<a class="brand" href="../index.html" aria-label="Dallen Lee portfolio home">DL<span>.</span></a>
-<nav class="topnav" aria-label="Portfolio navigation">
-<a href="../index.html">Home</a>
-<a href="../music/" aria-current="page">♫ Music</a>
-<a href="../engineering/">✳ Engineering</a>
-<a href="../ml/">⌘ ML / AI</a>
-</nav><a class="back-cv" href="../../index.html">CV ↗</a></div></div>
-<main class="wrap">
-<section class="hero">
-<div class="floating-note" aria-hidden="true">♫</div>
-<p class="eyebrow">01 / THE LISTENING ROOM</p>
-<h1>I think in<br><em>frequencies.</em></h1>
-<p class="lead">A place for bass lines, cinematic sketches, live audio and everything in between. Play with the sequencer, spin the record, and listen to my work when it's linked below.</p>
-<div class="hero-meta"><span class="pill">BASS GUITAR</span><span class="pill">COMPOSITION</span><span class="pill">LIVE SOUND</span><span class="pill">SCORING</span></div>
-</section>
-<div class="sectionline"><h2>01 / A little noise machine.</h2><p>A browser-built eight-step bass sequencer. Tap the glowing steps to program a pattern; switch it on to hear the notes.</p></div>
-<section class="music-grid" aria-label="Interactive browser music studio">
-<div class="glass" data-reveal>
-<div class="console-top"><div><p class="eyebrow" style="margin:0 0 8px">ON THE TURNTABLE</p><h3>One groove, endless loops.</h3></div><span class="pill">WEB AUDIO</span></div>
-<div class="record-wrap"><div class="record" role="img" aria-label="Stylized vinyl record"><div class="record-shine"></div></div></div>
-<div class="meter" id="levelMeter" aria-hidden="true"></div>
-<div class="transport">
-<button id="playBeat" class="btn primary" type="button" aria-pressed="false">▶ Play the loop</button>
-<button id="stopBeat" class="btn ghost" type="button">■ Stop</button>
-<label for="bpm">Tempo <input type="range" min="60" max="180" step="2" value="106" id="bpm"><span id="bpmReadout" class="tiny">106 BPM</span></label>
-</div>
-</div>
-<div class="glass" data-reveal>
-<p class="eyebrow" style="margin-top:0">THE SEQUENCER / 8 STEPS</p>
-<h3>Program a bass line.</h3>
-<p class="guide">Tap any step to turn the note on or off. Try creating a syncopated rhythm.</p>
-<div class="sequencer" id="sequencer" aria-label="Eight-step bass sequencer"></div>
-<div class="sheet-lines" aria-hidden="true"></div>
-<p class="tiny quiet">A tiny interactive synth, not a released recording.</p>
-<p class="guide">Tech under the hood: oscillator → low-pass filter → gain envelope → speakers. Sound plays only when you press Play.</p>
-</div>
-</section>
-<div class="sectionline" id="soundcloud"><h2>02 / Now playing.</h2><p>SoundCloud lives directly inside the portfolio. Paste a public track or playlist URL below to load an inline player.</p></div>
-<section class="music-grid">
-<div class="glass" data-reveal>
-<p class="eyebrow" style="margin:0">SOUNDCLOUD PLAYER</p><h3>Listen without leaving.</h3>
-<form class="sound-entry" id="saveSoundcloud">
-<label for="soundcloudUrl" class="hide">Your SoundCloud track or playlist URL</label>
-<input id="soundcloudUrl" type="url" inputmode="url" placeholder="https://soundcloud.com/artist/track" autocomplete="url" aria-label="SoundCloud public track or playlist URL" required>
-<button class="btn primary" type="submit">Load track ↗</button></form>
-<p id="soundcloudStatus" class="status" role="status"></p>
-<div id="soundcloudOutput"></div>
-<p class="guide">This stores your selected URL in this browser only. For a permanently public player, add your track URL to this page's source on GitHub.</p>
-</div>
-<div class="glass" data-reveal>
-<p class="eyebrow" style="margin:0">THE WORK BEHIND THE MUSIC</p>
-<h3>From room to recording.</h3>
-<div class="sound-list">
-<a href="https://soundcloud.com/" target="_blank" rel="noopener noreferrer"><span><strong>SoundCloud</strong><br><small class="quiet">Open the platform while setting up the playlist</small></span><span>↗</span></a>
-<a href="https://github.com/dallenleeyx" target="_blank" rel="noopener noreferrer"><span><strong>Studio notes / code</strong><br><small class="quiet">Making things across sound and software</small></span><span>↗</span></a>
-</div>
-<p class="guide">Interests: drama scoring, string arrangements, bass performance, FOH mixing, and musician-friendly live monitoring.</p>
-</div>
-</section>
-<div class="sectionline"><h2>03 / What I'm exploring.</h2><p>Current interests and future portfolio directions, not claims of completed commissions.</p></div>
-<section class="project-cards">
-<article class="project-card"><span class="tiny accent">SOUND / PERFORMANCE</span><h3>Bass & the pocket</h3><p>Groove, tone, restraint, ensemble listening, and the joy of making the lowest frequencies feel alive.</p><div class="tagline"><span>LIVE</span><span>BASS</span><span>ARRANGEMENT</span></div></article>
-<article class="project-card"><span class="tiny accent">SOUND / COMPOSITION</span><h3>Scenes without words</h3><p>Working toward original music for emotionally driven screen stories, especially string-led arrangements.</p><div class="tagline"><span>LOGIC PRO</span><span>STRINGS</span><span>FILM</span></div></article>
-<article class="project-card"><span class="tiny accent">SOUND / TECHNOLOGY</span><h3>Under the faders</h3><p>Routing, monitoring and mixing as engineering problems in service of the band and audience.</p><div class="tagline"><span>FOH</span><span>IEM</span><span>AUDIO</span></div></article>
-</section>
-</main>
-<footer class="wrap footer">
-<span>© 2026 Dallen Lee · Built with curiosity and code.</span>
-<div class="port-footer-links"><a href="https://github.com/dallenleeyx" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="../../index.html">Academic CV ↗</a></div>
-</footer><script defer src="../assets/portfolio.js"></script></body></html>
+</head><body class="music">
+<a class="skip" href="#projects">Skip to projects</a>
+<header class="site-header"><a class="name" href="../../index.html">Dallen Lee</a><nav aria-label="Portfolios"><a href="../music/" aria-current="page">Music</a><a href="../engineering/">Engineering</a><a href="../ml/">ML / AI</a><a class="cv-link" href="../../index.html">CV</a></nav></header>
+<main id="projects">
+<div class="page-heading"><p class="section-label">Recordings &amp; projects</p><h1>Music</h1></div>
+<p class="sample-note">One sample entry for now. Original work will be added here.</p>
+<ol class="project-list"><li><article class="music-project">
+<div class="project-number" aria-hidden="true">01</div>
+<div class="project-body"><div class="entry-meta"><span>Sample recording</span><span>Tycho · 2014</span></div>
+<h2>Awake</h2><p class="description">A public track by Tycho, included to show how recordings will appear here. This is not my work.</p>
+<iframe class="soundcloud" title="Awake by Tycho — SoundCloud sample" height="166" loading="lazy" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Ftycho%2Ftycho-awake&amp;color=%238c4033&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_reposts=false&amp;visual=false"></iframe>
+<a class="project-link" href="https://soundcloud.com/tycho/tycho-awake" target="_blank" rel="noopener noreferrer">Listen on SoundCloud <span aria-hidden="true">↗</span></a>
+</div></article></li></ol></main>
+<footer><span>Dallen Lee</span><a href="../../index.html">Back to CV</a></footer>
+</body></html>
