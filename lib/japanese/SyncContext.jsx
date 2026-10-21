@@ -14,11 +14,12 @@
 // distinct progress that must both survive, so applying the server's
 // snapshot directly would silently discard whatever this device added
 // since its last successful push.
-import { createContext, useCallback, useContext, useEffect, useRef } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { mergeSyncState, normalizeSyncState, stableStringify } from './syncMerge';
 
 const POLL_MS = 5000;
 const PUSH_DEBOUNCE_MS = 1200;
+const PUSH_RETRY_MS = 15000;
 
 const SyncContext = createContext(null);
 
@@ -29,6 +30,8 @@ export function JapaneseSyncProvider({ children }) {
   const pollInFlightRef = useRef(false);
   const dirtyRef = useRef(false);
   const readyRef = useRef(false);
+  const [pullFailed, setPullFailed] = useState(false);
+  const [pushFailed, setPushFailed] = useState(false);
 
   const getLocalSnapshot = useCallback(() => {
     const snapshot = {};
@@ -50,6 +53,7 @@ export function JapaneseSyncProvider({ children }) {
     if (!readyRef.current || inFlightRef.current || !dirtyRef.current) return;
     dirtyRef.current = false;
     inFlightRef.current = true;
+    let failed = false;
     try {
       const state = getLocalSnapshot();
       const res = await fetch('/api/japanese', {
@@ -58,11 +62,14 @@ export function JapaneseSyncProvider({ children }) {
         body: JSON.stringify({ state }),
       });
       if (!res.ok) throw new Error('push failed');
+      setPushFailed(false);
     } catch (e) {
-      dirtyRef.current = true; // retry on the next scheduled push
+      failed = true;
+      dirtyRef.current = true; // keep pending changes until the server accepts them
+      setPushFailed(true);
     } finally {
       inFlightRef.current = false;
-      if (dirtyRef.current) schedulePush();
+      if (dirtyRef.current) schedulePush(failed ? PUSH_RETRY_MS : PUSH_DEBOUNCE_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getLocalSnapshot]);
@@ -78,8 +85,9 @@ export function JapaneseSyncProvider({ children }) {
     pollInFlightRef.current = true;
     try {
       const res = await fetch('/api/japanese');
-      if (!res.ok) return;
+      if (!res.ok) throw new Error('pull failed');
       const body = await res.json();
+      setPullFailed(false);
       const localSnapshot = getLocalSnapshot();
       const merged = mergeSyncState(localSnapshot, body.state);
       applySnapshot(merged);
@@ -90,6 +98,7 @@ export function JapaneseSyncProvider({ children }) {
         schedulePush();
       }
     } catch (e) {
+      setPullFailed(true);
       // Offline or a transient failure -- the next scheduled poll retries.
     } finally {
       pollInFlightRef.current = false;
@@ -144,10 +153,16 @@ export function JapaneseSyncProvider({ children }) {
   }, []);
 
   return (
-    <SyncContext.Provider value={{ registerSection, schedulePush }}>
+    <SyncContext.Provider value={{ registerSection, schedulePush, cloudUnavailable: pullFailed || pushFailed }}>
       {children}
     </SyncContext.Provider>
   );
+}
+
+export function useJapaneseSyncStatus() {
+  const ctx = useContext(SyncContext);
+  if (!ctx) throw new Error('useJapaneseSyncStatus must be used within JapaneseSyncProvider');
+  return { cloudUnavailable: ctx.cloudUnavailable };
 }
 
 // A store calls this once per render with its CURRENT get/apply and an optional
