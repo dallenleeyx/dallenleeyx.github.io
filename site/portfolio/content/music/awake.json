@@ -1,11 +1,10 @@
 {
   "title": "Awake",
-  "excerpt": "A sample track by Tycho. Electronic / instrumental.\nThis recording isn’t mine.",
+  "excerpt": "This is a sample track.",
   "order": 10,
   "published": true,
-  "artist": "Tycho",
+  "artist": "Ed Sheeran",
   "soundcloud": "https://soundcloud.com/tycho/tycho-awake",
-  "credit": "Sample audio by Tycho. Not my recording.",
   "links": [
     {
       "label": "SoundCloud",
