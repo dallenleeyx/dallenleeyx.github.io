@@ -15,8 +15,8 @@
 
 /* Site-wide corner nav (Japanese / Fitness / Math) -- fixed, out of flow, so it
    never shifts any page's existing layout. */
-.app-nav{position:fixed;bottom:1.2rem;right:1.2rem;z-index:200;display:flex;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill,999px);padding:.35rem;box-shadow:var(--shadow-md);}
-.app-nav-link{font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;padding:.4rem .7rem;border-radius:var(--radius-pill,999px);transition:all var(--transition-fast);}
+.app-nav{position:fixed;bottom:1.2rem;right:1.2rem;z-index:200;display:flex;gap:.4rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill,999px);padding:.35rem;box-shadow:var(--shadow-md);max-width:calc(100vw - 1.4rem);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;}
+.app-nav-link{font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-muted);text-decoration:none;padding:.4rem .7rem;border-radius:var(--radius-pill,999px);transition:all var(--transition-fast);white-space:nowrap;flex-shrink:0;}
 .app-nav-link:hover{color:var(--fg-1);background:var(--surface-2);}
 .app-nav-link.active{color:var(--bg);background:var(--fg-1);}
 
