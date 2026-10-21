@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Linear regression from scratch — Dallen Lee</title><link rel="stylesheet" href="../../assets/base.css"><link rel="stylesheet" href="../../assets/ml.css"></head><body class="ml"><main class="document-main"><a class="back" href="../">← ML / AI projects</a><h1>Linear regression from scratch</h1><p class="sample-notice">Sample notebook using synthetic data.</p><p>Fit a line to data using gradient descent, with a small PyTorch implementation.</p><h2>The model</h2><p>The training data follows y = 1.8x + 1. The model learns a weight and bias by minimising mean squared error.</p><h2>PyTorch implementation</h2><pre><code>import torch
+
+# Illustrative example using synthetic data.
+x = torch.linspace(-1, 1, 21).reshape(-1, 1)
+y = 1.8 * x + 1
+model = torch.nn.Linear(1, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+for _ in range(200):
+    loss = ((model(x) - y) ** 2).mean()
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+print('Weight:', model.weight.item())
+print('Bias:', model.bias.item())
+</code></pre><p><a href="train.py" download>Download Python source ↓</a></p></main></body></html>
