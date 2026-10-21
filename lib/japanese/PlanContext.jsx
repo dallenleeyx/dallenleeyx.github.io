@@ -57,6 +57,7 @@ export function PlanProvider({ children }) {
   useEffect(() => { if (hydrated) saveJSON(PLAN_EDITS_KEY, planEdits); }, [planEdits, hydrated]);
 
   const schedulePush = useSyncSection('planBundle', {
+    ready: () => hydrated,
     get: () => ({ plan, planDone, planDaily, planEdits }),
     apply: (remote) => {
       if (remote.plan) setPlanState((prev) => ({ ...prev, ...remote.plan }));
