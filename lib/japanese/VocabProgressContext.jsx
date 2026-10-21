@@ -52,6 +52,7 @@ function useProgressStore(storageKey, syncKey) {
   useEffect(() => { if (hydrated) saveJSON(storageKey, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection(syncKey, {
+    ready: () => hydrated,
     get: () => store,
     apply: (remote) => setStore(remote),
   });
@@ -153,6 +154,7 @@ function useVocabMasteryStores() {
   useEffect(() => { if (hydrated) saveJSON(FG_MASTERY_KEY, fg); }, [fg, hydrated]);
 
   const schedulePush = useSyncSection('vocabMastery', {
+    ready: () => hydrated,
     get: () => ({ fc, kw, fg }),
     apply: (remote) => {
       if (remote.fc) setFc(remote.fc);
