@@ -8,11 +8,12 @@ import { JapaneseI18nProvider, useJapaneseI18n } from '../../lib/japanese/I18nPr
 import { JapaneseViewProvider, JapaneseTabBar, JapaneseViewContent } from './JapaneseTabs';
 import { SettingsModal } from './SettingsModal';
 import { PlanProvider } from '../../lib/japanese/PlanContext';
-import { JapaneseSyncProvider } from '../../lib/japanese/SyncContext';
+import { JapaneseSyncProvider, useJapaneseSyncStatus } from '../../lib/japanese/SyncContext';
 
 function ShellInner() {
   const { theme } = useJapaneseTheme();
   const { t } = useJapaneseI18n();
+  const { cloudUnavailable } = useJapaneseSyncStatus();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -27,6 +28,9 @@ function ShellInner() {
           <button className="settings-gear-btn" aria-label={t('settingsTitle')} onClick={() => setSettingsOpen(true)}>⚙️</button>
         </div>
       </header>
+      {cloudUnavailable && (
+        <p role="alert" className="jp-sync-alert">{t('syncUnavailable')}</p>
+      )}
       <JapaneseViewContent />
       {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
