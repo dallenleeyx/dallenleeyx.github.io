@@ -2,8 +2,8 @@
 // components/japanese/vocab/KanjiWriting.jsx — recall and draw a word's
 // kanji from its reading/meaning on a touch-friendly canvas, then reveal to
 // self-grade (no OCR -- honor system, same as Flashcards). A miss restarts
-// the whole run (see lib/japanese/cleanRunQueue.js), but is still banked as
-// weak first.
+// the whole run (see lib/japanese/cleanRunQueue.js). Weak words are
+// chosen manually in Word List or Flashcards, independently of practice.
 import { useEffect, useState } from 'react';
 import { VOCAB_DATA } from '../../../lib/japanese/data/vocab';
 import { useJapaneseI18n } from '../../../lib/japanese/I18nProvider';
@@ -29,7 +29,7 @@ function buildKwDeck(level, lessons, isolateMode, isWeak) {
 
 export function KanjiWriting({ active }) {
   const { t, silentMode } = useJapaneseI18n();
-  const { writing, kwMastery } = useVocabProgress();
+  const { writing, kwMastery, isWeak } = useVocabProgress();
   const [level, setLevel] = useState('all');
   const [lessons, setLessons] = useState([]);
   const [isolateMode, setIsolateMode] = useState(false);
@@ -41,7 +41,7 @@ export function KanjiWriting({ active }) {
   const canvas = useKanjiCanvas();
 
   const startSession = (lv, ls, iso) => {
-    const items = buildKwDeck(lv, ls, iso, writing.isWeak);
+    const items = buildKwDeck(lv, ls, iso, isWeak);
     queue.start(items, shuffleOn);
     setRevealed(false);
     setJustReset(false);
@@ -136,7 +136,7 @@ export function KanjiWriting({ active }) {
       ? 'This clears your kanji-writing progress for EVERY word. Continue?'
       : 'This clears your kanji-writing progress for the currently selected lessons. Continue?';
     if (!window.confirm(msg)) return;
-    const targetItems = buildKwDeck(level, lessons, false, writing.isWeak);
+    const targetItems = buildKwDeck(level, lessons, false, isWeak);
     writing.resetProgressFor(targetItems);
     startSession(level, lessons, isolateMode);
   };
