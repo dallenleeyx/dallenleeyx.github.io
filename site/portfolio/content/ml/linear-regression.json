@@ -1,0 +1,10 @@
+{
+  "title": "Linear regression from scratch",
+  "excerpt": "Fit a simple model with gradient descent, then compare it with PyTorch. A sample using synthetic data.",
+  "order": 10,
+  "published": true,
+  "links": [
+    { "label": "Read notebook", "url": "linear-regression/", "download": false },
+    { "label": "Python source", "url": "linear-regression/train.py", "download": true }
+  ]
+}

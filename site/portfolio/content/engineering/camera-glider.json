@@ -1,0 +1,9 @@
+{
+  "title": "Camera glider",
+  "excerpt": "A lightweight airframe with an onboard camera. A sample project, not yet built.",
+  "order": 10,
+  "published": true,
+  "links": [
+    { "label": "Project notes", "url": "camera-glider/", "download": false }
+  ]
+}

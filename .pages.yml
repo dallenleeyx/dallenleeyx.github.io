@@ -1,0 +1,187 @@
+# Project editing only. The academic CV and Next.js app are not editor collections.
+content:
+  - name: music
+    label: Music projects
+    type: collection
+    path: site/portfolio/content/music
+    format: json
+    filename: "{primary}.json"
+    subfolders: false
+    view:
+      primary: title
+      fields: [title, order, published]
+      sort: [order, title]
+      search: [title, excerpt]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: title
+        label: Project title
+        type: string
+        required: true
+        options:
+          maxlength: 200
+      - name: excerpt
+        label: Short description
+        type: text
+        required: true
+        options:
+          maxlength: 2000
+      - name: order
+        label: Display order
+        type: number
+        description: Lower numbers appear first. Use 10, 20, 30 to leave room between entries.
+        required: true
+      - name: published
+        label: Show in portfolio
+        type: boolean
+        description: Turn off to remove this entry from the public project list.
+      - name: artist
+        label: Artist or performer
+        type: string
+      - name: soundcloud
+        label: SoundCloud player URL
+        type: string
+        description: Optional. Paste the full https://soundcloud.com/artist/track or playlist URL.
+        pattern:
+          regex: '^https://(www\.)?soundcloud\.com/.+'
+          message: Use a full HTTPS SoundCloud track or playlist URL.
+      - name: credit
+        label: Player credit
+        type: string
+        description: Optional credit shown beneath the player.
+      - name: links
+        label: Project links
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{label}"
+        fields:
+          - name: label
+            label: Button text
+            type: string
+            required: true
+          - name: url
+            label: Link address
+            type: string
+            required: true
+            description: A full website address or a relative path within this portfolio.
+          - name: download
+            label: Download link
+            type: boolean
+  - name: engineering
+    label: Engineering projects
+    type: collection
+    path: site/portfolio/content/engineering
+    format: json
+    filename: "{primary}.json"
+    subfolders: false
+    view:
+      primary: title
+      fields: [title, order, published]
+      sort: [order, title]
+      search: [title, excerpt]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: title
+        label: Project title
+        type: string
+        required: true
+        options:
+          maxlength: 200
+      - name: excerpt
+        label: Short description
+        type: text
+        required: true
+        options:
+          maxlength: 2000
+      - name: order
+        label: Display order
+        type: number
+        description: Lower numbers appear first. Use 10, 20, 30 to leave room between entries.
+        required: true
+      - name: published
+        label: Show in portfolio
+        type: boolean
+        description: Turn off to remove this entry from the public project list.
+      - name: links
+        label: Project links
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{label}"
+        fields:
+          - name: label
+            label: Button text
+            type: string
+            required: true
+          - name: url
+            label: Link address
+            type: string
+            required: true
+            description: A full website address or a relative path within this portfolio.
+          - name: download
+            label: Download link
+            type: boolean
+  - name: ml
+    label: ML / AI projects
+    type: collection
+    path: site/portfolio/content/ml
+    format: json
+    filename: "{primary}.json"
+    subfolders: false
+    view:
+      primary: title
+      fields: [title, order, published]
+      sort: [order, title]
+      search: [title, excerpt]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: title
+        label: Project title
+        type: string
+        required: true
+        options:
+          maxlength: 200
+      - name: excerpt
+        label: Short description
+        type: text
+        required: true
+        options:
+          maxlength: 2000
+      - name: order
+        label: Display order
+        type: number
+        description: Lower numbers appear first. Use 10, 20, 30 to leave room between entries.
+        required: true
+      - name: published
+        label: Show in portfolio
+        type: boolean
+        description: Turn off to remove this entry from the public project list.
+      - name: links
+        label: Project links
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{label}"
+        fields:
+          - name: label
+            label: Button text
+            type: string
+            required: true
+          - name: url
+            label: Link address
+            type: string
+            required: true
+            description: A full website address or a relative path within this portfolio.
+          - name: download
+            label: Download link
+            type: boolean

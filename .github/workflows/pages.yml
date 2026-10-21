@@ -6,6 +6,7 @@ on:
     paths:
       - 'site/**'
       - '.github/workflows/pages.yml'
+      - '.pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +27,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Node.js for portfolio content
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate portfolio renderer
+        run: node --test site/portfolio/tools/build-projects.test.mjs
+      - name: Build portfolio project lists
+        run: node site/portfolio/tools/build-projects.mjs
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

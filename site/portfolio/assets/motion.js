@@ -155,6 +155,9 @@
       iframe.allow = 'autoplay';
       iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url.href) + '&color=%23ed795d&auto_play=false&hide_related=true&show_comments=false&visual=false';
       document.querySelector('#audioTitle').textContent = button.dataset.title;
+      const credit = document.querySelector('#audioCredit');
+      credit.textContent = button.dataset.credit || '';
+      credit.hidden = !credit.textContent;
       document.querySelector('#audioPlayer').replaceChildren(iframe);
       dialog.showModal();
     });
