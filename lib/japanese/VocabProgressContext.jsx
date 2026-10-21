@@ -17,6 +17,7 @@ const FURIGANA_PROGRESS_KEY = 'jpstudy_furigana_progress_v1';
 const FC_MASTERY_KEY = 'jpstudy_fc_lesson_passed_v1';
 const KW_MASTERY_KEY = 'jpstudy_kw_lesson_passed_v1';
 const FG_MASTERY_KEY = 'jpstudy_fg_lesson_passed_v1';
+const WEAK_WORDS_KEY = 'jpstudy_manual_weak_words_v1';
 
 function loadJSON(key, fallback) {
   try {
@@ -34,9 +35,8 @@ function lessonKey(level, lesson) {
   return `${level}::${lesson}`;
 }
 
-// Shared shape for all three per-word progress stores (flashcards' correct/
-// wrong bookkeeping isn't used, but the mastered/weak flag semantics are
-// identical: "mastered"/"weak" reflect only the LAST sitting with this word).
+// Shared per-word practice progress stores; grading changes mastery only.
+// Weak words are now selected explicitly in a separate store.
 //
 // Starts empty (SSR-safe) and restores the real saved value only after
 // mount -- see ThemeProvider.jsx's file-level comment for why reading
@@ -56,13 +56,12 @@ function useProgressStore(storageKey, syncKey) {
   });
 
   const getStats = (item) => store[wordId(item)] || {};
-  const isWeak = (item) => !!getStats(item).weak;
   const isMastered = (item) => !!getStats(item).mastered;
 
   const recordResult = (item, masteredThisSitting) => {
     setStore((prev) => ({
       ...prev,
-      [wordId(item)]: { mastered: masteredThisSitting, weak: !masteredThisSitting, lastSeen: new Date().toISOString() },
+      [wordId(item)]: { mastered: masteredThisSitting, lastSeen: new Date().toISOString() },
     }));
     schedulePush();
   };
@@ -71,13 +70,40 @@ function useProgressStore(storageKey, syncKey) {
     const now = new Date().toISOString();
     setStore((prev) => {
       const next = { ...prev };
-      items.forEach((item) => { next[wordId(item)] = { mastered: false, weak: false, lastSeen: now }; });
+      items.forEach((item) => { next[wordId(item)] = { mastered: false, lastSeen: now }; });
       return next;
     });
     schedulePush();
   };
 
-  return { isWeak, isMastered, getStats, recordResult, resetProgressFor };
+  return { isMastered, getStats, recordResult, resetProgressFor };
+}
+
+// Manual weak-word flags use separate local storage and cross-device sync.
+// Keeping false entries makes unmarking survive merges with older devices.
+function useManualWeakWords() {
+  const [flags, setFlags] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setFlags(loadJSON(WEAK_WORDS_KEY, {})); setHydrated(true); }, []);
+  useEffect(() => { if (hydrated) saveJSON(WEAK_WORDS_KEY, flags); }, [flags, hydrated]);
+
+  const schedulePush = useSyncSection('weakWords', {
+    get: () => flags,
+    apply: (remote) => setFlags(remote),
+  });
+  const isWeak = (item) => !!flags[wordId(item)]?.marked;
+  const toggleWeak = (item) => {
+    const id = wordId(item);
+    setFlags((prev) => ({
+      ...prev,
+      [id]: {
+        marked: !prev[id]?.marked,
+        updatedAt: Math.max(Date.now(), (Number(prev[id]?.updatedAt) || 0) + 1),
+      },
+    }));
+    schedulePush();
+  };
+  return { isWeak, toggleWeak };
 }
 
 // fc/kw/fg lesson-mastery flags all sync together under one 'vocabMastery'
@@ -140,6 +166,7 @@ export function VocabProgressProvider({ children }) {
   const flashcards = useProgressStore(PROGRESS_KEY, 'vocab');
   const writing = useProgressStore(KANJI_PROGRESS_KEY, 'writing');
   const furigana = useProgressStore(FURIGANA_PROGRESS_KEY, 'furigana');
+  const weakWords = useManualWeakWords();
 
   const { fcMastery, kwMastery, fgMastery } = useVocabMasteryStores();
 
@@ -152,7 +179,8 @@ export function VocabProgressProvider({ children }) {
       value={{
         // Flashcards' progress store stays exposed under the original flat
         // names, since it was the first (and most-used) consumer.
-        isWeak: flashcards.isWeak,
+        isWeak: weakWords.isWeak,
+        toggleWeak: weakWords.toggleWeak,
         isMastered: flashcards.isMastered,
         getStats: flashcards.getStats,
         recordSessionResult: flashcards.recordResult,
