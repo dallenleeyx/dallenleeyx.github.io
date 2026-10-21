@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Explore a glider simulation, robotics concepts, control theory and future hardware projects.">
+<meta name="theme-color" content="#101116"><title>Engineering Workshop — Dallen Lee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/portfolio.css"></head><body class="portfolio-site engineering" data-page="engineering">
+<div class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="../index.html" aria-label="Dallen Lee portfolio home">DL<span>.</span></a>
+<nav class="topnav" aria-label="Portfolio navigation">
+<a href="../index.html">Home</a><a href="../music/">♫ Music</a><a href="../engineering/" aria-current="page">✳ Engineering</a><a href="../ml/">⌘ ML / AI</a>
+</nav><a class="back-cv" href="../../index.html">CV ↗</a></div></div>
+<main class="wrap">
+<section class="hero">
+<div class="floating-note" aria-hidden="true">✳</div>
+<p class="eyebrow">02 / THE WORKSHOP</p>
+<h1>Small ideas.<br><em>Moving parts.</em></h1>
+<p class="lead">Robots should be clever, safe, and a little delightful. This is my workshop for testing physical ideas — from camera-carrying gliders to feedback control and embedded electronics.</p>
+<div class="hero-meta"><span class="pill">ROBOTICS</span><span class="pill">DYNAMICS</span><span class="pill">CONTROL THEORY</span><span class="pill">HARDWARE</span></div>
+</section>
+<div class="sectionline"><h2>01 / Flight lab.</h2><p>Inspired by a paper aeroplane with a camera. Adjust the launch parameters, then run a glider thought experiment.</p></div>
+<section class="engineer-layout" aria-label="Interactive glider simulation">
+<div class="glass blueprint" data-reveal>
+<div class="canvas-mark">FLIGHT STUDY / MODEL 001<br><span style="opacity:.6">TOY SIMULATION — NOT A FLIGHT CONTROLLER</span></div>
+<canvas id="gliderCanvas" width="650" height="350" role="img" aria-label="Animated paper-plane glider trajectory in a simplified model, controlled by launch speed, wing angle and wind"></canvas>
+<div class="blueprint-foot"><span>◉ CAMERA PAYLOAD / CONCEPT</span><span>CONTROL SURFACE: EXPERIMENTAL</span></div>
+</div>
+<div class="glass" data-reveal>
+<p class="eyebrow" style="margin:0">TUNE THE PROTOTYPE</p>
+<h3>A little more lift?</h3>
+<p class="guide">Slide around and see how the flight path responds. The equations here are illustrative rather than aerodynamically validated.</p>
+<div class="controls-stack">
+<div><div class="control-row"><label for="speed">Launch speed</label><output id="speedOut" for="speed">12.0 m/s</output></div><input class="control-slider" id="speed" type="range" min="4" max="20" value="12" step=".5"></div>
+<div><div class="control-row"><label for="angle">Wing pitch</label><output id="angleOut" for="angle">7°</output></div><input class="control-slider" id="angle" type="range" min="-4" max="20" value="7" step="1"></div>
+<div><div class="control-row"><label for="wind">Tailwind / headwind</label><output id="windOut" for="wind">+0.0 m/s</output></div><input class="control-slider" id="wind" type="range" min="-6" max="6" value="0" step=".5"></div>
+</div>
+<div class="transport" style="justify-content:flex-start;margin:22px 0">
+<button id="flightToggle" type="button" class="btn primary" aria-pressed="true">Ⅱ Pause flight</button>
+<button id="flightReset" type="button" class="btn ghost">↻ Reset</button>
+</div>
+<div class="statline" aria-label="Simplified flight estimates">
+<div class="stat"><strong id="rangeOut">0 m</strong><span>HORIZONTAL</span></div>
+<div class="stat"><strong id="glideOut">8.4:1</strong><span>GLIDE RATIO*</span></div>
+<div class="stat"><strong id="descentOut">1.4 m/s</strong><span>DESCENT*</span></div>
+</div>
+<p class="guide">*Toy values for interactive learning. Real flight requires validated aerodynamics, battery and mass calculations, and safe outdoor testing.</p>
+</div>
+</section>
+<div class="sectionline"><h2>02 / On the workbench.</h2><p>Current plans and research interests. Cards expand to reveal the question I want to solve, not invented completed work.</p></div>
+<section class="project-cards" aria-label="Robotics project ideas">
+<article class="project-card" data-reveal>
+<span class="eyebrow">001 / FLIGHT HARDWARE</span>
+<h3>Paper-plane robotic bird</h3><span class="pill" style="width:max-content">CONCEPT STAGE</span>
+<p>A camera-equipped lightweight glider inspired by paper aeroplanes: passive stability first, active steering second.</p>
+<details><summary>Open the build notebook ↗</summary><p>Researching airframe materials, center of gravity, servo actuation, flight-control boards, camera payloads and power budgets. First milestone: a safe, repeatable nonpowered glide.</p></details>
+<div class="tagline"><span>AERODYNAMICS</span><span>ESP32</span><span>SERVOS</span></div>
+</article>
+<article class="project-card" data-reveal>
+<span class="eyebrow">002 / ROBOT CONTROL</span>
+<h3>Making robots safer</h3><span class="pill" style="width:max-content">RESEARCH INTEREST</span>
+<p>Learning how feedback, PD control and energy-aware safety constraints help physical robots interact with people.</p>
+<details><summary>Open the control notebook ↗</summary><p>The mathematical questions include stability, Lyapunov functions, control barrier functions, passive compliance, and modeling rotation with Lie groups.</p></details>
+<div class="tagline"><span>CONTROL</span><span>SAFETY</span><span>LIE GROUPS</span></div>
+</article>
+<article class="project-card" data-reveal>
+<span class="eyebrow">003 / ELECTRONICS</span>
+<h3>Sensor playground</h3><span class="pill" style="width:max-content">PLANNING</span>
+<p>A collection of deliberately small experiments with IMUs, motor drivers and microcontrollers before attempting bigger robots.</p>
+<details><summary>Open the component drawer ↗</summary><p>Potential experiments: reading acceleration and angular velocity, calibrating sensor drift, sending telemetry, and driving a simple servo in a closed-loop test.</p></details>
+<div class="tagline"><span>IMU</span><span>MICROCONTROLLERS</span><span>CAD</span></div>
+</article>
+</section>
+<div class="sectionline"><h2>03 / The math underneath.</h2><p>Physical robots and mathematical control aren't separate subjects — each makes the other more interesting.</p></div>
+<section class="glass" data-reveal style="margin-bottom:40px">
+<p class="eyebrow" style="margin:0">CONTROL LAW / A STARTING POINT</p>
+<h3 style="font-family:var(--mono);font-size:clamp(22px,4vw,37px);margin:18px 0;color:var(--spark)">u(t) = Kₚe(t) + K𝒹ė(t)</h3>
+<p class="quiet" style="max-width:810px;margin:0">A proportional–derivative controller reacts both to how far the system is from a target and how quickly that error changes. Working toward safe robot control means understanding what guarantees — and limits — such a law can provide.</p>
+</section>
+</main>
+<footer class="wrap footer"><span>© 2026 Dallen Lee · An idea is not the same as a finished prototype.</span><div class="port-footer-links"><a href="https://github.com/dallenleeyx" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="../../index.html">Academic CV ↗</a></div></footer>
+<script defer src="../assets/portfolio.js"></script></body></html>
