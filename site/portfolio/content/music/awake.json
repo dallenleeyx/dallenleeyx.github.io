@@ -5,8 +5,12 @@
   "published": true,
   "artist": "Tycho",
   "soundcloud": "https://soundcloud.com/tycho/tycho-awake",
-  "credit": "Sample audio by Tycho.",
+  "credit": "Sample audio by Tycho. Not my recording.",
   "links": [
-    { "label": "SoundCloud", "url": "https://soundcloud.com/tycho/tycho-awake", "download": false }
+    {
+      "label": "SoundCloud",
+      "url": "https://soundcloud.com/tycho/tycho-awake",
+      "download": false
+    }
   ]
 }
