@@ -2,7 +2,7 @@
 // components/japanese/vocab/Furigana.jsx — recall and type a word's reading
 // from its kanji, auto-graded against the word's own reading (no self-
 // honesty needed). Same clean-run semantics as Writing: a miss restarts the
-// whole run, banked as weak first.
+// whole run. Weak words are selected manually, independently of grading.
 import { useEffect, useRef, useState } from 'react';
 import { VOCAB_DATA } from '../../../lib/japanese/data/vocab';
 import { useJapaneseI18n } from '../../../lib/japanese/I18nProvider';
@@ -24,7 +24,7 @@ function buildFgDeck(level, lessons, isolateMode, isWeak) {
 
 export function Furigana({ active }) {
   const { t } = useJapaneseI18n();
-  const { furigana, fgMastery } = useVocabProgress();
+  const { furigana, fgMastery, isWeak } = useVocabProgress();
   const [level, setLevel] = useState('all');
   const [lessons, setLessons] = useState([]);
   const [isolateMode, setIsolateMode] = useState(false);
@@ -39,7 +39,7 @@ export function Furigana({ active }) {
   const fieldRef = useRef(null);
 
   const startSession = (lv, ls, iso) => {
-    const items = buildFgDeck(lv, ls, iso, furigana.isWeak);
+    const items = buildFgDeck(lv, ls, iso, isWeak);
     queue.start(items, shuffleOn);
     setValue('');
     setSubmitted(false);
@@ -99,7 +99,7 @@ export function Furigana({ active }) {
       ? 'This clears your furigana-practice progress for EVERY word. Continue?'
       : 'This clears your furigana-practice progress for the currently selected lessons. Continue?';
     if (!window.confirm(msg)) return;
-    const targetItems = buildFgDeck(level, lessons, false, furigana.isWeak);
+    const targetItems = buildFgDeck(level, lessons, false, isWeak);
     furigana.resetProgressFor(targetItems);
     startSession(level, lessons, isolateMode);
   };
