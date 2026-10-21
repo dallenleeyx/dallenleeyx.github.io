@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Interactive regression training, a command-line playground and PyTorch code samples.">
+<meta name="theme-color" content="#101116"><title>ML / AI Lab — Dallen Lee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../assets/portfolio.css"></head><body class="portfolio-site ml" data-page="ml">
+<div class="topbar"><div class="wrap topbar-inner">
+<a class="brand" href="../index.html" aria-label="Dallen Lee portfolio home">DL<span>.</span></a>
+<nav class="topnav" aria-label="Portfolio navigation">
+<a href="../index.html">Home</a><a href="../music/">♫ Music</a><a href="../engineering/">✳ Engineering</a><a href="../ml/" aria-current="page">⌘ ML / AI</a>
+</nav><a class="back-cv" href="../../index.html">CV ↗</a></div></div>
+<main class="wrap">
+<section class="hero">
+<div class="floating-note" aria-hidden="true" style="font-family:var(--mono)">{ }</div>
+<p class="eyebrow">03 / THE MACHINE ROOM · PYTHON · OPTIMIZATION</p>
+<h1>From proofs<br>to <em>predictions.</em></h1>
+<p class="lead">Machine learning is much more interesting when you can inspect what the optimizer is actually doing. Explore my mini lab: train a model, watch the loss fall, and poke around the terminal.</p>
+<div class="hero-meta"><span class="pill">PYTORCH</span><span class="pill">OPTIMIZATION</span><span class="pill">STATISTICAL LEARNING</span><span class="pill">STOCHASTIC CONTROL</span></div>
+</section>
+<div class="sectionline"><h2>01 / Open a terminal.</h2><p>A tiny interactive shell to discover projects and experiments. Try <code>help</code>, <code>projects</code>, or <code>train</code>.</p></div>
+<section class="ml-layout">
+<div class="terminal" data-reveal>
+<div class="terminal-bar"><i class="traffic"></i><i class="traffic"></i><i class="traffic"></i><span style="margin-left:12px">dallen@lab:~ — zsh (simulation)</span></div>
+<div class="terminal-screen" id="terminalOutput" role="log" aria-label="Interactive portfolio command output"></div>
+<form class="terminal-form" id="terminalForm">
+<label for="terminalInput">➜</label><input id="terminalInput" autocomplete="off" spellcheck="false" placeholder="type help then enter…" aria-label="Terminal command">
+</form>
+</div>
+<div class="glass" data-reveal>
+<p class="eyebrow" style="margin-top:0">HOW I THINK</p>
+<h3>Math first. Then experiments.</h3>
+<p class="quiet">I study mathematics and research computational questions where randomness, optimization, and algorithms meet. I'm interested in ML methods that can be explained mathematically and tested empirically.</p>
+<div class="sheet-lines" style="height:115px;background:repeating-linear-gradient(to bottom,transparent 0 16px,#6688ba44 17px 18px,transparent 19px 31px);"></div>
+<div class="statline">
+<div class="stat"><strong>∇</strong><span>GRADIENTS</span></div><div class="stat"><strong>Σ</strong><span>COVARIANCE</span></div><div class="stat"><strong>π</strong><span>POLICIES</span></div>
+</div>
+</div>
+</section>
+<div class="sectionline"><h2>02 / Run a training job.</h2><p>A working linear-regression demo in JavaScript, with matching PyTorch source. Change the hyperparameters and examine the loss curve.</p></div>
+<section class="ml-layout">
+<div class="glass" data-reveal>
+<div class="console-top"><div><p class="eyebrow" style="margin:0 0 7px">TRAINING MONITOR / LIVE</p><h3>Mean squared error.</h3></div><span class="pill">Y ≈ WX + B</span></div>
+<canvas class="plot" id="trainingPlot" width="520" height="260" role="img" aria-label="Training loss versus epochs for a simple linear model"></canvas>
+<div class="hyperparams">
+<label for="learningRate">Learning rate<input id="learningRate" type="number" value="0.12" min="0.001" max="0.9" step=".01"></label>
+<label for="epochs">Epochs<input id="epochs" type="number" value="180" min="20" max="1500" step="20"></label>
+</div>
+<button id="runTrain" class="btn primary" type="button">▶ Run gradient descent</button>
+<div class="statline" style="margin-top:18px">
+<div class="stat"><strong id="lossValue" style="font-size:18px">—</strong><span>MSE</span></div>
+<div class="stat"><strong id="weightsValue" style="font-size:15px">—</strong><span>LEARNED MODEL</span></div>
+<div class="stat"><strong id="epochValue" style="font-size:18px">0</strong><span>EPOCHS</span></div>
+</div>
+</div>
+<div class="code-window" data-reveal>
+<div class="code-head"><span><span class="accent">●</span> train.py — PyTorch equivalent</span><button id="copyCode" class="btn small" type="button">Copy code</button></div>
+<pre><code id="pytorchCode">import torch
+
+# Educational toy data. The browser plot
+# runs equivalent math in JavaScript.
+torch.manual_seed(7)
+x = torch.linspace(-1, 1, 21).view(-1, 1)
+y = 1 + 1.8 * x + 0.16 * torch.sin(
+    torch.arange(21).float() * 5
+).view(-1, 1)
+
+model = torch.nn.Linear(1, 1)
+optim = torch.optim.SGD(model.parameters(),
+                        lr=0.12)
+loss_fn = torch.nn.MSELoss()
+
+for epoch in range(180):
+    pred = model(x)
+    loss = loss_fn(pred, y)
+    optim.zero_grad()
+    loss.backward()
+    optim.step()
+    if epoch % 30 == 0:
+        print(epoch, round(loss.item(), 4))
+
+print("weight", model.weight.item())
+print("bias", model.bias.item())</code></pre>
+</div>
+</section>
+<div class="sectionline"><h2>03 / Research meets code.</h2><p>Real research experience is kept distinct from proposed or exploratory AI directions.</p></div>
+<section class="lab-cards">
+<article class="lab-card" data-reveal><span class="label">NUS UROPS / RESEARCH EXPERIENCE</span><h3>Covariance matrix cleaning</h3><p>Eigenvalue shrinkage and robust covariance ideas for Markowitz portfolio construction. Exploring the bridge between random matrix theory and empirical risk estimation.</p><a href="../../index.html">Read my CV ↗</a></article>
+<article class="lab-card" data-reveal><span class="label">RESEARCH INTEREST / EXPLORING</span><h3>Deep hedging & stochastic control</h3><p>Learnable decisions under uncertainty: how policy optimization and stochastic control can inform risk-sensitive financial decisions.</p><a href="https://github.com/dallenleeyx" target="_blank" rel="noopener noreferrer">GitHub profile ↗</a></article>
+<article class="lab-card" data-reveal><span class="label">INTERACTIVE DEMO / RUN IT ABOVE</span><h3>Optimization workbench</h3><p>Tune a learning rate, inspect gradient-descent convergence, and compare the browser demonstration with concise Python / PyTorch code.</p><a href="#trainingPlot">Open the training plot ↑</a></article>
+</section>
+<div class="sectionline"><h2>04 / The stack I'm growing.</h2><p>A focus area, not a badge wall: Python & PyTorch, optimization, numerical linear algebra, robotics AI, and mathematical modeling.</p></div>
+<div class="glass" data-reveal><div class="hero-meta" style="margin:0"><span class="pill">PYTHON</span><span class="pill">PYTORCH</span><span class="pill">NUMPY</span><span class="pill">LINEAR ALGEBRA</span><span class="pill">RANDOM MATRICES</span><span class="pill">STOCHASTIC CONTROL</span><span class="pill">RESEARCH COMPUTING</span></div></div>
+</main>
+<footer class="wrap footer"><span>© 2026 Dallen Lee · An idea is not the same as a finished prototype.</span><div class="port-footer-links"><a href="https://github.com/dallenleeyx" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="../../index.html">Academic CV ↗</a></div></footer>
+<script defer src="../assets/portfolio.js"></script></body></html>
