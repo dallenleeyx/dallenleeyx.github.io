@@ -61,16 +61,20 @@
       }
     }
     function drawSteps(active = -1) {
-      steps.replaceChildren();
       pattern.forEach((enabled, i) => {
-        const button = document.createElement('button');
+        const button = steps.children[i] || document.createElement('button');
         button.type = 'button';
         button.className = 'step' + (enabled ? ' on' : '') + (i === active ? ' playing' : '');
         button.textContent = String(i + 1).padStart(2, '0');
         button.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + (enabled ? 'on' : 'off'));
         button.setAttribute('aria-pressed', String(enabled));
-        button.addEventListener('click', () => { pattern[i] = !pattern[i]; drawSteps(active); });
-        steps.appendChild(button);
+        if (!button.parentNode) {
+          button.addEventListener('click', () => {
+            pattern[i] = !pattern[i];
+            drawSteps(playing ? (index + pattern.length - 1) % pattern.length : -1);
+          });
+          steps.appendChild(button);
+        }
       });
     }
     function tick() {
@@ -256,7 +260,7 @@
     [speedControl,angleControl,windControl].forEach(el=>el.addEventListener('input',()=>{resetFlight();}));
     window.addEventListener('resize',size);
     resetFlight();size();
-    if(isFlying){last=performance.now();frame=requestAnimationFrame(animate);}else {go.textContent='▶ Start flight';}
+    if(isFlying){last=performance.now();frame=requestAnimationFrame(animate);}else {go.textContent='▶ Start flight';go.setAttribute('aria-pressed','false');}
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&isFlying){isFlying=false;cancelAnimationFrame(frame);go.textContent='▶ Resume flight';go.setAttribute('aria-pressed','false');}});
   }
 
@@ -299,8 +303,12 @@
     }
     function train(){
       if(fitting)return;
-      const alpha=Number(lr.value),total=Math.min(1500,Math.max(20,Number(epochs.value)||180));
-      if(!(alpha>0))return;
+      const alpha=Number(lr.value),requestedEpochs=Number(epochs.value);
+      if(!Number.isFinite(alpha)||alpha<.001||alpha>.9||!Number.isInteger(requestedEpochs)||requestedEpochs<20||requestedEpochs>1500){
+        log('Use a learning rate from 0.001 to 0.9 and a whole number of epochs from 20 to 1500.');
+        return;
+      }
+      const total=requestedEpochs;
       fitting=true;run.disabled=true;run.textContent='Training…';results=[];
       let w=-1.6,b=-1.2,epoch=0;
       function step(){
