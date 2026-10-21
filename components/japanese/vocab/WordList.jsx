@@ -130,6 +130,9 @@ export function WordList() {
     const lessonNums = lessonNumbersFor(level);
     const hasUnlabeled = items.some((item) => item.lesson === undefined);
     const groups = lesson === null ? (hasUnlabeled ? [...lessonNums, undefined] : lessonNums) : [lesson];
+    if (weakOnly && lesson !== null && !items.some((item) => item.lesson === lesson)) {
+      return <p className="wl-empty-note">{t('wlNoWeakResults')}</p>;
+    }
     return groups.map((n) => {
       const lessonItems = items.filter((item) => item.lesson === n);
       const heading = n === undefined ? 'Other' : lessonTitles[n] ? `${n}課 ${lessonTitles[n]}` : `${n}課`;
