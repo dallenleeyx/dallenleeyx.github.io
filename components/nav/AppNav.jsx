@@ -14,6 +14,7 @@ const LINKS = [
   { href: '/math', label: 'Math' },
   { href: '/bible', label: 'Bible' },
   { href: '/jobs', label: 'Jobs' },
+  { href: '/portfolio', label: 'Portfolio' },
 ];
 
 const LAST_SITE_KEY = 'lastSite';
@@ -22,8 +23,9 @@ export function AppNav() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (LINKS.some((l) => l.href === pathname)) {
-      try { localStorage.setItem(LAST_SITE_KEY, pathname); } catch (e) {}
+    const current = pathname?.startsWith('/portfolio/') ? '/portfolio' : pathname;
+    if (LINKS.some((l) => l.href === current)) {
+      try { localStorage.setItem(LAST_SITE_KEY, current); } catch (e) {}
     }
   }, [pathname]);
 
@@ -33,7 +35,7 @@ export function AppNav() {
         <Link
           key={href}
           href={href}
-          className={`app-nav-link${pathname === href ? ' active' : ''}`}
+          className={`app-nav-link${pathname === href || (href === '/portfolio' && pathname?.startsWith('/portfolio/')) ? ' active' : ''}` }
         >
           {label}
         </Link>
