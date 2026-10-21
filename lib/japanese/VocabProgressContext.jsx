@@ -7,9 +7,10 @@
 // cross-device sync registry (lib/japanese/SyncContext.jsx) -- all three
 // progress maps sync under their own key ('vocab'/'writing'/'furigana'), and
 // the three lesson-mastery stores sync together under 'vocabMastery'.
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { wordId } from './wordId';
 import { useSyncSection } from './SyncContext';
+import { mergeWeakWords } from './syncMerge';
 
 const PROGRESS_KEY = 'jpstudy_progress_v1'; // flashcards
 const KANJI_PROGRESS_KEY = 'jpstudy_kanji_progress_v1'; // writing
@@ -51,6 +52,7 @@ function useProgressStore(storageKey, syncKey) {
   useEffect(() => { if (hydrated) saveJSON(storageKey, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection(syncKey, {
+    ready: () => hydrated,
     get: () => store,
     apply: (remote) => setStore(remote),
   });
@@ -83,25 +85,51 @@ function useProgressStore(storageKey, syncKey) {
 // Keeping false entries makes unmarking survive merges with older devices.
 function useManualWeakWords() {
   const [flags, setFlags] = useState({});
+  // Keep the latest edit available synchronously to the sync layer. React
+  // state updates are batched, so a push started from a toggle can otherwise
+  // read the previous render's snapshot, especially when a tab is hidden.
+  const flagsRef = useRef({});
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { setFlags(loadJSON(WEAK_WORDS_KEY, {})); setHydrated(true); }, []);
+
+  useEffect(() => {
+    const saved = loadJSON(WEAK_WORDS_KEY, {});
+    flagsRef.current = saved;
+    setFlags(saved);
+    setHydrated(true);
+  }, []);
   useEffect(() => { if (hydrated) saveJSON(WEAK_WORDS_KEY, flags); }, [flags, hydrated]);
 
   const schedulePush = useSyncSection('weakWords', {
-    get: () => flags,
-    apply: (remote) => setFlags(remote),
+    // Never sync the initial empty placeholder before localStorage has loaded.
+    ready: () => hydrated,
+    get: () => flagsRef.current,
+    apply: (remote) => {
+      // A remote GET may have started before a new local click. Merge against
+      // the current ref so it cannot undo that click when the response arrives.
+      const merged = mergeWeakWords(flagsRef.current, remote);
+      flagsRef.current = merged;
+      setFlags(merged);
+    },
   });
+
   const isWeak = (item) => !!flags[wordId(item)]?.marked;
   const toggleWeak = (item) => {
+    if (!hydrated) return;
     const id = wordId(item);
-    setFlags((prev) => ({
+    const prev = flagsRef.current;
+    const next = {
       ...prev,
       [id]: {
         marked: !prev[id]?.marked,
         updatedAt: Math.max(Date.now(), (Number(prev[id]?.updatedAt) || 0) + 1),
       },
-    }));
-    schedulePush();
+    };
+    flagsRef.current = next;
+    setFlags(next);
+    // Persist immediately even if the user closes this tab before React's
+    // next effect or the debounced network request has had time to finish.
+    saveJSON(WEAK_WORDS_KEY, next);
+    schedulePush(250);
   };
   return { isWeak, toggleWeak };
 }
@@ -126,6 +154,7 @@ function useVocabMasteryStores() {
   useEffect(() => { if (hydrated) saveJSON(FG_MASTERY_KEY, fg); }, [fg, hydrated]);
 
   const schedulePush = useSyncSection('vocabMastery', {
+    ready: () => hydrated,
     get: () => ({ fc, kw, fg }),
     apply: (remote) => {
       if (remote.fc) setFc(remote.fc);

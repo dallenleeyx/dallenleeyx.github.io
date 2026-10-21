@@ -1020,6 +1020,18 @@ main {
   text-align: left;
 }
 
+.jp-sync-alert {
+  margin: var(--jp-space-3) var(--jp-space-5);
+  padding: var(--jp-space-3) var(--jp-space-4);
+  border: 1px solid var(--jp-seal);
+  border-radius: var(--jp-radius-md);
+  background: var(--jp-seal-bg);
+  color: var(--jp-seal);
+  font-family: var(--jp-font-ui);
+  font-size: var(--jp-fs-xs);
+  line-height: 1.6;
+}
+
 /* ---------- word list ---------- */
 .wl-empty-note { font-family: var(--jp-font-ui); font-size: var(--jp-fs-xs); color: var(--jp-ink-soft); font-style: italic; margin: var(--jp-space-4) 0; }
 .wordlist-group { margin-bottom: var(--jp-space-6); }

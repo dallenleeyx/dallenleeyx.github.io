@@ -14,11 +14,12 @@
 // distinct progress that must both survive, so applying the server's
 // snapshot directly would silently discard whatever this device added
 // since its last successful push.
-import { createContext, useCallback, useContext, useEffect, useRef } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { mergeSyncState, normalizeSyncState, stableStringify } from './syncMerge';
 
 const POLL_MS = 5000;
 const PUSH_DEBOUNCE_MS = 1200;
+const PUSH_RETRY_MS = 15000;
 
 const SyncContext = createContext(null);
 
@@ -26,18 +27,25 @@ export function JapaneseSyncProvider({ children }) {
   const sectionsRef = useRef(new Map()); // key -> { get, apply }
   const pushTimerRef = useRef(null);
   const inFlightRef = useRef(false);
+  const pollInFlightRef = useRef(false);
   const dirtyRef = useRef(false);
   const readyRef = useRef(false);
+  const [pullFailed, setPullFailed] = useState(false);
+  const [pushFailed, setPushFailed] = useState(false);
 
   const getLocalSnapshot = useCallback(() => {
     const snapshot = {};
-    sectionsRef.current.forEach(({ get }, key) => { snapshot[key] = get(); });
+    sectionsRef.current.forEach(({ get, ready }, key) => {
+      // Hooks hydrate their localStorage state after mounting. An empty
+      // pre-hydration placeholder must never be pushed as saved progress.
+      if (!ready || ready()) snapshot[key] = get();
+    });
     return snapshot;
   }, []);
 
   const applySnapshot = useCallback((snapshot) => {
-    sectionsRef.current.forEach(({ apply }, key) => {
-      if (snapshot[key] !== undefined) apply(snapshot[key]);
+    sectionsRef.current.forEach(({ apply, ready }, key) => {
+      if ((!ready || ready()) && snapshot[key] !== undefined) apply(snapshot[key]);
     });
   }, []);
 
@@ -45,6 +53,7 @@ export function JapaneseSyncProvider({ children }) {
     if (!readyRef.current || inFlightRef.current || !dirtyRef.current) return;
     dirtyRef.current = false;
     inFlightRef.current = true;
+    let failed = false;
     try {
       const state = getLocalSnapshot();
       const res = await fetch('/api/japanese', {
@@ -53,27 +62,32 @@ export function JapaneseSyncProvider({ children }) {
         body: JSON.stringify({ state }),
       });
       if (!res.ok) throw new Error('push failed');
+      setPushFailed(false);
     } catch (e) {
-      dirtyRef.current = true; // retry on the next scheduled push
+      failed = true;
+      dirtyRef.current = true; // keep pending changes until the server accepts them
+      setPushFailed(true);
     } finally {
       inFlightRef.current = false;
-      if (dirtyRef.current) schedulePush();
+      if (dirtyRef.current) schedulePush(failed ? PUSH_RETRY_MS : PUSH_DEBOUNCE_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getLocalSnapshot]);
 
-  function schedulePush() {
+  function schedulePush(delayMs = PUSH_DEBOUNCE_MS) {
     dirtyRef.current = true;
     if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
-    pushTimerRef.current = setTimeout(doPush, PUSH_DEBOUNCE_MS);
+    pushTimerRef.current = setTimeout(doPush, delayMs);
   }
 
   const poll = useCallback(async () => {
-    if (!readyRef.current) return;
+    if (!readyRef.current || pollInFlightRef.current) return;
+    pollInFlightRef.current = true;
     try {
       const res = await fetch('/api/japanese');
-      if (!res.ok) return;
+      if (!res.ok) throw new Error('pull failed');
       const body = await res.json();
+      setPullFailed(false);
       const localSnapshot = getLocalSnapshot();
       const merged = mergeSyncState(localSnapshot, body.state);
       applySnapshot(merged);
@@ -84,7 +98,10 @@ export function JapaneseSyncProvider({ children }) {
         schedulePush();
       }
     } catch (e) {
-      // offline or a transient failure -- the next scheduled poll retries
+      setPullFailed(true);
+      // Offline or a transient failure -- the next scheduled poll retries.
+    } finally {
+      pollInFlightRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getLocalSnapshot, applySnapshot]);
@@ -93,13 +110,39 @@ export function JapaneseSyncProvider({ children }) {
     readyRef.current = true;
     poll();
     const interval = setInterval(poll, POLL_MS);
-    const onVisible = () => { if (document.visibilityState === 'visible') poll(); };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') poll();
+      // Don't leave a queued edit waiting through a background-tab throttle.
+      else if (dirtyRef.current) {
+        clearTimeout(pushTimerRef.current);
+        void doPush();
+      }
+    };
+    const onPageHide = () => {
+      // A user may mark a word and immediately close the tab. Keepalive
+      // sends the small weak-word section even if the regular debounce or
+      // page lifecycle cannot finish. The server merges the section with
+      // other saved study progress rather than replacing it.
+      if (!dirtyRef.current && !inFlightRef.current) return;
+      const weakWords = getLocalSnapshot().weakWords;
+      if (weakWords && Object.keys(weakWords).length) {
+        void fetch('/api/japanese', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state: { weakWords } }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', onVisible);
+    window.addEventListener('pagehide', onPageHide);
     return () => {
       clearInterval(interval);
+      clearTimeout(pushTimerRef.current);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
+      window.removeEventListener('pagehide', onPageHide);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -110,14 +153,20 @@ export function JapaneseSyncProvider({ children }) {
   }, []);
 
   return (
-    <SyncContext.Provider value={{ registerSection, schedulePush }}>
+    <SyncContext.Provider value={{ registerSection, schedulePush, cloudUnavailable: pullFailed || pushFailed }}>
       {children}
     </SyncContext.Provider>
   );
 }
 
-// A store calls this once per render with its CURRENT get/apply (get: () =>
-// its live local state; apply: (mergedData) => write it into local state).
+export function useJapaneseSyncStatus() {
+  const ctx = useContext(SyncContext);
+  if (!ctx) throw new Error('useJapaneseSyncStatus must be used within JapaneseSyncProvider');
+  return { cloudUnavailable: ctx.cloudUnavailable };
+}
+
+// A store calls this once per render with its CURRENT get/apply and an optional
+// ready() function to prevent syncing its pre-hydration placeholder.
 // The wrapper registered with the provider always delegates to the latest
 // closures via refs, so the provider's poll loop -- which fires on its own
 // interval, independent of any particular render -- never reads stale data.
@@ -125,18 +174,21 @@ export function JapaneseSyncProvider({ children }) {
 // markPassed, etc.) should call after a LOCAL edit so it gets pushed; it
 // must NOT be called from apply() itself, or applying a remote snapshot
 // would immediately echo it straight back to the server.
-export function useSyncSection(key, { get, apply }) {
+export function useSyncSection(key, { get, apply, ready }) {
   const ctx = useContext(SyncContext);
   if (!ctx) throw new Error('useSyncSection must be used within JapaneseSyncProvider');
   const getRef = useRef(get);
   const applyRef = useRef(apply);
+  const readyRef = useRef(ready);
   getRef.current = get;
   applyRef.current = apply;
+  readyRef.current = ready;
 
   useEffect(() => {
     return ctx.registerSection(key, {
       get: (...args) => getRef.current(...args),
       apply: (...args) => applyRef.current(...args),
+      ready: () => !readyRef.current || readyRef.current(),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
