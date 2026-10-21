@@ -114,7 +114,7 @@ export function JapaneseSyncProvider({ children }) {
       // sends the small weak-word section even if the regular debounce or
       // page lifecycle cannot finish. The server merges the section with
       // other saved study progress rather than replacing it.
-      if (!dirtyRef.current) return;
+      if (!dirtyRef.current && !inFlightRef.current) return;
       const weakWords = getLocalSnapshot().weakWords;
       if (weakWords && Object.keys(weakWords).length) {
         void fetch('/api/japanese', {
