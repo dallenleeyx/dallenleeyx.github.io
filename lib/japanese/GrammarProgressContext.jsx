@@ -43,6 +43,7 @@ function useSrsStore() {
   useEffect(() => { if (hydrated) saveJSON(GP_SRS_KEY, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection('srs', {
+    ready: () => hydrated,
     get: () => store,
     apply: (remote) => setStore(remote),
   });
@@ -74,6 +75,7 @@ function useMasteryStore() {
   useEffect(() => { if (hydrated) saveJSON(GP_MASTERY_KEY, store); }, [store, hydrated]);
 
   const schedulePush = useSyncSection('grammarMastery', {
+    ready: () => hydrated,
     get: () => store,
     apply: (remote) => setStore(remote),
   });
