@@ -19,11 +19,16 @@ export async function GET() {
   const email = await requireEmail();
   if (!email) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const record = await getJapaneseRecord(email);
-  if (!record) {
-    return NextResponse.json({ state: normalizeSyncState(null), updatedAt: 0 });
+  try {
+    const record = await getJapaneseRecord(email);
+    if (!record) {
+      return NextResponse.json({ state: normalizeSyncState(null), updatedAt: 0 });
+    }
+    return NextResponse.json({ state: normalizeSyncState(record.state), updatedAt: record.updatedAt });
+  } catch (error) {
+    console.error('Japanese sync read unavailable:', error?.code || 'database connection failed');
+    return NextResponse.json({ error: 'cloud_sync_unavailable' }, { status: 503 });
   }
-  return NextResponse.json({ state: normalizeSyncState(record.state), updatedAt: record.updatedAt });
 }
 
 export async function PUT(request) {
@@ -35,9 +40,14 @@ export async function PUT(request) {
     return NextResponse.json({ error: 'state must be an object' }, { status: 400 });
   }
 
-  const current = await getJapaneseRecord(email);
-  const merged = mergeSyncState(current?.state, body.state);
-  const updatedAt = Date.now();
-  await setJapaneseRecord(email, merged, updatedAt);
-  return NextResponse.json({ ok: true, state: merged, updatedAt });
+  try {
+    const current = await getJapaneseRecord(email);
+    const merged = mergeSyncState(current?.state, body.state);
+    const updatedAt = Date.now();
+    await setJapaneseRecord(email, merged, updatedAt);
+    return NextResponse.json({ ok: true, state: merged, updatedAt });
+  } catch (error) {
+    console.error('Japanese sync write unavailable:', error?.code || 'database connection failed');
+    return NextResponse.json({ error: 'cloud_sync_unavailable' }, { status: 503 });
+  }
 }
