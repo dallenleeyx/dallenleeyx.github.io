@@ -24,7 +24,7 @@ function buildDeck(level, lessons, isolateMode, isWeak) {
 
 export function Flashcards({ active }) {
   const { t, silentMode } = useJapaneseI18n();
-  const { isWeak, recordSessionResult, fcMastery, resetProgressFor } = useVocabProgress();
+  const { isWeak, toggleWeak, recordSessionResult, fcMastery, resetProgressFor } = useVocabProgress();
   const [level, setLevel] = useState('all');
   const [lessons, setLessons] = useState([]);
   const [isolateMode, setIsolateMode] = useState(false);
@@ -131,6 +131,7 @@ export function Flashcards({ active }) {
   useEffect(() => {
     if (!active) return;
     function onKey(e) {
+      if (e.target?.closest?.('button, input, textarea, select, [contenteditable="true"]')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         handleFlip();
@@ -196,6 +197,19 @@ export function Flashcards({ active }) {
             <span className="card-text">{backText}</span>
           </div>
         </button>
+        {current && (
+          <button
+            type="button"
+            className={`weak-word-toggle fc-weak-toggle${isWeak(current) ? ' active' : ''}`}
+            aria-pressed={isWeak(current)}
+            aria-label={`${t(isWeak(current) ? 'unmarkWeak' : 'markWeak')}: ${current.word}`}
+            onClick={() => toggleWeak(current)}
+            disabled={busy}
+          >
+            <span aria-hidden="true">{isWeak(current) ? '★' : '☆'}</span>
+            {t(isWeak(current) ? 'weakMarked' : 'markWeak')}
+          </button>
+        )}
         {!flipped && <p className="card-hint">{t('cardHint')}</p>}
         {flipped && (
           <div className="grade-buttons">
