@@ -1,4 +1,17 @@
-# Project editing only. The academic CV and Next.js app are not editor collections.
+media:
+  - name: article_images
+    label: Article images
+    input: site/notes/media/images
+    output: /notes/media/images
+    categories: [image]
+    rename: safe
+  - name: article_videos
+    label: Manim videos
+    input: site/notes/media/videos
+    output: /notes/media/videos
+    categories: [video]
+    rename: safe
+
 content:
   - name: music
     label: Music projects
@@ -71,117 +84,59 @@ content:
           - name: download
             label: Download link
             type: boolean
-  - name: engineering
-    label: Engineering projects
+  - name: notes
+    label: Notes & simulations
     type: collection
-    path: site/portfolio/content/engineering
-    format: json
-    filename: "{primary}.json"
+    path: site/notes/content
+    format: yaml-frontmatter
+    filename: "{primary}.md"
     subfolders: false
     view:
       primary: title
-      fields: [title, order, published]
-      sort: [order, title]
-      search: [title, excerpt]
+      fields: [title, date, kind, published]
+      sort: [date, title]
       default:
-        sort: order
-        order: asc
+        sort: date
+        order: desc
     fields:
       - name: title
-        label: Project title
+        label: Article title
         type: string
         required: true
+      - name: date
+        label: Date
+        type: date
+        required: true
         options:
-          maxlength: 200
-      - name: excerpt
-        label: Short description
+          format: yyyy-MM-dd
+      - name: kind
+        label: Entry type
+        type: select
+        required: true
+        options:
+          values: [Note, Simulation]
+      - name: summary
+        label: Short summary
         type: text
         required: true
         options:
-          maxlength: 2000
-      - name: order
-        label: Display order
-        type: number
-        description: Lower numbers appear first. Use 10, 20, 30 to leave room between entries.
-        required: true
-      - name: published
-        label: Show in portfolio
-        type: boolean
-        description: Turn off to remove this entry from the public project list.
-      - name: links
-        label: Project links
-        type: object
-        list:
-          collapsible:
-            collapsed: true
-            summary: "{label}"
-        fields:
-          - name: label
-            label: Button text
-            type: string
-            required: true
-          - name: url
-            label: Link address
-            type: string
-            required: true
-            description: A full website address or a relative path within this portfolio.
-          - name: download
-            label: Download link
-            type: boolean
-  - name: ml
-    label: ML / AI projects
-    type: collection
-    path: site/portfolio/content/ml
-    format: json
-    filename: "{primary}.json"
-    subfolders: false
-    view:
-      primary: title
-      fields: [title, order, published]
-      sort: [order, title]
-      search: [title, excerpt]
-      default:
-        sort: order
-        order: asc
-    fields:
-      - name: title
-        label: Project title
+          maxlength: 360
+      - name: tags
+        label: Tags (comma separated)
         type: string
-        required: true
+      - name: cover
+        label: Optional cover image
+        type: image
         options:
-          maxlength: 200
-      - name: excerpt
-        label: Short description
-        type: text
-        required: true
-        options:
-          maxlength: 2000
-      - name: order
-        label: Display order
-        type: number
-        description: Lower numbers appear first. Use 10, 20, 30 to leave room between entries.
-        required: true
+          media: article_images
       - name: published
-        label: Show in portfolio
+        label: Publish
         type: boolean
-        description: Turn off to remove this entry from the public project list.
-      - name: links
-        label: Project links
-        type: object
-        list:
-          collapsible:
-            collapsed: true
-            summary: "{label}"
-        fields:
-          - name: label
-            label: Button text
-            type: string
-            required: true
-          - name: url
-            label: Link address
-            type: string
-            required: true
-            description: A full website address or a relative path within this portfolio.
-          - name: download
-            label: Download link
-            type: boolean
+        description: Uncheck to hide from the public index (repository source remains public).
+      - name: body
+        label: Article (Markdown + LaTeX)
+        type: code
+        required: true
+        description: Use $...$ and $$...$$ for LaTeX; upload MP4 to Manim videos and use a ::manim shortcode. See NOTES_GUIDE.md.
+        options:
+          format: markdown
