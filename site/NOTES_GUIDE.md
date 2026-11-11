@@ -11,7 +11,7 @@ Each entry is a Markdown file under \`site/notes/content/\` with YAML frontmatte
 
 ### Markdown and LaTeX
 
-Use ordinary Markdown for paragraphs, headings, links, lists, tables, code fences and images. Write inline math as \`$E=mc^2$\` or \`\\(E=mc^2\\)\`; display equations as:
+Use ordinary Markdown for paragraphs, headings, links, lists, tables, code fences and images. Write inline math as \`$E=mc^2$\` or \\(E=mc^2\\); display equations as:
 
 ~~~text
 $$
@@ -19,7 +19,7 @@ dX_t=b(X_t,u_t)\,dt+\sigma(X_t,u_t)\,dW_t.
 $$
 ~~~
 
-The published pages are built with Marked and KaTeX, so readers see typeset equations without a client-side math parser. For best results, use \`$...$\` and \`$$...$$\` rather than \`\\(...\\)\` or \`\\[...\\]\`.
+The published pages are built with Marked and KaTeX, so readers see typeset equations without a client-side math parser. The builder also accepts LaTeX's \\( ... \\) and \\[ ... \\] delimiters; dollar signs are simplest in Pages CMS.
 
 ### Images
 
