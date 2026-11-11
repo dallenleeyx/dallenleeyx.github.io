@@ -1,4 +1,4 @@
-name: Deploy CV to GitHub Pages
+name: Deploy CV and notebook to GitHub Pages
 
 on:
   push:
@@ -35,6 +35,15 @@ jobs:
         run: node --test site/portfolio/tools/build-projects.test.mjs
       - name: Build portfolio project lists
         run: node site/portfolio/tools/build-projects.mjs
+      - name: Install notebook build dependencies
+        run: npm install --prefix site/notes --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Build notes and simulations
+        run: node site/notes/tools/build-notes.mjs
+      - name: Verify sample article, math, and embedded simulation
+        run: |
+          test -f site/notes/brownian-motion-demo/index.html
+          grep -q 'class="katex"' site/notes/brownian-motion-demo/index.html
+          grep -q '<iframe' site/notes/brownian-motion-demo/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

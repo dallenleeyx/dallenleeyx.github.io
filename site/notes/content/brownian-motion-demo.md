@@ -11,13 +11,13 @@ This is a **demo entry** showing how mathematical notes and interactive simulati
 
 ## A scaling idea
 
-Let the increments \(X_1,X_2,\ldots\) be independent, with mean zero and variance one. A scaled random walk is
+Let the increments $X_1,X_2,\ldots$ be independent, with mean zero and variance one. A scaled random walk is
 
 $$
 S_n(t)=\frac{1}{\sqrt{n}}\sum_{k=1}^{\lfloor nt\rfloor}X_k.
 $$
 
-As \(n\) grows, its paths begin to resemble Brownian motion (in the appropriate sense). The limiting process \(B_t\) satisfies
+As $n$ grows, its paths begin to resemble Brownian motion (in the appropriate sense). The limiting process \(B_t\) satisfies
 
 $$
 B_0=0,\qquad B_t-B_s\sim\mathcal{N}(0,t-s),\quad 0\le s<t.

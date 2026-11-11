@@ -59,3 +59,5 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
 @keyframes gentle-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 @media(max-width:620px){body{font-size:16px}.notebook-nav{display:block}.notebook-nav nav{margin-top:12px;gap:14px}.notebook-intro{padding:60px 0 40px}.entry-controls{align-items:start;flex-direction:column}.entry-controls #entry-search{width:100%}.article-main{padding-top:46px}.embed iframe{min-height:400px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.entry-row,.notebook-intro{animation:none}.entry-row h2{transition:none}}
+
+[hidden]{display:none!important}
