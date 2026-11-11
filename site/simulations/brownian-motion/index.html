@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brownian motion demo</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,sans-serif;color:#253037;background:#fff}
+*{box-sizing:border-box}body{margin:0;padding:18px}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:16px;letter-spacing:-.01em;font-weight:600;margin:0}
+p{color:#707b80;font-size:12px;margin:5px 0 0}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px}
+label{display:flex;gap:6px;align-items:center}select,button{border:1px solid #cbd1d3;background:#fff;padding:6px 10px;border-radius:4px;font:inherit;color:inherit}
+button{cursor:pointer}button:hover{background:#eff3f3}
+canvas{display:block;width:100%;height:280px;margin-top:18px;border:1px solid #e4e7e5;border-radius:4px}
+.legend{font-size:11px;color:#657076;margin:8px 0}
+</style></head><body><header><div><h1>Sample paths · Brownian motion</h1><p>Independent normal increments, variance Δt</p></div>
+<div class="controls"><label>Steps <select id="steps"><option>50</option><option selected>200</option><option>800</option></select></label>
+<label>Paths <select id="paths"><option>3</option><option selected>5</option><option>10</option></select></label>
+<button id="draw" type="button">Resample ↻</button></div></header>
+<canvas id="plot" role="img" aria-label="Several randomly generated Brownian motion sample paths"></canvas>
+<p class="legend">Horizontal axis: t from 0 to 1 · Vertical axis: sample path value</p>
+<script>
+(() => {
+ const canvas=document.querySelector('#plot'),ctx=canvas.getContext('2d'),steps=document.querySelector('#steps'),paths=document.querySelector('#paths');
+ const colors=['#3a6573','#b77a4e','#6e8770','#9b6c89','#8e7e58','#537c9a','#bd8a69','#967f9b','#72947a','#53616f'];
+ let samples=[];
+ function normal(){const u=Math.max(Number.MIN_VALUE,Math.random());return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random())}
+ function generate(){const n=Number(steps.value);samples=Array.from({length:Number(paths.value)},()=>{let y=0;return Array.from({length:n+1},(_,i)=>i===0?0:(y+=normal()/Math.sqrt(n)))});render()}
+ function render(){
+  const pixelRatio=Math.min(window.devicePixelRatio||1,2);
+  const width=canvas.clientWidth,height=canvas.clientHeight;
+  canvas.width=Math.round(width*pixelRatio);canvas.height=Math.round(height*pixelRatio);
+  ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
+  ctx.clearRect(0,0,width,height);
+  const pad={l:32,r:12,t:15,b:24},w=width-pad.l-pad.r,h=height-pad.t-pad.b;
+  const ys=samples.flat();const max=Math.max(1.5,...ys.map(v=>Math.abs(v)))*1.1;
+  ctx.strokeStyle='#e5e9e8';ctx.lineWidth=1;
+  for(let i=-2;i<=2;i++){const y=pad.t+h*(1-(i*max/2+max)/(2*max));ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(width-pad.r,y);ctx.stroke()}
+  ctx.fillStyle='#7e8b8d';ctx.font='11px system-ui';ctx.fillText('0',8,pad.t+h/2+4);ctx.fillText('0',pad.l,height-6);ctx.fillText('1',width-pad.r-5,height-6);
+  samples.forEach((points,j)=>{ctx.beginPath();ctx.strokeStyle=colors[j%colors.length];ctx.lineWidth=1.65;
+   points.forEach((v,i)=>{const x=pad.l+(i/(points.length-1))*w,y=pad.t+h*(.5-v/(2*max));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke()})
+ }
+ document.querySelector('#draw').addEventListener('click',generate);
+ steps.addEventListener('change',generate);paths.addEventListener('change',generate);
+ window.addEventListener('resize',render);generate();
+})();
+</script></body></html>

@@ -1,4 +1,71 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Music projects by Dallen Lee. A sample portfolio."><title>Music — Dallen Lee</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Instrument+Serif:ital@0;1&amp;family=Newsreader:ital,wght@0,400;0,500;1,400&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap"><link rel="stylesheet" href="../assets/base.css"><link rel="stylesheet" href="../assets/music.css"><script defer src="../assets/motion.js"></script></head><body class="music" data-scene="music"><canvas id="atmosphere" aria-hidden="true"></canvas><a class="skip" href="#projects">Skip to projects</a><header class="site-header"><a class="name" href="../../index.html">Dallen Lee<span aria-hidden="true"> ↗</span></a><div class="header-right"><nav aria-label="Portfolios"><a href="../music/" aria-current="page">Music</a><a href="../engineering/">Engineering</a><a href="../ml/">ML / AI</a><a href="../../index.html">CV</a></nav><button class="motion-toggle" id="motionToggle" type="button" aria-label="Pause background animation" title="Pause background animation" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path class="pause-icon" d="M7 5V15M13 5V15"/><path class="play-icon" d="M7 4L15 10L7 16Z"/></svg></button></div></header><main><section class="music-heading"><h1>Music<span aria-hidden="true">.</span></h1><a class="browse-button" href="#projects" aria-label="Browse music projects"><span aria-hidden="true">↓</span></a></section><ol class="project-list" id="projects"><!-- projects:start -->
-<li><article class="track"><span class="track-number" aria-hidden="true"></span><div class="track-text"><h2>Awake</h2><p>A sample track by Tycho. Electronic / instrumental.<br>This recording isn’t mine.</p></div><div class="project-links"><button class="listen-button" type="button" data-audio="https://soundcloud.com/tycho/tycho-awake" data-title="Awake — Tycho" data-credit="Sample audio by Tycho." hidden><span class="button-icon" aria-hidden="true">▶</span><span>Listen</span></button><a href="https://soundcloud.com/tycho/tycho-awake" target="_blank" rel="noopener noreferrer">SoundCloud <span aria-hidden="true">↗</span></a></div></article></li>
-<!-- projects:end --></ol></main><footer class="site-footer"><a href="../../index.html">Back to CV <span aria-hidden="true">↗</span></a><a class="edit-projects" href="https://app.pagescms.org/dallenleeyx/dallenleeyx.github.io/main" target="_blank" rel="noopener noreferrer">Edit projects</a><span>Dallen Lee</span></footer><dialog id="audioDialog" aria-labelledby="audioTitle"><div class="dialog-heading"><h2 id="audioTitle">Listen</h2><button class="close-player" type="button" aria-label="Close player">×</button></div><div id="audioPlayer"></div><p id="audioCredit"></p></dialog></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music — Dallen Lee</title>
+  <meta name="description" content="Recordings, arrangements, and music projects by Dallen Lee.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="../../assets/style.css">
+  <link rel="stylesheet" href="../assets/music.css">
+</head>
+<body>
+  <div class="music-shell">
+    <a class="skip-link" href="#projects">Skip to music projects</a>
+    <header class="music-nav">
+      <a class="wordmark" href="../../">Dallen Lee</a>
+      <nav aria-label="Main navigation">
+        <a href="../../">Home</a>
+        <a href="./" aria-current="page">Music</a>
+        <a href="../../notes/">Notes &amp; simulations</a>
+      </nav>
+    </header>
+    <main>
+      <header class="music-intro">
+        <p class="eyebrow">Outside mathematics</p>
+        <h1>Music</h1>
+        <p>Things I've played, recorded, arranged, or made. A small collection, added to as it grows.</p>
+      </header>
+      <section aria-label="Recordings and projects">
+        <div class="section-heading"><h2>Selected work</h2><span>Recordings &amp; projects</span></div>
+        <ol class="project-list" id="projects"><!-- projects:start -->
+        <li class="empty-projects">No recordings posted yet.</li>
+        <!-- projects:end --></ol>
+      </section>
+    </main>
+    <footer class="music-footer"><span>© Dallen Lee</span><a href="https://app.pagescms.org/dallenleeyx/dallenleeyx.github.io/main" rel="noopener noreferrer" target="_blank">Manage music ↗</a></footer>
+  </div>
+  <dialog id="audioDialog" aria-labelledby="audioTitle">
+    <div class="dialog-heading"><h2 id="audioTitle">Listen</h2><button type="button" class="close-player" aria-label="Close player">×</button></div>
+    <div id="audioPlayer"></div><p id="audioCredit"></p>
+  </dialog>
+  <script>
+    (() => {
+      const dialog = document.querySelector('#audioDialog');
+      const player = document.querySelector('#audioPlayer');
+      const title = document.querySelector('#audioTitle');
+      const credit = document.querySelector('#audioCredit');
+      document.querySelectorAll('.listen-button[data-audio]').forEach(button => {
+        button.hidden = false;
+        button.addEventListener('click', () => {
+          const url = button.dataset.audio;
+          if (!/^https:\/\/(www\.)?soundcloud\.com\//.test(url)) return;
+          title.textContent = button.dataset.title || 'Listen';
+          credit.textContent = button.dataset.credit || '';
+          const frame = document.createElement('iframe');
+          frame.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&auto_play=false';
+          frame.title = title.textContent;
+          frame.loading = 'lazy';
+          frame.allow = 'autoplay';
+          player.replaceChildren(frame);
+          dialog.showModal();
+        });
+      });
+      dialog.querySelector('.close-player').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('close', () => player.replaceChildren());
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    })();
+  </script>
+</body>
+</html>

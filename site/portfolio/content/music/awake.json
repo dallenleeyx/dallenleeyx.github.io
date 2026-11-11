@@ -2,7 +2,7 @@
   "title": "Awake",
   "excerpt": "This is a sample track.",
   "order": 10,
-  "published": true,
+  "published": false,
   "artist": "Ed Sheeran",
   "soundcloud": "https://soundcloud.com/tycho/tycho-awake",
   "links": [

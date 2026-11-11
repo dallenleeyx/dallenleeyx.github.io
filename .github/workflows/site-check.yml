@@ -1,0 +1,32 @@
+name: Check public site changes
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.pages.yml'
+      - '.github/workflows/pages.yml'
+      - '.github/workflows/site-check.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check existing portfolio renderer
+        run: node --test site/portfolio/tools/build-projects.test.mjs
+      - name: Build portfolio project lists
+        run: node site/portfolio/tools/build-projects.mjs
+      - name: Install notebook dependencies
+        run: npm install --prefix site/notes --no-package-lock --no-audit --no-fund --ignore-scripts
+      - name: Build articles
+        run: node site/notes/tools/build-notes.mjs
+      - name: Check published HTML
+        run: |
+          test -f site/notes/brownian-motion-demo/index.html
+          grep -q 'class="katex"' site/notes/brownian-motion-demo/index.html
+          grep -q '<iframe' site/notes/brownian-motion-demo/index.html
